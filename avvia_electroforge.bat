@@ -1,8 +1,8 @@
 @echo off
-title CADe SIMU Next - Avvio Rapido
+title ElectroForge - Avvio Rapido
 cd /d "%~dp0"
 echo ========================================================
-echo   CADe SIMU Next - Simulatore Schemi Elettrici Moderno
+echo   ElectroForge - Simulatore & CAD Elettrico Industriale
 echo ========================================================
 echo.
 echo Avvio del server applicativo...

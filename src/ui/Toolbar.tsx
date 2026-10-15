@@ -139,7 +139,7 @@ export const Toolbar: React.FC<Props> = ({
           </div>
           <div>
             <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '0.5px' }}>
-              CADe SIMU <span style={{ color: '#60a5fa' }}>Next</span>
+              Electro<span style={{ color: '#38bdf8' }}>Forge</span>
             </span>
           </div>
         </div>
@@ -155,7 +155,7 @@ export const Toolbar: React.FC<Props> = ({
             onClick={() => {
               if (confirm('Vuoi creare un nuovo schema vuoto?')) {
                 onDocChange({
-                  app: 'cadesimu-next',
+                  app: 'electroforge',
                   version: 1,
                   sheet: { ...doc.sheet, title: 'Nuovo Schema' },
                   elements: [],

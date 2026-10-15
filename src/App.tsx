@@ -294,7 +294,7 @@ export const App: React.FC = () => {
       </div>
 
       {/* 2. Pure Vector Drawing Sheet for Printing and PDF Export (Borders + Cartiglio ISO 7200 + Schematic) */}
-      <div className="print-only" id="cadesimu-print-sheet">
+      <div className="print-only" id="electroforge-print-sheet">
         <style>{`
           @media print {
             @page {

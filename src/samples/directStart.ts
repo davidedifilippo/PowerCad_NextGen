@@ -5,7 +5,7 @@ import { Doc } from '../model/types';
  * "Avviamento Diretto Motore Trifase con circuito di comando e circuito di potenza, autoritenuta e segnalazioni"
  */
 export const SAMPLE_DIRECT_START: Doc = {
-  app: 'cadesimu-next',
+  app: 'electroforge',
   version: 1,
   sheet: {
     format: 'A3', // As requested: default to roomy A3 format

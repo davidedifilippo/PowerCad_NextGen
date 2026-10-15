@@ -1,6 +1,6 @@
-# CADe SIMU Next ⚡
+# ElectroForge ⚡
 
-Un simulatore ed editor di schemi elettrici industriale e didattico moderno, fluido e leggero, progettato per superare tutti i limiti e l'instabilità del CADe_SIMU originale. Realizzato con **React 18**, **TypeScript** e **Vite**.
+Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno, fluido e leggero. Realizzato con **React 18**, **TypeScript** e **Vite**.
 
 ---
 
@@ -61,7 +61,7 @@ Un simulatore ed editor di schemi elettrici industriale e didattico moderno, flu
 ### Metodo 1: Doppio Click (Windows)
 Fai doppio click sul file:
 ```
-avvia_cadesimu_next.bat
+avvia_electroforge.bat
 ```
 Si aprirà automaticamente il browser all'indirizzo `http://localhost:5173/`.
 

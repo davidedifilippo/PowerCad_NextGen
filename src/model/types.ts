@@ -109,7 +109,7 @@ export interface Sheet {
 }
 
 export interface Doc {
-  app: 'cadesimu-next';
+  app: 'electroforge' | 'cadesimu-next';
   version: 1;
   sheet: Sheet;
   elements: Element[];

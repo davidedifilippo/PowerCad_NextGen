@@ -40,7 +40,7 @@ export const ComponentPalette: React.FC<Props> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'cadesimu-components-library.json';
+    a.download = 'electroforge-components-library.json';
     a.click();
   };
 
