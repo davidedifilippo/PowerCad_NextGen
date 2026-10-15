@@ -365,6 +365,47 @@ const GridBorderMarkers: React.FC<{ margin: number; innerW: number; innerH: numb
   );
 };
 
+/** Compute a generous bounding box for component hit-testing and selection halo */
+export function getComponentBounds(def: ComponentDef) {
+  let minX = -20;
+  let maxX = 20;
+  let minY = -20;
+  let maxY = 20;
+
+  for (const t of def.terminals) {
+    minX = Math.min(minX, t.x - 10);
+    maxX = Math.max(maxX, t.x + 10);
+    minY = Math.min(minY, t.y - 10);
+    maxY = Math.max(maxY, t.y + 10);
+  }
+
+  for (const s of def.symbol) {
+    if (s.t === 'line') {
+      minX = Math.min(minX, s.x1 - 6, s.x2 - 6);
+      maxX = Math.max(maxX, s.x1 + 6, s.x2 + 6);
+      minY = Math.min(minY, s.y1 - 6, s.y2 - 6);
+      maxY = Math.max(maxY, s.y1 + 6, s.y2 + 6);
+    } else if (s.t === 'rect') {
+      minX = Math.min(minX, s.x - 6);
+      maxX = Math.max(maxX, s.x + s.w + 6);
+      minY = Math.min(minY, s.y - 6);
+      maxY = Math.max(maxY, s.y + s.h + 6);
+    } else if (s.t === 'circle' || s.t === 'rotor') {
+      minX = Math.min(minX, s.cx - s.r - 6);
+      maxX = Math.max(maxX, s.cx + s.r + 6);
+      minY = Math.min(minY, s.cy - s.r - 6);
+      maxY = Math.max(maxY, s.cy + s.r + 6);
+    }
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    w: Math.max(30, maxX - minX),
+    h: Math.max(30, maxY - minY),
+  };
+}
+
 /** Element renderer */
 const ElementItem: React.FC<{
   elem: Element;
@@ -377,6 +418,8 @@ const ElementItem: React.FC<{
 }> = ({ elem, simState, isSelected, onClick, onMouseDown, onContextMenu, onTerminalClick }) => {
   const def = registry.get(elem.def);
   if (!def) return null;
+
+  const bounds = getComponentBounds(def);
 
   // Determine active state for visual primitives
   const defaultState =
@@ -407,20 +450,31 @@ const ElementItem: React.FC<{
       onClick={onClick}
       onMouseDown={onMouseDown}
       onContextMenu={onContextMenu}
-      style={{ cursor: simState.running ? 'pointer' : 'default' }}
+      style={{ cursor: simState.running ? 'pointer' : 'move' }}
     >
+      {/* Invisible broad hit-box so clicks anywhere on the component body register immediately */}
+      <rect
+        x={bounds.x}
+        y={bounds.y}
+        width={bounds.w}
+        height={bounds.h}
+        fill="transparent"
+        pointerEvents="all"
+      />
+
       {/* Selection halo */}
       {isSelected && (
         <rect
-          x={-35}
-          y={-35}
-          width={70}
-          height={70}
-          fill="none"
+          x={bounds.x - 2}
+          y={bounds.y - 2}
+          width={bounds.w + 4}
+          height={bounds.h + 4}
+          fill="rgba(59, 130, 246, 0.08)"
           stroke="#3b82f6"
           strokeWidth={1.5}
           strokeDasharray="3 3"
           rx={4}
+          pointerEvents="none"
         />
       )}
 
@@ -461,6 +515,9 @@ const ElementItem: React.FC<{
           <g
             key={term.id}
             transform={`translate(${term.x}, ${term.y})`}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
             onClick={(e) => {
               e.stopPropagation();
               onTerminalClick(term.id, worldPos);

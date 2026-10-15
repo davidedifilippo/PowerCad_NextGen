@@ -79,6 +79,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         id: string;
         startScreen: Pt;
         origElemPos: Pt;
+        wasSelectedAtStart: boolean;
         isDragging: boolean;
       }
     | {
@@ -86,6 +87,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         id: string;
         startScreen: Pt;
         origPts: Pt[];
+        wasSelectedAtStart: boolean;
         isDragging: boolean;
       }
     | {
@@ -543,8 +545,8 @@ export const SchematicCanvas: React.FC<Props> = ({
         onDocChange({ ...doc, elements: updatedElements, wires: updatedWires });
       } else if (dragRef.current.type === 'element') {
         const elemId = dragRef.current.id;
-        const newX = snapPt({ x: dragRef.current.origElemPos.x + dx, y: 0 }).x;
-        const newY = snapPt({ x: 0, y: dragRef.current.origElemPos.y + dy }).y;
+        const newX = snap(dragRef.current.origElemPos.x + dx);
+        const newY = snap(dragRef.current.origElemPos.y + dy);
 
         const updated = doc.elements.map((el) => {
           if (el.id !== elemId) return el;
@@ -617,7 +619,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         // Single click selection
         if (dragRef.current.type === 'element' || dragRef.current.type === 'wire') {
           const clickedId = dragRef.current.id;
-          if (selectedIds.has(clickedId) && selectedIds.size === 1) {
+          if (dragRef.current.wasSelectedAtStart && selectedIds.size === 1) {
             // Second click releases / deselects
             onSelectIds(new Set());
           } else {
@@ -631,6 +633,8 @@ export const SchematicCanvas: React.FC<Props> = ({
 
   // MouseDown on an element
   const handleElementMouseDown = (elem: Element, e: React.MouseEvent) => {
+    e.stopPropagation();
+
     if (floatingSelection && e.button === 0) {
       setFloatingSelection(null);
       return;
@@ -639,8 +643,10 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (simState.running || activeWireTool) return;
 
     if (e.button === 0) {
+      const isAlreadySelected = selectedIds.has(elem.id);
+
       // If clicked element is part of multi-selection, drag whole selection!
-      if (selectedIds.has(elem.id) && selectedIds.size > 1) {
+      if (isAlreadySelected && selectedIds.size > 1) {
         const origElemPositions = new Map<string, Pt>();
         for (const el of doc.elements) {
           if (selectedIds.has(el.id)) origElemPositions.set(el.id, { x: el.x, y: el.y });
@@ -658,11 +664,17 @@ export const SchematicCanvas: React.FC<Props> = ({
           isDragging: false,
         };
       } else {
+        // If not already selected, immediately select it for fast visual feedback
+        if (!isAlreadySelected) {
+          onSelectIds(new Set([elem.id]));
+        }
+
         dragRef.current = {
           type: 'element',
           id: elem.id,
           startScreen: { x: e.clientX, y: e.clientY },
           origElemPos: { x: elem.x, y: elem.y },
+          wasSelectedAtStart: isAlreadySelected,
           isDragging: false,
         };
       }
@@ -671,6 +683,8 @@ export const SchematicCanvas: React.FC<Props> = ({
 
   // MouseDown on a wire
   const handleWireMouseDown = (wire: Wire, e: React.MouseEvent) => {
+    e.stopPropagation();
+
     if (floatingSelection && e.button === 0) {
       setFloatingSelection(null);
       return;
@@ -679,7 +693,9 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (simState.running || activeWireTool) return;
 
     if (e.button === 0) {
-      if (selectedIds.has(wire.id) && selectedIds.size > 1) {
+      const isAlreadySelected = selectedIds.has(wire.id);
+
+      if (isAlreadySelected && selectedIds.size > 1) {
         const origElemPositions = new Map<string, Pt>();
         for (const el of doc.elements) {
           if (selectedIds.has(el.id)) origElemPositions.set(el.id, { x: el.x, y: el.y });
@@ -697,11 +713,16 @@ export const SchematicCanvas: React.FC<Props> = ({
           isDragging: false,
         };
       } else {
+        if (!isAlreadySelected) {
+          onSelectIds(new Set([wire.id]));
+        }
+
         dragRef.current = {
           type: 'wire',
           id: wire.id,
           startScreen: { x: e.clientX, y: e.clientY },
           origPts: wire.pts.map((p) => ({ ...p })),
+          wasSelectedAtStart: isAlreadySelected,
           isDragging: false,
         };
       }
@@ -710,6 +731,8 @@ export const SchematicCanvas: React.FC<Props> = ({
 
   // MouseDown on wire endpoint handle (to stretch wire)
   const handleWireHandleMouseDown = (wire: Wire, pointIndex: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+
     if (floatingSelection && e.button === 0) {
       setFloatingSelection(null);
       return;
@@ -841,13 +864,6 @@ export const SchematicCanvas: React.FC<Props> = ({
       const snapped = snapPt(world);
       setWireDraft([snapped]);
       return;
-    }
-
-    // Single-click selects, second click releases
-    if (selectedIds.has(wire.id) && selectedIds.size === 1) {
-      onSelectIds(new Set());
-    } else {
-      onSelectIds(new Set([wire.id]));
     }
   };
 
