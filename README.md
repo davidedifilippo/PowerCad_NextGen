@@ -1,77 +1,85 @@
 # ElectroForge ⚡
 
-Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno, fluido e leggero. Realizzato con **React 18**, **TypeScript** e **Vite**.
+Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno, fluido e leggero. Sviluppato interamente da zero con **React 18**, **TypeScript**, **SVG vettoriale** e **Vite**.
+
+---
+
+## ⚖️ Dichiarazione di Indipendenza & Standard Normativi (Disclaimer)
+
+> [!NOTE]
+> **ElectroForge** è un progetto open-source indipendente, sviluppato per scopi formativi, professionali e didattici.
+> - **Simbologia Normata:** Tutti i simboli elettrici, la numerazione dei morsetti (es. 1-2, 13-14, 21-22, A1-A2, X1-X2) e le logiche grafiche adottate sono rigorosamente conformi agli standard internazionali aperti **IEC 60617** (recepiti in Italia come **CEI EN 60617**) e **ISO 7200**.
+> - **Indipendenza:** Il progetto trae ispirazione dall'usabilità dei classici simulatori didattici di automazione industriale per Windows degli anni 2000 (quali *CADe_SIMU* del Prof. Juan Luis Villanueva Montoto). Tuttavia, **non è in alcun modo affiliato, sponsorizzato né collegato a CADe_SIMU o ai suoi autori**. Il codice sorgente, l'architettura reattiva, il motore di risoluzione nodale e l'interfaccia utente sono stati progettati e scritti interamente ex-novo per il Web moderno.
 
 ---
 
 ## 🚀 Caratteristiche Principali
 
-1. **Passaggio Istantaneo da Formato A4 ad A3 (e A2)**:
-   - Selezionabile al volo dal menu a tendina nella barra superiore (*"Foglio: A4 / A3 / Orizzontale / Verticale"*).
-   - Il cartiglio normato CEI/IEC 60617 / ISO 7200 si riposiziona e ridimensiona automaticamente nell'angolo in basso a destra con dati di progetto, revisione, autore e data.
+1. **Multipiattaforma al 100% (Windows, macOS, Linux, iPad/Tablet)**:
+   - Funziona in qualsiasi browser web moderno ad alte prestazioni, senza dipendenze binarie né emulatori.
 
-2. **Nuova Barra "Cavi & Connessioni" con Cursore a Croce**:
-   - Palette orizzontale dedicata per tutti i tipi di conduttori normati:
+2. **Libreria Componenti Conforme a IEC 60617**:
+   - **Alimentazioni:** Fonti monofase (L, N, PE), trifase (3L, 3L+N, 3L+PE, 3L+N+PE), corrente continua (+24V, 0V DC) e trasformatori.
+   - **Protezioni:** Fusibili (monopolari, bipolari, tripolari, con sezionatore), interruttori magnetotermici (1P, 1P+N, 2P, 3P, 3P+N, 4P), differenziali e relè termici salvamotore.
+   - **Contattori & Interruttori:** Sezionatori rotativi, contattori di potenza tripolari e quadripolari, invertitori di marcia.
+   - **Comandi:** Pulsanti NO/NC, pulsanti a fungo d'emergenza con sgancio a rotazione, selettori a chiave e selettori rotativi a 2/3 posizioni stabili.
+   - **Contatti Ausiliari & Temporizzati:** Contatti NO, NC, di scambio, temporizzati ritardati all'eccitazione (TON), alla diseccitazione (TOF) e contatti di relè termico (95-96 NC, 97-98 NO).
+   - **Bobine & Segnali:** Bobine standard per contattori (-KM), bobine bistabili a due impulsi (Set/Reset), teleruttori, elettrovalvole (-EV), temporizzatori TON, TOF, ciclici/intermittenti, generatori d'impulsi, interruttori orari, contatori numerici d'impulsi, lampade spia a luce fissa e intermittente (con selezione colore), suonerie a campana, ronzatori/vibratori, sirene e clacson.
+   - **Motori:** Motori asincroni trifase con animazione del rotore in rotazione, motori monofase e motori DC.
+
+3. **Motore di Simulazione Elettrica in Tempo Reale**:
+   - Risoluzione dei potenziali di rete (Fase, Neutro, Terra, Trifase L1-L2-L3, DC).
+   - Evidenziazione visiva e interattiva dei conduttori in tensione.
+   - Interblocco reale dei contatti associati tramite tag (es. `-KM1`, `-KA1`, `-QM1`).
+   - Simulazione temporizzata reale (secondi) con animazioni e lampeggio sincrono.
+
+4. **Passaggio Istantaneo da Formato A4 ad A3 (e A2)**:
+   - Selezionabile al volo dal menu a tendina (*"Foglio: A4 / A3 / Orizzontale / Verticale"*).
+   - Cartiglio normato IEC 60617 / ISO 7200 auto-riposizionante con dati di progetto, revisione, autore e data.
+
+5. **Palette Cavi & Connessioni Normata**:
+   - Palette dedicata con tratteggio e colori convenzionali:
      - **Fase (L)** (Marrone `#9a3412`)
      - **Neutro (N)** (Blu `#2563eb`)
-     - **Terra (PE)** (Tratteggiato Giallo/Verde `#16a34a`)
+     - **Terra (PE)** (Giallo/Verde `#16a34a`)
      - **Positivo (+)** (Rosso `#ef4444`, 24V DC)
      - **Negativo (-)** (Nero `#0f172a`, 0V DC)
-     - **Comando** (Grigio scuro `#475569`, ausiliario)
-     - **3F Vert (|||)** e **3F Orizz (≡)** (Fasci trifase a passo normato 20px).
-   - Cursore a croce interattivo durante il tracciamento e disattivazione immediata con il tasto **`Esc`**.
+     - **Comando Ausiliario** (Grigio scuro `#475569`)
+     - **Fasci Trifase (3F Vert / 3F Orizz)** a passo fisso 20px.
 
-3. **Manipolazione Avanzata dei Cavi & Conduttori**:
-   - Selezione individuale del cavo con un solo click (secondo click per rilasciare).
-   - Spostamento dell'intero filo trascinandolo.
-   - Allungamento e accorciamento trascinando i morsetti/pallini terminali di estremità.
-
-4. **Selezione Rettangolare (Box Marquee) & Spostamento Sezioni**:
-   - Trascina il mouse su un'area libera per circondare un'intera sezione di schema.
-   - Tutti i componenti e conduttori circondati vengono selezionati all'unisono.
-   - Puoi afferrare la selezione e spostare l'intera sezione dove preferisci.
-
-5. **Copia, Taglia, Incolla Fluttuante & Cancellazione di Gruppo**:
-   - Scorciatoie standard **`Ctrl+C`**, **`Ctrl+V`**, **`Ctrl+X`** e menu contestuale con il tasto destro.
-   - **Incolla Fluttuante**: quando incolli una sezione, questa si aggancia al cursore del mouse; basta muovere il mouse e fare un click per fissarla nella nuova posizione.
-   - Cancellazione istantanea di gruppi selezionati premendo il tasto **`Canc`** (o `Backspace`).
-
-6. **Stampa Vettoriale & Esportazione PDF Conforme a Standard**:
-   - Pulsante dedicato **`Stampa`** e scorciatoia **`Ctrl+P`**.
-   - Genera una tavola tecnica vettoriale pulita, centrata e a piena pagina, escludendo l'interfaccia dell'applicazione e includendo cornici, riferimenti a reticolo e cartiglio.
-   - Adattamento automatico di `@page` al formato e orientamento del foglio (A4/A3/A2, landscape/portrait).
-
-7. **Motore di Simulazione Elettrica in Tempo Reale**:
-   - Risoluzione dei potenziali di linea (Fase L, Neutro N, Terra PE, Trifase L1-L2-L3, 24V DC / 0V).
-   - Evidenziazione dinamica dei conduttori in tensione.
-   - Interblocco reale dei sezionatori/magnetotermici (es. `-QM1` parte aperto e non alimenta il motore finché non viene chiuso).
-   - Accoppiamento tra bobine e contatti ausiliari/potenza tramite la sigla **Tag** (es. `-KM1`).
-   - Circuito di autoritenuta marcia/arresto perfettamente simulato.
-   - Rotore animato per i motori asincroni trifase durante la rotazione.
-
-8. **Componenti Extensibili in JSON & Interfaccia Moderna**:
-   - Icone ampie e leggibili, ricerca istantanea e filtri per categoria.
-   - Possibilità di aggiungere nuovi componenti personalizzati al volo tramite JSON.
-   - Undo e Redo illimitati (`Ctrl+Z`, `Ctrl+Y`).
+6. **Strumenti di Editing Avanzati**:
+   - Selezione rettangolare (box marquee) per afferrare e spostare intere sezioni di schema.
+   - Copia, Taglia, Incolla con modalità **Incolla Fluttuante** agganciata al mouse.
+   - Annulla e Ripristina illimitati (`Ctrl+Z`, `Ctrl+Y`).
+   - Stampa vettoriale pulita ad alta risoluzione o esportazione diretta in PDF (`Ctrl+P`).
+   - Esportazione e importazione degli schemi in formato aperto JSON.
 
 ---
 
 ## 🛠️ Come Avviare l'Applicazione
 
-### Metodo 1: Doppio Click (Windows)
-Fai doppio click sul file:
-```
-avvia_electroforge.bat
-```
-Si aprirà automaticamente il browser all'indirizzo `http://localhost:5173/`.
+### Su macOS e Linux
+1. Clona il repository:
+   ```bash
+   git clone <URL_REPOSITORY>
+   cd cadesimu-next
+   ```
+2. Installa le dipendenze ed avvia il server di sviluppo:
+   ```bash
+   npm install
+   npm run dev
+   ```
+3. Apri il browser all'indirizzo `http://localhost:5173/`.
 
-### Metodo 2: Da Terminale
-```bash
-npm install
-npm run dev
-```
+### Su Windows
+- **Metodo rapido:** Doppio click sul file `avvia_electroforge.bat`.
+- **Oppure da terminale PowerShell / Prompt:**
+  ```bash
+  npm install
+  npm run dev
+  ```
 
-### Esecuzione Test
+### Esecuzione Test Unitari
 ```bash
 npm test
 ```
@@ -83,17 +91,19 @@ npm run build
 
 ---
 
-## 📋 Struttura del Progetto
+## 🌐 Pubblicazione su GitHub Pages
 
-- `src/model/types.ts`: Modello dati JSON-serializzabile (ComponentDef, Primitives, Behavior, Element, Wire, WireKind, Sheet).
-- `src/library/standard.ts`: Libreria dei componenti normati (Alimentazioni, Protezioni, Comando, Contatti, Bobine, Motori, Lampade).
-- `src/library/registry.ts`: Registro componenti con supporto per import/export JSON dinamico.
-- `src/engine/simulation.ts`: Motore di simulazione del circuito elettrico (nodi equipotenziali, commutazione contatti, carichi, motori).
-- `src/editor/Renderer.tsx`: Motore di rendering vettoriale SVG con supporto cartiglio A4/A3 e feedback grafico in tempo reale.
-- `src/editor/SchematicCanvas.tsx`: Canvas interattivo (pan, zoom, tracciamento cavi, selezione box, spostamento gruppi, incolla fluttuante).
-- `src/ui/Toolbar.tsx`: Barra comandi superiore (formato foglio, simulazione, file JSON, stampa PDF, undo/redo).
-- `src/ui/WireToolbar.tsx`: Barra dedicata ai cavi e connessioni con colori normati.
-- `src/ui/ComponentPalette.tsx`: Palette componenti con icone grandi e gestione componenti JSON.
-- `src/ui/PropertiesPanel.tsx`: Scheda laterale con ispezione singola o selezione multipla.
-- `src/ui/ContextMenu.tsx`: Menu contestuale del tasto destro (Copia, Incolla, Taglia, Elimina, Ruota, Parametri).
-- `src/samples/directStart.ts`: Esempio pre-caricato di avviamento diretto marcia/arresto con autoritenuta e motore trifase.
+Il progetto è configurato con percorsi relativi (`base: './'`) e include una GitHub Action automatica in `.github/workflows/deploy.yml`.
+
+Per attivare la pubblicazione gratuita su GitHub:
+1. Vai sul tuo repository su GitHub.
+2. Clicca su **Settings** > **Pages** (nella barra laterale sinistra).
+3. Sotto **Build and deployment** > **Source**, seleziona **GitHub Actions**.
+4. A ogni `git push` sul branch `main`, GitHub compilerà e metterà online l'applicazione all'indirizzo:
+   `https://<tuo-utente>.github.io/<nome-repository>/`
+
+---
+
+## 📄 Licenza
+
+Rilasciato sotto licenza open-source MIT.
