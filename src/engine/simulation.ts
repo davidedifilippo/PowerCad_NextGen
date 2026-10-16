@@ -241,6 +241,30 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
               timerProgress[elem.tag] = 0;
             }
           }
+        } else if (beh.mode === 'blink') {
+          const delaySec = Number(elem.props?.delay ?? 1);
+          if (energized) {
+            const current = ((timerProgress[elem.tag] ?? 0) + (iter === 0 ? dtSec : 0)) % (delaySec * 2);
+            timerProgress[elem.tag] = current;
+            if (current < delaySec) {
+              newActiveOutputs[elem.tag] = true;
+            }
+          } else {
+            timerProgress[elem.tag] = 0;
+          }
+        } else if (beh.mode === 'latch') {
+          const kb1 = terms.get('B1');
+          const potB1 = kb1 ? netPotentials[kb1] : undefined;
+          const setEnergized = isVoltageDifference(potA, potB);
+          const resetEnergized = isVoltageDifference(potB1, potB);
+
+          const currentLatched = state.elementStates[elem.id] ?? false;
+          let nextLatched = currentLatched;
+          if (setEnergized) nextLatched = true;
+          if (resetEnergized) nextLatched = false;
+
+          state.elementStates[elem.id] = nextLatched;
+          if (nextLatched) newActiveOutputs[elem.tag] = true;
         }
       } else if (beh.type === 'load') {
         const ka = terms.get(beh.a);

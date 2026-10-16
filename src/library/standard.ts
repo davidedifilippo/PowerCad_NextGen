@@ -2204,12 +2204,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
 
-  // ==================== BOBINE & TEMPORIZZATORI ====================
+  // ==================== BOBINE & SEGNALI ====================
+  // --- Gruppo 1: Bobine Contattori, Relè ed Elettrovalvola ---
   {
     id: 'coil_standard',
-    name: 'Bobina Contattore / Relè Monostabile',
-    category: 'Bobine',
-    tagPrefix: '-KM',
+    name: 'Bobina contattori e relè',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
     terminals: [
       { id: 'A1', x: 0, y: -20, label: 'A1' },
       { id: 'A2', x: 0, y: 20, label: 'A2' },
@@ -2219,33 +2220,249 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
       // Normative IEC Horizontal Rectangle (24 x 14)
       { t: 'rect', x: -12, y: -7, w: 24, h: 14, fill: '#ffffff', when: 'off' },
-      // Active in simulation: filled grey (#9ca3af) exactly as in CADe_SIMU
       { t: 'rect', x: -12, y: -7, w: 24, h: 14, fill: '#9ca3af', when: 'on' },
       { t: 'line', x1: 0, y1: 7, x2: 0, y2: 20 },
     ],
   },
   {
-    id: 'coil_timer_on',
-    name: 'Bobina Relè Temporizzatore (Ritardo Eccitazione TON)',
-    category: 'Bobine',
-    tagPrefix: '-KT',
+    id: 'coil_bistable',
+    name: 'Bistabile Bobina contattori e relè',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: -6, y: -20, label: 'A1' },
+      { id: 'B1', x: 6, y: -20, label: 'B1' },
+      { id: 'A2', x: 0, y: 20, label: 'A2' },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'latch' },
+    symbol: [
+      { t: 'line', x1: -6, y1: -20, x2: -6, y2: -7 },
+      { t: 'line', x1: 6, y1: -20, x2: 6, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#9ca3af', when: 'on' },
+      // Center trapezoid / dual diagonal windings
+      { t: 'line', x1: -6, y1: -7, x2: -14, y2: 7 },
+      { t: 'line', x1: 6, y1: -7, x2: 14, y2: 7 },
+      { t: 'line', x1: 0, y1: 7, x2: 0, y2: 20 },
+    ],
+  },
+  {
+    id: 'coil_teleruttore',
+    name: 'Teleruttore',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
     terminals: [
       { id: 'A1', x: 0, y: -20, label: 'A1' },
       { id: 'A2', x: 0, y: 20, label: 'A2' },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'mono' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'rect', x: -16, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -16, y: -7, w: 28, h: 14, fill: '#9ca3af', when: 'on' },
+      // Left section with triangle pointing to divider line
+      { t: 'line', x1: -6, y1: -7, x2: -6, y2: 7 },
+      { t: 'line', x1: -16, y1: -7, x2: -6, y2: 0 },
+      { t: 'line', x1: -16, y1: 7, x2: -6, y2: 0 },
+      { t: 'line', x1: 0, y1: 7, x2: 0, y2: 20 },
+    ],
+  },
+  {
+    id: 'coil_solenoid_valve',
+    name: 'Bobina elettrovalvola',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-EV',
+    terminals: [
+      { id: 'A1', x: 0, y: -20, label: 'A1' },
+      { id: 'A2', x: 0, y: 20, label: 'A2' },
+    ],
+    behavior: { type: 'load', kind: 'lamp', a: 'A1', b: 'A2' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 24, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 24, h: 14, fill: '#9ca3af', when: 'on' },
+      // Diagonal slash across the coil
+      { t: 'line', x1: -14, y1: 7, x2: 10, y2: -7 },
+      // Shaft connecting to valve
+      { t: 'line', x1: 10, y1: 0, x2: 15, y2: 0 },
+      // Valve butterfly symbol (two opposing triangles)
+      { t: 'path', d: 'M 15 -8 L 23 -8 L 19 0 Z', fill: '#ffffff' },
+      { t: 'path', d: 'M 15 8 L 23 8 L 19 0 Z', fill: '#ffffff' },
+      { t: 'line', x1: 0, y1: 7, x2: 0, y2: 20 },
+    ],
+  },
+
+  // --- Gruppo 2: Temporizzatori e Contatori ---
+  {
+    id: 'coil_timer_on',
+    name: 'Temporizzatore ritardato all\'eccitazione',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: 2, y: -20, label: 'A1' },
+      { id: 'A2', x: 2, y: 20, label: 'A2' },
     ],
     props: [
       { key: 'delay', label: 'Tempo (secondi)', type: 'number', default: 3 },
     ],
     behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'ton' },
     symbol: [
+      { t: 'line', x1: 2, y1: -20, x2: 2, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#9ca3af', when: 'on' },
+      // Left section with cross X
+      { t: 'line', x1: -4, y1: -7, x2: -4, y2: 7 },
+      { t: 'line', x1: -14, y1: -7, x2: -4, y2: 7 },
+      { t: 'line', x1: -14, y1: 7, x2: -4, y2: -7 },
+      { t: 'line', x1: 2, y1: 7, x2: 2, y2: 20 },
+    ],
+  },
+  {
+    id: 'coil_timer_off',
+    name: 'Temporizzatore ritardato alla diseccitazione',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: 2, y: -20, label: 'A1' },
+      { id: 'A2', x: 2, y: 20, label: 'A2' },
+    ],
+    props: [
+      { key: 'delay', label: 'Tempo (secondi)', type: 'number', default: 3 },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'tof' },
+    symbol: [
+      { t: 'line', x1: 2, y1: -20, x2: 2, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#9ca3af', when: 'on' },
+      // Left section filled solid black
+      { t: 'rect', x: -14, y: -7, w: 10, h: 14, fill: '#0f172a' },
+      { t: 'line', x1: 2, y1: 7, x2: 2, y2: 20 },
+    ],
+  },
+  {
+    id: 'coil_timer_on_off',
+    name: 'Temporizzatore ritardato all\'eccitazione e alla diseccitazione',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: 4, y: -20, label: 'A1' },
+      { id: 'A2', x: 4, y: 20, label: 'A2' },
+    ],
+    props: [
+      { key: 'delay', label: 'Tempo (secondi)', type: 'number', default: 3 },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'ton' },
+    symbol: [
+      { t: 'line', x1: 4, y1: -20, x2: 4, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#9ca3af', when: 'on' },
+      // Left section: outer half with X, inner half filled black
+      { t: 'line', x1: -8, y1: -7, x2: -8, y2: 7 },
+      { t: 'line', x1: -14, y1: -7, x2: -8, y2: 7 },
+      { t: 'line', x1: -14, y1: 7, x2: -8, y2: -7 },
+      { t: 'rect', x: -8, y: -7, w: 6, h: 14, fill: '#0f172a' },
+      { t: 'line', x1: -2, y1: -7, x2: -2, y2: 7 },
+      { t: 'line', x1: 4, y1: 7, x2: 4, y2: 20 },
+    ],
+  },
+  {
+    id: 'coil_relay_flasher',
+    name: 'Relè intermittente',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: 2, y: -20, label: 'A1' },
+      { id: 'A2', x: 2, y: 20, label: 'A2' },
+    ],
+    props: [
+      { key: 'delay', label: 'Periodo (secondi)', type: 'number', default: 1 },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'blink' },
+    symbol: [
+      { t: 'line', x1: 2, y1: -20, x2: 2, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#9ca3af', when: 'on' },
+      // Vertical divider
+      { t: 'line', x1: -3, y1: -7, x2: -3, y2: 7 },
+      // Square pulse waveform in left section
+      { t: 'path', d: 'M -12 3 L -10 3 L -10 -3 L -7 -3 L -7 3 L -5 3' },
+      { t: 'line', x1: 2, y1: 7, x2: 2, y2: 20 },
+    ],
+  },
+  {
+    id: 'coil_pulse_generator',
+    name: 'Generatore d\'impulsi',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: 2, y: -20, label: 'A1' },
+      { id: 'A2', x: 2, y: 20, label: 'A2' },
+    ],
+    props: [
+      { key: 'delay', label: 'Durata impulso (s)', type: 'number', default: 0.5 },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'blink' },
+    symbol: [
+      { t: 'line', x1: 2, y1: -20, x2: 2, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#9ca3af', when: 'on' },
+      // Vertical divider
+      { t: 'line', x1: -3, y1: -7, x2: -3, y2: 7 },
+      // Double pulse waveform train in left section
+      { t: 'path', d: 'M -13 3 L -12 3 L -12 -3 L -10 -3 L -10 3 L -8 3 L -8 -3 L -6 -3 L -6 3 L -5 3' },
+      { t: 'line', x1: 2, y1: 7, x2: 2, y2: 20 },
+    ],
+  },
+  {
+    id: 'coil_time_switch',
+    name: 'Interruttore orario',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: 0, y: -20, label: 'A1' },
+      { id: 'A2', x: 0, y: 20, label: 'A2' },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'mono' },
+    symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
-      // Normative IEC Horizontal Rectangle (24 x 14)
       { t: 'rect', x: -12, y: -7, w: 24, h: 14, fill: '#ffffff', when: 'off' },
       { t: 'rect', x: -12, y: -7, w: 24, h: 14, fill: '#9ca3af', when: 'on' },
-      // Standard TON cross on left division
-      { t: 'line', x1: -4, y1: -7, x2: -4, y2: 7 },
-      { t: 'line', x1: -12, y1: -7, x2: -4, y2: 7 },
-      { t: 'line', x1: -12, y1: 7, x2: -4, y2: -7 },
+      // Clock dial with hands at 12 and 3
+      { t: 'circle', cx: 0, cy: 0, r: 6, fill: '#ffffff' },
+      { t: 'line', x1: 0, y1: 0, x2: 0, y2: -4 },
+      { t: 'line', x1: 0, y1: 0, x2: 4, y2: 0 },
+      { t: 'line', x1: 0, y1: 7, x2: 0, y2: 20 },
+    ],
+  },
+  {
+    id: 'counter_impulse',
+    name: 'Contatore d\'impulsi',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-C',
+    terminals: [
+      { id: 'A1', x: -10, y: -20, label: 'A1' },
+      { id: 'C', x: 0, y: -20, label: 'C' },
+      { id: 'D', x: 10, y: -20, label: 'D' },
+      { id: 'R', x: 20, y: -20, label: 'R' },
+      { id: 'A2', x: 0, y: 20, label: 'A2' },
+    ],
+    props: [
+      { key: 'preset', label: 'Conteggio impostato', type: 'number', default: 5 },
+    ],
+    behavior: { type: 'coil', a: 'C', b: 'A2', mode: 'mono' },
+    symbol: [
+      // Main rectangle
+      { t: 'rect', x: -24, y: -7, w: 48, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -24, y: -7, w: 48, h: 14, fill: '#9ca3af', when: 'on' },
+      // Divider
+      { t: 'line', x1: -10, y1: -7, x2: -10, y2: 7 },
+      // Dial circle
+      { t: 'circle', cx: -17, cy: 0, r: 5, fill: '#ffffff' },
+      // Terminals
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -7 },
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -7 },
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -7 },
       { t: 'line', x1: 0, y1: 7, x2: 0, y2: 20 },
     ],
   },
@@ -2297,11 +2514,11 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
 
-  // ==================== SEGNALAZIONE & SPIE ====================
+  // ==================== BOBINE & SEGNALI (SEGNALAZIONE) ====================
   {
     id: 'pilot_lamp',
     name: 'Lampada Spia di Segnalazione (H)',
-    category: 'Segnalazione',
+    category: 'Bobine e Segnali',
     tagPrefix: '-H',
     props: [
       {
@@ -2331,7 +2548,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
   {
     id: 'buzzer',
     name: 'Segnalatore Acustico / Sirena (H)',
-    category: 'Segnalazione',
+    category: 'Bobine e Segnali',
     tagPrefix: '-H',
     terminals: [
       { id: '1', x: 0, y: -20, label: '1' },
