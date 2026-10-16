@@ -249,6 +249,7 @@ export const ComponentPalette: React.FC<Props> = ({
                           stroke={p.stroke || '#0f172a'}
                           strokeWidth={p.w || 1.8}
                           strokeDasharray={p.dash ? '2 2' : undefined}
+                          transform={p.transform}
                         />
                       );
                     }
@@ -262,6 +263,7 @@ export const ComponentPalette: React.FC<Props> = ({
                           fill={p.fill || '#ffffff'}
                           stroke={p.stroke || '#0f172a'}
                           strokeWidth={1.5}
+                          transform={p.transform}
                         />
                       );
                     }
@@ -276,6 +278,7 @@ export const ComponentPalette: React.FC<Props> = ({
                           fill={p.fill || '#ffffff'}
                           stroke={p.stroke || '#0f172a'}
                           strokeWidth={1.5}
+                          transform={p.transform}
                         />
                       );
                     }
@@ -287,6 +290,7 @@ export const ComponentPalette: React.FC<Props> = ({
                           fill={p.fill || 'none'}
                           stroke={p.stroke || '#0f172a'}
                           strokeWidth={1.5}
+                          transform={p.transform}
                         />
                       );
                     }

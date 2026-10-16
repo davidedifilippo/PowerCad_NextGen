@@ -582,7 +582,7 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
   const xs = def.terminals.map((t: { x: number }) => t.x);
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
-  if (maxX - minX >= 25 || (def.terminals.length > 2 && minX < 0)) {
+  if (maxX - minX >= 15 || (def.terminals.length > 2 && minX < 0)) {
     // Multi-pole: tag placed on the left side of pole 1
     return { x: minX - 12, y: -2, textAnchor: 'end' };
   }
@@ -621,6 +621,7 @@ const PrimitiveItem: React.FC<{
           strokeWidth={strokeWidth}
           strokeDasharray={strokeDasharray}
           strokeLinecap="round"
+          transform={prim.transform}
         />
       );
     case 'rect':
@@ -635,6 +636,7 @@ const PrimitiveItem: React.FC<{
           strokeWidth={strokeWidth}
           strokeDasharray={strokeDasharray}
           rx={prim.r || 0}
+          transform={prim.transform}
         />
       );
     case 'circle': {
@@ -648,6 +650,7 @@ const PrimitiveItem: React.FC<{
           stroke={stroke}
           strokeWidth={strokeWidth}
           filter={isLitGlow ? `drop-shadow(0 0 8px ${customGlowColor})` : undefined}
+          transform={prim.transform}
         />
       );
     }
@@ -658,6 +661,7 @@ const PrimitiveItem: React.FC<{
           fill={prim.fill || 'none'}
           stroke={stroke}
           strokeWidth={strokeWidth}
+          transform={prim.transform}
         />
       );
     case 'text':

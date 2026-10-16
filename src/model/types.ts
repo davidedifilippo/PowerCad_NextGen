@@ -6,7 +6,7 @@ export interface Rect { x: number; y: number; w: number; h: number }
 /** Visibility condition for a primitive: drawn only when the element is active / inactive. */
 export type When = 'on' | 'off';
 
-interface PrimBase { when?: When; stroke?: string; dash?: boolean; w?: number }
+interface PrimBase { when?: When; stroke?: string; dash?: boolean; w?: number; transform?: string }
 export type Prim =
   | (PrimBase & { t: 'line'; x1: number; y1: number; x2: number; y2: number })
   | (PrimBase & { t: 'rect'; x: number; y: number; w: number; h: number; fill?: string; r?: number })

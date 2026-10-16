@@ -107,6 +107,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
   },
 
   // ==================== PROTEZIONI ====================
+  // ==================== FUSIBILI (IEC 60617) ====================
   {
     id: 'fuse_1p',
     name: 'Fusibile 1P',
@@ -118,10 +119,309 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
     behavior: { type: 'conductor', pairs: [['1', '2']] },
     symbol: [
-      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -10 },
-      { t: 'rect', x: -6, y: -10, w: 12, h: 20 },
-      { t: 'line', x1: 0, y1: -10, x2: 0, y2: 10 },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 20 },
+      { t: 'rect', x: -4.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: 20 },
+    ],
+  },
+  {
+    id: 'fuse_1p_n',
+    name: 'Fusibile 1P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -20, label: '1' },
+      { id: '3', x: 10, y: -20, label: '3' },
+      { id: '2', x: -10, y: 20, label: '2' },
+      { id: '4', x: 10, y: 20, label: '4' },
+    ],
+    behavior: {
+      type: 'conductor',
+      pairs: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Fuse (1-2)
+      { t: 'rect', x: -14.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: 20 },
+      // Pole 2: Neutral Link (3-4)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: 20 },
+      { t: 'line', x1: 6, y1: -2, x2: 14, y2: -2, w: 1.8 },
+    ],
+  },
+  {
+    id: 'fuse_3p',
+    name: 'Fusibile 3P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -20, y: -20, label: '1' },
+      { id: '3', x: 0, y: -20, label: '3' },
+      { id: '5', x: 20, y: -20, label: '5' },
+      { id: '2', x: -20, y: 20, label: '2' },
+      { id: '4', x: 0, y: 20, label: '4' },
+      { id: '6', x: 20, y: 20, label: '6' },
+    ],
+    behavior: {
+      type: 'conductor',
+      pairs: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1
+      { t: 'rect', x: -24.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: 20 },
+      // Pole 2
+      { t: 'rect', x: -4.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: 20 },
+      // Pole 3
+      { t: 'rect', x: 15.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: 20 },
+    ],
+  },
+  {
+    id: 'fuse_3p_n',
+    name: 'Fusibile 3P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -30, y: -20, label: '1' },
+      { id: '3', x: -10, y: -20, label: '3' },
+      { id: '5', x: 10, y: -20, label: '5' },
+      { id: '7', x: 30, y: -20, label: '7' },
+      { id: '2', x: -30, y: 20, label: '2' },
+      { id: '4', x: -10, y: 20, label: '4' },
+      { id: '6', x: 10, y: 20, label: '6' },
+      { id: '8', x: 30, y: 20, label: '8' },
+    ],
+    behavior: {
+      type: 'conductor',
+      pairs: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Pole 1
+      { t: 'rect', x: -34.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: -30, y1: -20, x2: -30, y2: 20 },
+      // Pole 2
+      { t: 'rect', x: -14.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: 20 },
+      // Pole 3
+      { t: 'rect', x: 5.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: 20 },
+      // Pole 4: Neutral Link
+      { t: 'line', x1: 30, y1: -20, x2: 30, y2: 20 },
+      { t: 'line', x1: 26, y1: -2, x2: 34, y2: -2, w: 1.8 },
+    ],
+  },
+
+  // ==================== SEZIONATORI PORTAFUSIBILI (IEC 60617) ====================
+  {
+    id: 'fuse_disconnector_1p',
+    name: 'Sezionatore Portafusibili 1P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: 0, y: -20, label: '1' },
+      { id: '2', x: 0, y: 20, label: '2' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [['1', '2']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      // OFF (Open, slanted blade with fuse)
+      { t: 'rect', x: -4.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 0 12)', when: 'off' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, transform: 'rotate(-22 0 12)', when: 'off' },
+      // ON (Closed, straight)
+      { t: 'rect', x: -4.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'fuse_disconnector_1p_n',
+    name: 'Sezionatore Portafusibili 1P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -20, label: '1' },
+      { id: '3', x: 10, y: -20, label: '3' },
+      { id: '2', x: -10, y: 20, label: '2' },
+      { id: '4', x: 10, y: 20, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Fuse blade (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: 20 },
+      { t: 'rect', x: -14.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'rect', x: -14.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, when: 'on' },
+      // Pole 2: Neutral switch blade (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: 20 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'fuse_disconnector_2p',
+    name: 'Sezionatore Portafusibili 2P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -20, label: '1' },
+      { id: '3', x: 10, y: -20, label: '3' },
+      { id: '2', x: -10, y: 20, label: '2' },
+      { id: '4', x: 10, y: 20, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Fuse blade (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: 20 },
+      { t: 'rect', x: -14.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'rect', x: -14.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, when: 'on' },
+      // Pole 2: Fuse blade (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: 20 },
+      { t: 'rect', x: 5.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'rect', x: 5.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'fuse_disconnector_3p',
+    name: 'Sezionatore Portafusibili 3P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -20, y: -20, label: '1' },
+      { id: '3', x: 0, y: -20, label: '3' },
+      { id: '5', x: 20, y: -20, label: '5' },
+      { id: '2', x: -20, y: 20, label: '2' },
+      { id: '4', x: 0, y: 20, label: '4' },
+      { id: '6', x: 20, y: 20, label: '6' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Fuse blade (-20)
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -12 },
+      { t: 'line', x1: -20, y1: 12, x2: -20, y2: 20 },
+      { t: 'rect', x: -24.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 -20 12)', when: 'off' },
+      { t: 'line', x1: -20, y1: 12, x2: -20, y2: -12, transform: 'rotate(-22 -20 12)', when: 'off' },
+      { t: 'rect', x: -24.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: -20, y1: 12, x2: -20, y2: -12, when: 'on' },
+      // Pole 2: Fuse blade (0)
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      { t: 'rect', x: -4.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 0 12)', when: 'off' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, transform: 'rotate(-22 0 12)', when: 'off' },
+      { t: 'rect', x: -4.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, when: 'on' },
+      // Pole 3: Fuse blade (20)
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -12 },
+      { t: 'line', x1: 20, y1: 12, x2: 20, y2: 20 },
+      { t: 'rect', x: 15.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 20 12)', when: 'off' },
+      { t: 'line', x1: 20, y1: 12, x2: 20, y2: -12, transform: 'rotate(-22 20 12)', when: 'off' },
+      { t: 'rect', x: 15.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: 20, y1: 12, x2: 20, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'fuse_disconnector_3p_n',
+    name: 'Sezionatore Portafusibili 3P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -30, y: -20, label: '1' },
+      { id: '3', x: -10, y: -20, label: '3' },
+      { id: '5', x: 10, y: -20, label: '5' },
+      { id: '7', x: 30, y: -20, label: '7' },
+      { id: '2', x: -30, y: 20, label: '2' },
+      { id: '4', x: -10, y: 20, label: '4' },
+      { id: '6', x: 10, y: 20, label: '6' },
+      { id: '8', x: 30, y: 20, label: '8' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Fuse blade (-30)
+      { t: 'line', x1: -30, y1: -20, x2: -30, y2: -12 },
+      { t: 'line', x1: -30, y1: 12, x2: -30, y2: 20 },
+      { t: 'rect', x: -34.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 -30 12)', when: 'off' },
+      { t: 'line', x1: -30, y1: 12, x2: -30, y2: -12, transform: 'rotate(-22 -30 12)', when: 'off' },
+      { t: 'rect', x: -34.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: -30, y1: 12, x2: -30, y2: -12, when: 'on' },
+      // Pole 2: Fuse blade (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: 20 },
+      { t: 'rect', x: -14.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'rect', x: -14.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, when: 'on' },
+      // Pole 3: Fuse blade (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: 20 },
+      { t: 'rect', x: 5.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'rect', x: 5.5, y: -7, w: 9, h: 14, fill: '#ffffff', stroke: '#0f172a', when: 'on' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, when: 'on' },
+      // Pole 4: Neutral switch blade (30)
+      { t: 'line', x1: 30, y1: -20, x2: 30, y2: -12 },
+      { t: 'line', x1: 30, y1: 12, x2: 30, y2: 20 },
+      { t: 'line', x1: 30, y1: 12, x2: 30, y2: -12, transform: 'rotate(-22 30 12)', when: 'off' },
+      { t: 'line', x1: 30, y1: 12, x2: 30, y2: -12, when: 'on' },
     ],
   },
   {
