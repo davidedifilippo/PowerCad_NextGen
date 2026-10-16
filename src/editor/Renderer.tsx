@@ -590,6 +590,12 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
     return { x: minX - 22, y: -2, textAnchor: 'end' };
   }
 
+  if (def.id.startsWith('contact_timer_') && def.terminals.length > 2) {
+    const xs = def.terminals.map((t: { x: number }) => t.x);
+    const minX = Math.min(...xs);
+    return { x: minX - 18, y: -2, textAnchor: 'end' };
+  }
+
   const xs = def.terminals.map((t: { x: number }) => t.x);
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);

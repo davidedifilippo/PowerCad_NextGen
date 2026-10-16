@@ -1693,12 +1693,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
 
-  // ==================== CONTATTI AUSILIARI & POTENZA ====================
+  // ==================== CONTATTI AUSILIARI & TEMPORIZZATI ====================
+  // --- Gruppo 1: Contatti Ausiliari Istantanei (Tag -K) ---
   {
     id: 'contact_no',
-    name: 'Contatto Ausiliario NA (Linked)',
+    name: 'Contatto NO',
     category: 'Contatti',
-    tagPrefix: '-KM',
+    tagPrefix: '-K',
     terminals: [
       { id: '13', x: 0, y: -20, label: '13' },
       { id: '14', x: 0, y: 20, label: '14' },
@@ -1710,34 +1711,461 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'circle', cx: 0, cy: -8, r: 2 },
-      { t: 'circle', cx: 0, cy: 8, r: 2 },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
-      { t: 'line', x1: 0, y1: 8, x2: 6, y2: -6, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: -6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
     ],
   },
   {
     id: 'contact_nc',
-    name: 'Contatto Ausiliario NC (Linked)',
+    name: 'Contatto NC',
     category: 'Contatti',
-    tagPrefix: '-KM',
+    tagPrefix: '-K',
     terminals: [
-      { id: '21', x: 0, y: -20, label: '21' },
-      { id: '22', x: 0, y: 20, label: '22' },
+      { id: '11', x: 0, y: -20, label: '11' },
+      { id: '12', x: 0, y: 20, label: '12' },
     ],
     behavior: {
       type: 'contact',
       actuation: 'linked',
-      nc: [['21', '22']],
+      nc: [['11', '12']],
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'circle', cx: 0, cy: -8, r: 2 },
-      { t: 'circle', cx: 0, cy: 8, r: 2 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 6, y2: -6, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+    ],
+  },
+  {
+    id: 'contact_aux_no_nc',
+    name: 'Contatto NO + NC',
+    category: 'Contatti',
+    tagPrefix: '-K',
+    terminals: [
+      { id: '11', x: -10, y: -20, label: '11' },
+      { id: '13', x: 10, y: -20, label: '13' },
+      { id: '12', x: -10, y: 20, label: '12' },
+      { id: '14', x: 10, y: 20, label: '14' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['11', '12']],
+      no: [['13', '14']],
+    },
+    symbol: [
+      // Left NC pole: (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -8 },
+      { t: 'line', x1: -10, y1: -8, x2: -4, y2: -8 },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: 20 },
+      { t: 'line', x1: -10, y1: 8, x2: -4, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: -8, when: 'on' },
+      // Right NO pole: (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -8 },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: 20 },
+      { t: 'line', x1: 10, y1: 8, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: -8, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -7, y1: 0, x2: 7, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -10, y1: 0, x2: 10, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'contact_aux_con',
+    name: 'Contatto CON (Scambio)',
+    category: 'Contatti',
+    tagPrefix: '-K',
+    terminals: [
+      { id: '11', x: 0, y: -20, label: '11' },
+      { id: '12', x: -10, y: 20, label: '12' },
+      { id: '14', x: 10, y: 20, label: '14' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['11', '12']],
+      no: [['11', '14']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      // NC bracket at 12
+      { t: 'line', x1: -10, y1: 20, x2: -10, y2: 8 },
+      { t: 'line', x1: -10, y1: 8, x2: -5, y2: 8 },
+      // NO bracket at 14
+      { t: 'line', x1: 10, y1: 20, x2: 10, y2: 8 },
+      { t: 'line', x1: 10, y1: 8, x2: 5, y2: 8 },
+      // Blade
+      { t: 'line', x1: 0, y1: -8, x2: -5, y2: 8, when: 'off' },
+      { t: 'line', x1: 0, y1: -8, x2: 5, y2: 8, when: 'on' },
+    ],
+  },
+
+  // --- Gruppo 2: Contatti Temporizzati - Ritardo all'Eccitazione (Row 2, Tag -KA) ---
+  {
+    id: 'contact_timer_on_no',
+    name: 'Ritardato all\'eccitazione NO',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '67', x: 0, y: -20, label: '67' },
+      { id: '68', x: 0, y: 20, label: '68' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [['67', '68']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: 8, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      // Timer actuator shaft with cup opening right (convex left)
+      { t: 'line', x1: -14, y1: 0, x2: -3, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'path', d: 'M -8 -5 A 5 5 0 0 0 -8 5' },
+    ],
+  },
+  {
+    id: 'contact_timer_on_nc',
+    name: 'Ritardato all\'eccitazione NC',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: 0, y: -20, label: '55' },
+      { id: '56', x: 0, y: 20, label: '56' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      // Timer actuator shaft with cup opening right (convex left)
+      { t: 'line', x1: -14, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'path', d: 'M -8 -5 A 5 5 0 0 0 -8 5' },
+    ],
+  },
+  {
+    id: 'contact_timer_on_no_nc',
+    name: 'Ritardato all\'eccitazione NO + NC',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: -10, y: -20, label: '55' },
+      { id: '57', x: 10, y: -20, label: '57' },
+      { id: '56', x: -10, y: 20, label: '56' },
+      { id: '58', x: 10, y: 20, label: '58' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+      no: [['57', '58']],
+    },
+    symbol: [
+      // Left NC pole: (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -8 },
+      { t: 'line', x1: -10, y1: -8, x2: -4, y2: -8 },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: 20 },
+      { t: 'line', x1: -10, y1: 8, x2: -4, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: -8, when: 'on' },
+      // Right NO pole: (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -8 },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: 20 },
+      { t: 'line', x1: 10, y1: 8, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: -8, when: 'on' },
+      // Timer actuator shaft & cup on left
+      { t: 'path', d: 'M -18 -5 A 5 5 0 0 0 -18 5' },
+      { t: 'line', x1: -24, y1: 0, x2: 7, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -24, y1: 0, x2: 10, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'contact_timer_on_con',
+    name: 'Ritardato all\'eccitazione CON',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: 0, y: -20, label: '55' },
+      { id: '56', x: -10, y: 20, label: '56' },
+      { id: '58', x: 10, y: 20, label: '58' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+      no: [['55', '58']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      // NC bracket at 56
+      { t: 'line', x1: -10, y1: 20, x2: -10, y2: 8 },
+      { t: 'line', x1: -10, y1: 8, x2: -5, y2: 8 },
+      // NO bracket at 58
+      { t: 'line', x1: 10, y1: 20, x2: 10, y2: 8 },
+      { t: 'line', x1: 10, y1: 8, x2: 5, y2: 8 },
+      // Blade
+      { t: 'line', x1: 0, y1: -8, x2: -5, y2: 8, when: 'off' },
+      { t: 'line', x1: 0, y1: -8, x2: 5, y2: 8, when: 'on' },
+      // Timer actuator shaft & cup
+      { t: 'path', d: 'M -8 -5 A 5 5 0 0 0 -8 5' },
+      { t: 'line', x1: -14, y1: 0, x2: -2.5, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 2.5, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+
+  // --- Gruppo 3: Contatti Temporizzati - Ritardo alla Diseccitazione (Row 3, Tag -KA) ---
+  {
+    id: 'contact_timer_off_no',
+    name: 'Ritardato alla diseccitazione NO',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '67', x: 0, y: -20, label: '67' },
+      { id: '68', x: 0, y: 20, label: '68' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [['67', '68']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: 8, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      // Timer actuator shaft with cup opening left (convex right)
+      { t: 'line', x1: -14, y1: 0, x2: -3, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'path', d: 'M -12 -5 A 5 5 0 0 1 -12 5' },
+    ],
+  },
+  {
+    id: 'contact_timer_off_nc',
+    name: 'Ritardato alla diseccitazione NC',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: 0, y: -20, label: '55' },
+      { id: '56', x: 0, y: 20, label: '56' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      // Timer actuator shaft with cup opening left (convex right)
+      { t: 'line', x1: -14, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'path', d: 'M -12 -5 A 5 5 0 0 1 -12 5' },
+    ],
+  },
+  {
+    id: 'contact_timer_off_no_nc',
+    name: 'Ritardato alla diseccitazione NO + NC',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: -10, y: -20, label: '55' },
+      { id: '57', x: 10, y: -20, label: '57' },
+      { id: '56', x: -10, y: 20, label: '56' },
+      { id: '58', x: 10, y: 20, label: '58' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+      no: [['57', '58']],
+    },
+    symbol: [
+      // Left NC pole: (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -8 },
+      { t: 'line', x1: -10, y1: -8, x2: -4, y2: -8 },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: 20 },
+      { t: 'line', x1: -10, y1: 8, x2: -4, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: -8, when: 'on' },
+      // Right NO pole: (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -8 },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: 20 },
+      { t: 'line', x1: 10, y1: 8, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: -8, when: 'on' },
+      // Timer actuator shaft & cup on left
+      { t: 'path', d: 'M -22 -5 A 5 5 0 0 1 -22 5' },
+      { t: 'line', x1: -24, y1: 0, x2: 7, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -24, y1: 0, x2: 10, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'contact_timer_off_con',
+    name: 'Ritardato alla diseccitazione CON',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: 0, y: -20, label: '55' },
+      { id: '56', x: -10, y: 20, label: '56' },
+      { id: '58', x: 10, y: 20, label: '58' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+      no: [['55', '58']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      // NC bracket at 56
+      { t: 'line', x1: -10, y1: 20, x2: -10, y2: 8 },
+      { t: 'line', x1: -10, y1: 8, x2: -5, y2: 8 },
+      // NO bracket at 58
+      { t: 'line', x1: 10, y1: 20, x2: 10, y2: 8 },
+      { t: 'line', x1: 10, y1: 8, x2: 5, y2: 8 },
+      // Blade
+      { t: 'line', x1: 0, y1: -8, x2: -5, y2: 8, when: 'off' },
+      { t: 'line', x1: 0, y1: -8, x2: 5, y2: 8, when: 'on' },
+      // Timer actuator shaft & cup
+      { t: 'path', d: 'M -12 -5 A 5 5 0 0 1 -12 5' },
+      { t: 'line', x1: -14, y1: 0, x2: -2.5, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 2.5, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+
+  // --- Gruppo 4: Contatti Temporizzati - Ritardo Ecc./Disecc. (Row 4, Tag -KA) ---
+  {
+    id: 'contact_timer_onoff_no',
+    name: 'Ritardato alla ecc./disecc. NO',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '67', x: 0, y: -20, label: '67' },
+      { id: '68', x: 0, y: 20, label: '68' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [['67', '68']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: 8, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      // Double cup (umbrella in both directions)
+      { t: 'line', x1: -14, y1: 0, x2: -3, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'path', d: 'M -7 -5 A 4 4 0 0 0 -7 5' },
+      { t: 'path', d: 'M -11 -5 A 4 4 0 0 1 -11 5' },
+    ],
+  },
+  {
+    id: 'contact_timer_onoff_nc',
+    name: 'Ritardato alla ecc./disecc. NC',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: 0, y: -20, label: '55' },
+      { id: '56', x: 0, y: 20, label: '56' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      // Double cup (umbrella in both directions)
+      { t: 'line', x1: -14, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'path', d: 'M -7 -5 A 4 4 0 0 0 -7 5' },
+      { t: 'path', d: 'M -11 -5 A 4 4 0 0 1 -11 5' },
+    ],
+  },
+  {
+    id: 'contact_timer_onoff_no_nc',
+    name: 'Ritardato alla ecc./disecc. NO + NC',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: -10, y: -20, label: '55' },
+      { id: '57', x: 10, y: -20, label: '57' },
+      { id: '56', x: -10, y: 20, label: '56' },
+      { id: '58', x: 10, y: 20, label: '58' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+      no: [['57', '58']],
+    },
+    symbol: [
+      // Left NC pole: (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -8 },
+      { t: 'line', x1: -10, y1: -8, x2: -4, y2: -8 },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: 20 },
+      { t: 'line', x1: -10, y1: 8, x2: -4, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 8, x2: -10, y2: -8, when: 'on' },
+      // Right NO pole: (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -8 },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: 20 },
+      { t: 'line', x1: 10, y1: 8, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 8, x2: 10, y2: -8, when: 'on' },
+      // Double cup on left
+      { t: 'path', d: 'M -17 -5 A 4 4 0 0 0 -17 5' },
+      { t: 'path', d: 'M -21 -5 A 4 4 0 0 1 -21 5' },
+      { t: 'line', x1: -24, y1: 0, x2: 7, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -24, y1: 0, x2: 10, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'contact_timer_onoff_con',
+    name: 'Ritardato alla ecc./disecc. CON',
+    category: 'Contatti',
+    tagPrefix: '-KA',
+    terminals: [
+      { id: '55', x: 0, y: -20, label: '55' },
+      { id: '56', x: -10, y: 20, label: '56' },
+      { id: '58', x: 10, y: 20, label: '58' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      nc: [['55', '56']],
+      no: [['55', '58']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
+      // NC bracket at 56
+      { t: 'line', x1: -10, y1: 20, x2: -10, y2: 8 },
+      { t: 'line', x1: -10, y1: 8, x2: -5, y2: 8 },
+      // NO bracket at 58
+      { t: 'line', x1: 10, y1: 20, x2: 10, y2: 8 },
+      { t: 'line', x1: 10, y1: 8, x2: 5, y2: 8 },
+      // Blade
+      { t: 'line', x1: 0, y1: -8, x2: -5, y2: 8, when: 'off' },
+      { t: 'line', x1: 0, y1: -8, x2: 5, y2: 8, when: 'on' },
+      // Double cup
+      { t: 'path', d: 'M -7 -5 A 4 4 0 0 0 -7 5' },
+      { t: 'path', d: 'M -11 -5 A 4 4 0 0 1 -11 5' },
+      { t: 'line', x1: -14, y1: 0, x2: -2.5, y2: 0, dash: true, when: 'off' },
+      { t: 'line', x1: -14, y1: 0, x2: 2.5, y2: 0, dash: true, when: 'on' },
     ],
   },
 

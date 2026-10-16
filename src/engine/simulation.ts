@@ -227,6 +227,20 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
           } else {
             timerProgress[elem.tag] = 0;
           }
+        } else if (beh.mode === 'tof') {
+          const delaySec = Number(elem.props?.delay ?? 3);
+          if (energized) {
+            newActiveOutputs[elem.tag] = true;
+            timerProgress[elem.tag] = delaySec;
+          } else {
+            const current = (timerProgress[elem.tag] ?? 0) - (iter === 0 ? dtSec : 0);
+            if (current > 0) {
+              timerProgress[elem.tag] = current;
+              newActiveOutputs[elem.tag] = true;
+            } else {
+              timerProgress[elem.tag] = 0;
+            }
+          }
         }
       } else if (beh.type === 'load') {
         const ka = terms.get(beh.a);
