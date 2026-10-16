@@ -432,7 +432,7 @@ const ElementItem: React.FC<{
 
   // Color resolution for pilot lamp
   let customGlowColor: string | undefined;
-  if (elem.def === 'pilot_lamp' && elem.props?.color) {
+  if ((elem.def === 'pilot_lamp' || elem.def === 'pilot_lamp_flashing') && elem.props?.color) {
     const cMap: Record<string, string> = {
       Verde: '#22c55e',
       Rosso: '#ef4444',

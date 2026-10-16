@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_DIRECT_START } from '../samples/directStart';
+import { Doc } from '../model/types';
 import { createInitialSimState, stepSimulation } from './simulation';
 
 describe('Simulation Engine', () => {
@@ -74,5 +75,35 @@ describe('Simulation Engine', () => {
 
     const sim = stepSimulation(customDoc, { ...createInitialSimState(), running: true }, 0.05);
     expect(sim.activeOutputs['lamp1']).toBe(true);
+  });
+
+  it('correctly simulates flashing lamp and siren when energized', () => {
+    const flashDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        { id: 'pwr_l1', def: 'pwr_l', x: 100, y: 100, rot: 0 as const, tag: 'L', props: {} },
+        { id: 'pwr_n1', def: 'pwr_n', x: 200, y: 100, rot: 0 as const, tag: 'N', props: {} },
+        { id: 'lamp_flash', def: 'pilot_lamp_flashing', x: 100, y: 200, rot: 0 as const, tag: '-H1', props: { period: 1 } },
+        { id: 'siren1', def: 'signal_siren', x: 200, y: 200, rot: 0 as const, tag: '-H2', props: {} },
+      ],
+      wires: [
+        // L bus
+        { id: 'w_l', pts: [{ x: 100, y: 110 }, { x: 100, y: 180 }] },
+        { id: 'w_l_siren', pts: [{ x: 100, y: 180 }, { x: 200, y: 180 }] },
+        // N bus routed to avoid passing through X1 terminal at (200, 180)
+        { id: 'w_n', pts: [{ x: 200, y: 110 }, { x: 240, y: 110 }, { x: 240, y: 220 }, { x: 200, y: 220 }] },
+        { id: 'w_n_lamp', pts: [{ x: 100, y: 220 }, { x: 200, y: 220 }] },
+      ],
+    };
+
+    // First step (t=0.5s): lamp is ON during the first half of period
+    const sim1 = stepSimulation(flashDoc, { ...createInitialSimState(), running: true }, 0.5);
+    expect(sim1.activeOutputs['lamp_flash']).toBe(true);
+    expect(sim1.activeOutputs['siren1']).toBe(true);
+
+    // Second step (t=1.5s): lamp is OFF during the second half of period
+    const sim2 = stepSimulation(flashDoc, sim1, 1.0);
+    expect(sim2.activeOutputs['lamp_flash']).toBeFalsy();
+    expect(sim2.activeOutputs['siren1']).toBe(true);
   });
 });

@@ -272,7 +272,20 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         const potA = ka ? netPotentials[ka] : undefined;
         const potB = kb ? netPotentials[kb] : undefined;
         if (isVoltageDifference(potA, potB)) {
-          newActiveOutputs[elem.id] = true;
+          if (beh.kind === 'lamp_flasher') {
+            const period = Number(elem.props?.period ?? 1);
+            const current = ((timerProgress[elem.id] ?? 0) + (iter === 0 ? dtSec : 0)) % (period * 2);
+            timerProgress[elem.id] = current;
+            if (current < period) {
+              newActiveOutputs[elem.id] = true;
+            }
+          } else {
+            newActiveOutputs[elem.id] = true;
+          }
+        } else {
+          if (beh.kind === 'lamp_flasher') {
+            timerProgress[elem.id] = 0;
+          }
         }
       } else if (beh.type === 'motor3') {
         const ku = terms.get(beh.u);

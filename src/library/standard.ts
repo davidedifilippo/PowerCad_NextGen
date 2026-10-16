@@ -2514,10 +2514,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
 
-  // ==================== BOBINE & SEGNALI (SEGNALAZIONE) ====================
+  // ==================== DISPOSITIVI DI SEGNALAZIONE ====================
   {
     id: 'pilot_lamp',
-    name: 'Lampada Spia di Segnalazione (H)',
+    name: 'Lampada',
     category: 'Bobine e Segnali',
     tagPrefix: '-H',
     props: [
@@ -2537,29 +2537,166 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
       { t: 'circle', cx: 0, cy: 0, r: 12, fill: '#ffffff', when: 'off' },
-      // Lit glow
       { t: 'circle', cx: 0, cy: 0, r: 12, fill: '#16a34a', when: 'on' },
-      // Standard IEC Cross: always visible on top in black, preserving the symbol even when lit
+      // Standard IEC Cross: always visible in black
       { t: 'line', x1: -8.5, y1: -8.5, x2: 8.5, y2: 8.5, stroke: '#0f172a', w: 1.5 },
       { t: 'line', x1: 8.5, y1: -8.5, x2: -8.5, y2: 8.5, stroke: '#0f172a', w: 1.5 },
       { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
     ],
   },
   {
-    id: 'buzzer',
-    name: 'Segnalatore Acustico / Sirena (H)',
+    id: 'pilot_lamp_flashing',
+    name: 'Lampada intermittente',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-H',
+    props: [
+      {
+        key: 'color',
+        label: 'Colore Lampada',
+        type: 'select',
+        options: ['Verde', 'Rosso', 'Giallo', 'Blu', 'Bianco'],
+        default: 'Verde',
+      },
+      {
+        key: 'period',
+        label: 'Periodo lampeggio (s)',
+        type: 'number',
+        default: 1,
+      },
+    ],
+    terminals: [
+      { id: 'X1', x: 0, y: -20, label: 'X1' },
+      { id: 'X2', x: 0, y: 20, label: 'X2' },
+    ],
+    behavior: { type: 'load', kind: 'lamp_flasher', a: 'X1', b: 'X2' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'circle', cx: 0, cy: 0, r: 12, fill: '#ffffff', when: 'off' },
+      { t: 'circle', cx: 0, cy: 0, r: 12, fill: '#16a34a', when: 'on' },
+      // Standard IEC Cross
+      { t: 'line', x1: -8.5, y1: -8.5, x2: 8.5, y2: 8.5, stroke: '#0f172a', w: 1.5 },
+      { t: 'line', x1: 8.5, y1: -8.5, x2: -8.5, y2: 8.5, stroke: '#0f172a', w: 1.5 },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      // Pulse mark on right side
+      { t: 'path', d: 'M 16 3 L 18 3 L 18 -4 L 21 -4 L 21 3 L 23 3' },
+    ],
+  },
+  {
+    id: 'signal_bell',
+    name: 'Pulsante',
     category: 'Bobine e Segnali',
     tagPrefix: '-H',
     terminals: [
-      { id: '1', x: 0, y: -20, label: '1' },
-      { id: '2', x: 0, y: 20, label: '2' },
+      { id: 'X1', x: 0, y: -20, label: 'X1' },
+      { id: 'X2', x: 0, y: 20, label: 'X2' },
     ],
-    behavior: { type: 'load', kind: 'buzzer', a: '1', b: '2' },
+    behavior: { type: 'load', kind: 'bell', a: 'X1', b: 'X2' },
     symbol: [
-      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
-      { t: 'rect', x: -10, y: -12, w: 20, h: 24 },
-      { t: 'path', d: 'M 10 -6 L 16 -12 L 16 12 L 10 6 Z', fill: '#fbbf24' },
-      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'line', x1: 0, y1: -7, x2: 5, y2: -7 },
+      { t: 'line', x1: 0, y1: 20, x2: 0, y2: 7 },
+      { t: 'line', x1: 0, y1: 7, x2: 5, y2: 7 },
+      // Flat base
+      { t: 'line', x1: 5, y1: -7, x2: 5, y2: 7 },
+      // Bell dome
+      { t: 'path', d: 'M 5 -7 A 7 7 0 0 1 5 7 Z', fill: '#ffffff', when: 'off' },
+      { t: 'path', d: 'M 5 -7 A 7 7 0 0 1 5 7 Z', fill: '#fbbf24', when: 'on' },
+      // Sound waves when energized
+      { t: 'path', d: 'M 15 -5 A 7 7 0 0 1 15 5', stroke: '#f59e0b', when: 'on' },
+      { t: 'path', d: 'M 18 -8 A 11 11 0 0 1 18 8', stroke: '#f59e0b', when: 'on' },
+    ],
+  },
+  {
+    id: 'signal_vibratore',
+    name: 'Vibratore',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-H',
+    terminals: [
+      { id: 'X1', x: 0, y: -20, label: 'X1' },
+      { id: 'X2', x: 0, y: 20, label: 'X2' },
+    ],
+    behavior: { type: 'load', kind: 'buzzer', a: 'X1', b: 'X2' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'line', x1: 0, y1: -7, x2: 6, y2: -7 },
+      { t: 'line', x1: 0, y1: 20, x2: 0, y2: 7 },
+      { t: 'line', x1: 0, y1: 7, x2: 6, y2: 7 },
+      // Flat base on right
+      { t: 'line', x1: 12.5, y1: -7.5, x2: 12.5, y2: 7.5 },
+      // Dome curving to the left
+      { t: 'path', d: 'M 12.5 -7.5 A 8.5 8.5 0 0 0 12.5 7.5 Z', fill: '#ffffff', when: 'off' },
+      { t: 'path', d: 'M 12.5 -7.5 A 8.5 8.5 0 0 0 12.5 7.5 Z', fill: '#fbbf24', when: 'on' },
+      // Vibration ripples
+      { t: 'path', d: 'M 15 -5 A 7 7 0 0 1 15 5', stroke: '#f59e0b', when: 'on' },
+    ],
+  },
+  {
+    id: 'signal_siren',
+    name: 'Sirena',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-H',
+    terminals: [
+      { id: 'X1', x: 0, y: -20, label: 'X1' },
+      { id: 'X2', x: 0, y: 20, label: 'X2' },
+    ],
+    behavior: { type: 'load', kind: 'siren', a: 'X1', b: 'X2' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'line', x1: 0, y1: -7, x2: 6, y2: -7 },
+      { t: 'line', x1: 0, y1: 20, x2: 0, y2: 7 },
+      { t: 'line', x1: 0, y1: 7, x2: 6, y2: 7 },
+      // Triangle body
+      { t: 'path', d: 'M 6 -9 L 18 0 L 6 9 Z', fill: '#ffffff', when: 'off' },
+      { t: 'path', d: 'M 6 -9 L 18 0 L 6 9 Z', fill: '#fbbf24', when: 'on' },
+      // Sound waves
+      { t: 'path', d: 'M 21 -5 A 7 7 0 0 1 21 5', stroke: '#f59e0b', when: 'on' },
+      { t: 'path', d: 'M 24 -9 A 12 12 0 0 1 24 9', stroke: '#f59e0b', when: 'on' },
+    ],
+  },
+  {
+    id: 'signal_horn',
+    name: 'Clacson',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-H',
+    terminals: [
+      { id: 'X1', x: 0, y: -20, label: 'X1' },
+      { id: 'X2', x: 0, y: 20, label: 'X2' },
+    ],
+    behavior: { type: 'load', kind: 'horn', a: 'X1', b: 'X2' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -6 },
+      { t: 'line', x1: 0, y1: 6, x2: 0, y2: 20 },
+      // Rectangular driver body
+      { t: 'rect', x: -6, y: -6, w: 12, h: 12, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -6, y: -6, w: 12, h: 12, fill: '#fbbf24', when: 'on' },
+      // Horn trumpet
+      { t: 'path', d: 'M 6 -2 L 19 -4 L 21 7 L 6 2 Z', fill: '#ffffff', when: 'off' },
+      { t: 'path', d: 'M 6 -2 L 19 -4 L 21 7 L 6 2 Z', fill: '#fbbf24', when: 'on' },
+      // Sound waves
+      { t: 'path', d: 'M 24 -2 A 7 7 0 0 1 25 8', stroke: '#f59e0b', when: 'on' },
+      { t: 'path', d: 'M 27 -5 A 11 11 0 0 1 29 11', stroke: '#f59e0b', when: 'on' },
+    ],
+  },
+  // Legacy alias for buzzer
+  {
+    id: 'buzzer',
+    name: 'Segnalatore Acustico / Ronzatore (H)',
+    category: 'Bobine e Segnali',
+    tagPrefix: '-H',
+    terminals: [
+      { id: 'X1', x: 0, y: -20, label: 'X1' },
+      { id: 'X2', x: 0, y: 20, label: 'X2' },
+    ],
+    behavior: { type: 'load', kind: 'buzzer', a: 'X1', b: 'X2' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'line', x1: 0, y1: -7, x2: 6, y2: -7 },
+      { t: 'line', x1: 0, y1: 20, x2: 0, y2: 7 },
+      { t: 'line', x1: 0, y1: 7, x2: 6, y2: 7 },
+      { t: 'line', x1: 12.5, y1: -7.5, x2: 12.5, y2: 7.5 },
+      { t: 'path', d: 'M 12.5 -7.5 A 8.5 8.5 0 0 0 12.5 7.5 Z', fill: '#ffffff', when: 'off' },
+      { t: 'path', d: 'M 12.5 -7.5 A 8.5 8.5 0 0 0 12.5 7.5 Z', fill: '#fbbf24', when: 'on' },
+      { t: 'path', d: 'M 15 -5 A 7 7 0 0 1 15 5', stroke: '#f59e0b', when: 'on' },
     ],
   },
 ];
