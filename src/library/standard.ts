@@ -421,6 +421,677 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 30, y1: 12, x2: 30, y2: -12, when: 'on' },
     ],
   },
+
+  // ==================== INTERRUTTORI SEZIONATORI (IEC 60617) ====================
+  {
+    id: 'switch_disconnector_1p',
+    name: 'Interruttore Sezionatore 1P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: 0, y: -20, label: '1' },
+      { id: '2', x: 0, y: 20, label: '2' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [['1', '2']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      // OFF (Open, slanted blade with filled square pad)
+      { t: 'rect', x: -3.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 0 12)', when: 'off' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, transform: 'rotate(-22 0 12)', when: 'off' },
+      // ON (Closed, straight)
+      { t: 'rect', x: -3.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'switch_disconnector_1p_n',
+    name: 'Interruttore Sezionatore 1P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -20, label: '1' },
+      { id: '3', x: 10, y: -20, label: '3' },
+      { id: '2', x: -10, y: 20, label: '2' },
+      { id: '4', x: 10, y: 20, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Disconnector blade with square pad (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: 20 },
+      { t: 'rect', x: -13.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'rect', x: -13.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, when: 'on' },
+      // Pole 2: Neutral switch blade (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: 20 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'switch_disconnector_2p',
+    name: 'Interruttore Sezionatore 2P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -20, label: '1' },
+      { id: '3', x: 10, y: -20, label: '3' },
+      { id: '2', x: -10, y: 20, label: '2' },
+      { id: '4', x: 10, y: 20, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1 (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: 20 },
+      { t: 'rect', x: -13.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'rect', x: -13.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, when: 'on' },
+      // Pole 2 (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: 20 },
+      { t: 'rect', x: 6.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'rect', x: 6.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'switch_disconnector_3p',
+    name: 'Interruttore Sezionatore 3P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -20, y: -20, label: '1' },
+      { id: '3', x: 0, y: -20, label: '3' },
+      { id: '5', x: 20, y: -20, label: '5' },
+      { id: '2', x: -20, y: 20, label: '2' },
+      { id: '4', x: 0, y: 20, label: '4' },
+      { id: '6', x: 20, y: 20, label: '6' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1 (-20)
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -12 },
+      { t: 'line', x1: -20, y1: 12, x2: -20, y2: 20 },
+      { t: 'rect', x: -23.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 -20 12)', when: 'off' },
+      { t: 'line', x1: -20, y1: 12, x2: -20, y2: -12, transform: 'rotate(-22 -20 12)', when: 'off' },
+      { t: 'rect', x: -23.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: -20, y1: 12, x2: -20, y2: -12, when: 'on' },
+      // Pole 2 (0)
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      { t: 'rect', x: -3.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 0 12)', when: 'off' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, transform: 'rotate(-22 0 12)', when: 'off' },
+      { t: 'rect', x: -3.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: -12, when: 'on' },
+      // Pole 3 (20)
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -12 },
+      { t: 'line', x1: 20, y1: 12, x2: 20, y2: 20 },
+      { t: 'rect', x: 16.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 20 12)', when: 'off' },
+      { t: 'line', x1: 20, y1: 12, x2: 20, y2: -12, transform: 'rotate(-22 20 12)', when: 'off' },
+      { t: 'rect', x: 16.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: 20, y1: 12, x2: 20, y2: -12, when: 'on' },
+    ],
+  },
+  {
+    id: 'switch_disconnector_3p_n',
+    name: 'Interruttore Sezionatore 3P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -30, y: -20, label: '1' },
+      { id: '3', x: -10, y: -20, label: '3' },
+      { id: '5', x: 10, y: -20, label: '5' },
+      { id: '7', x: 30, y: -20, label: '7' },
+      { id: '2', x: -30, y: 20, label: '2' },
+      { id: '4', x: -10, y: 20, label: '4' },
+      { id: '6', x: 10, y: 20, label: '6' },
+      { id: '8', x: 30, y: 20, label: '8' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Pole 1 (-30)
+      { t: 'line', x1: -30, y1: -20, x2: -30, y2: -12 },
+      { t: 'line', x1: -30, y1: 12, x2: -30, y2: 20 },
+      { t: 'rect', x: -33.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 -30 12)', when: 'off' },
+      { t: 'line', x1: -30, y1: 12, x2: -30, y2: -12, transform: 'rotate(-22 -30 12)', when: 'off' },
+      { t: 'rect', x: -33.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: -30, y1: 12, x2: -30, y2: -12, when: 'on' },
+      // Pole 2 (-10)
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: 20 },
+      { t: 'rect', x: -13.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, transform: 'rotate(-22 -10 12)', when: 'off' },
+      { t: 'rect', x: -13.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: -10, y1: 12, x2: -10, y2: -12, when: 'on' },
+      // Pole 3 (10)
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: 20 },
+      { t: 'rect', x: 6.5, y: -7, w: 7, h: 7, fill: '#0f172a', transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, transform: 'rotate(-22 10 12)', when: 'off' },
+      { t: 'rect', x: 6.5, y: -7, w: 7, h: 7, fill: '#0f172a', when: 'on' },
+      { t: 'line', x1: 10, y1: 12, x2: 10, y2: -12, when: 'on' },
+      // Pole 4: Neutral switch blade (30)
+      { t: 'line', x1: 30, y1: -20, x2: 30, y2: -12 },
+      { t: 'line', x1: 30, y1: 12, x2: 30, y2: 20 },
+      { t: 'line', x1: 30, y1: 12, x2: 30, y2: -12, transform: 'rotate(-22 30 12)', when: 'off' },
+      { t: 'line', x1: 30, y1: 12, x2: 30, y2: -12, when: 'on' },
+    ],
+  },
+
+  // ==================== INTERRUTTORI DIFFERENZIALI (RCD) ====================
+  {
+    id: 'rcd_differential_1p_n',
+    name: 'Interruttore Differenziale 1P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -20, label: '1' },
+      { id: '3', x: 10, y: -20, label: '3' },
+      { id: '2', x: -10, y: 20, label: '2' },
+      { id: '4', x: 10, y: 20, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Contact stubs
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      // Switch blades
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, transform: 'rotate(-22 -10 0)', when: 'off' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, transform: 'rotate(-22 10 0)', when: 'off' },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, when: 'on' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, when: 'on' },
+      // Bottom lines through toroid
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: 20 },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: 20 },
+      // Toroid oval
+      { t: 'rect', x: -16, y: 5, w: 32, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
+      // Link to trip relay
+      { t: 'line', x1: -16, y1: 9, x2: -24, y2: 9 },
+      { t: 'line', x1: -24, y1: 9, x2: -24, y2: -6 },
+      // Trip relay box
+      { t: 'rect', x: -30, y: -12, w: 12, h: 12, fill: '#ffffff' },
+      { t: 'line', x1: -30, y1: -12, x2: -18, y2: 0 },
+      { t: 'line', x1: -18, y1: -12, x2: -30, y2: 0 },
+      // Dashed actuator link to contacts
+      { t: 'line', x1: -18, y1: -6, x2: -12, y2: -6, dash: true },
+    ],
+  },
+  {
+    id: 'rcd_differential_3p_n',
+    name: 'Interruttore Differenziale 3P + N',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -30, y: -20, label: '1' },
+      { id: '3', x: -10, y: -20, label: '3' },
+      { id: '5', x: 10, y: -20, label: '5' },
+      { id: '7', x: 30, y: -20, label: '7' },
+      { id: '2', x: -30, y: 20, label: '2' },
+      { id: '4', x: -10, y: 20, label: '4' },
+      { id: '6', x: 10, y: 20, label: '6' },
+      { id: '8', x: 30, y: 20, label: '8' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Contact stubs
+      { t: 'line', x1: -30, y1: -20, x2: -30, y2: -12 },
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: 30, y1: -20, x2: 30, y2: -12 },
+      // Switch blades
+      { t: 'line', x1: -30, y1: 0, x2: -30, y2: -12, transform: 'rotate(-22 -30 0)', when: 'off' },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, transform: 'rotate(-22 -10 0)', when: 'off' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, transform: 'rotate(-22 10 0)', when: 'off' },
+      { t: 'line', x1: 30, y1: 0, x2: 30, y2: -12, transform: 'rotate(-22 30 0)', when: 'off' },
+      { t: 'line', x1: -30, y1: 0, x2: -30, y2: -12, when: 'on' },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, when: 'on' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, when: 'on' },
+      { t: 'line', x1: 30, y1: 0, x2: 30, y2: -12, when: 'on' },
+      // Bottom lines through toroid
+      { t: 'line', x1: -30, y1: 0, x2: -30, y2: 20 },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: 20 },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: 20 },
+      { t: 'line', x1: 30, y1: 0, x2: 30, y2: 20 },
+      // Wide toroid oval
+      { t: 'rect', x: -36, y: 5, w: 72, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
+      // Link to trip relay
+      { t: 'line', x1: -36, y1: 9, x2: -44, y2: 9 },
+      { t: 'line', x1: -44, y1: 9, x2: -44, y2: -6 },
+      // Trip relay box
+      { t: 'rect', x: -50, y: -12, w: 12, h: 12, fill: '#ffffff' },
+      { t: 'line', x1: -50, y1: -12, x2: -38, y2: 0 },
+      { t: 'line', x1: -38, y1: -12, x2: -50, y2: 0 },
+      // Dashed actuator link to contacts
+      { t: 'line', x1: -38, y1: -6, x2: -32, y2: -6, dash: true },
+    ],
+  },
+
+  // ==================== RELE TERMICO BIMETALLICO (IEC 60617) ====================
+  {
+    id: 'thermal_bimetal_relay_3p',
+    name: 'Relè Termico Bimetallico 3P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -20, y: -20, label: '1' },
+      { id: '3', x: 0, y: -20, label: '3' },
+      { id: '5', x: 20, y: -20, label: '5' },
+      { id: '2', x: -20, y: 20, label: '2' },
+      { id: '4', x: 0, y: 20, label: '4' },
+      { id: '6', x: 20, y: 20, label: '6' },
+    ],
+    behavior: {
+      type: 'thermal',
+      pairs: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Bimetal square loop (-20)
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -6 },
+      { t: 'line', x1: -20, y1: -6, x2: -14, y2: -6 },
+      { t: 'line', x1: -14, y1: -6, x2: -14, y2: 6 },
+      { t: 'line', x1: -14, y1: 6, x2: -20, y2: 6 },
+      { t: 'line', x1: -20, y1: 6, x2: -20, y2: 20 },
+      // Pole 2: Bimetal square loop (0)
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -6 },
+      { t: 'line', x1: 0, y1: -6, x2: 6, y2: -6 },
+      { t: 'line', x1: 6, y1: -6, x2: 6, y2: 6 },
+      { t: 'line', x1: 6, y1: 6, x2: 0, y2: 6 },
+      { t: 'line', x1: 0, y1: 6, x2: 0, y2: 20 },
+      // Pole 3: Bimetal square loop (20)
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -6 },
+      { t: 'line', x1: 20, y1: -6, x2: 26, y2: -6 },
+      { t: 'line', x1: 26, y1: -6, x2: 26, y2: 6 },
+      { t: 'line', x1: 26, y1: 6, x2: 20, y2: 6 },
+      { t: 'line', x1: 20, y1: 6, x2: 20, y2: 20 },
+    ],
+  },
+
+  // ==================== INTERRUTTORI MAGNETOTERMICI (MCB) ====================
+  {
+    id: 'mcb_magnetothermal_1p',
+    name: 'Interruttore Magnetotermico 1P',
+    category: 'Protezioni',
+    tagPrefix: '-Q',
+    terminals: [
+      { id: '1', x: 0, y: -25, label: '1' },
+      { id: '2', x: 0, y: 25, label: '2' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [['1', '2']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -16 },
+      // Contact blade
+      { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, transform: 'rotate(-22 0 -4)', when: 'off' },
+      { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, when: 'on' },
+      // Thermal/Magnetic trip unit
+      { t: 'line', x1: 0, y1: -4, x2: 0, y2: 0 },
+      { t: 'rect', x: -6, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: 0, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+      // Manual control box on left
+      { t: 'rect', x: -20, y: -16, w: 10, h: 10, fill: '#ffffff' },
+      { t: 'line', x1: -20, y1: -16, x2: -10, y2: -6 },
+      { t: 'line', x1: -10, y1: -16, x2: -20, y2: -6 },
+      { t: 'line', x1: -15, y1: -6, x2: -15, y2: 7, dash: true },
+      { t: 'line', x1: -15, y1: 7, x2: -6, y2: 7, dash: true },
+      { t: 'line', x1: -10, y1: -11, x2: -3, y2: -11, dash: true },
+    ],
+  },
+  {
+    id: 'mcb_magnetothermal_1p_n',
+    name: 'Interruttore Magnetotermico 1P + N',
+    category: 'Protezioni',
+    tagPrefix: '-Q',
+    terminals: [
+      { id: '1', x: -10, y: -25, label: '1' },
+      { id: '3', x: 10, y: -25, label: '3' },
+      { id: '2', x: -10, y: 25, label: '2' },
+      { id: '4', x: 10, y: 25, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: Phase with I > trip (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, transform: 'rotate(-22 -10 -4)', when: 'off' },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, when: 'on' },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: 0 },
+      { t: 'rect', x: -16, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: -10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 25 },
+      // Pole 2: Neutral blade (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, transform: 'rotate(-22 10 -4)', when: 'off' },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, when: 'on' },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: 25 },
+      // Manual control box on left
+      { t: 'rect', x: -30, y: -16, w: 10, h: 10, fill: '#ffffff' },
+      { t: 'line', x1: -30, y1: -16, x2: -20, y2: -6 },
+      { t: 'line', x1: -20, y1: -16, x2: -30, y2: -6 },
+      { t: 'line', x1: -25, y1: -6, x2: -25, y2: 7, dash: true },
+      { t: 'line', x1: -25, y1: 7, x2: -16, y2: 7, dash: true },
+      { t: 'line', x1: -20, y1: -11, x2: -13, y2: -11, dash: true },
+    ],
+  },
+  {
+    id: 'mcb_magnetothermal_2p',
+    name: 'Interruttore Magnetotermico 2P',
+    category: 'Protezioni',
+    tagPrefix: '-Q',
+    terminals: [
+      { id: '1', x: -10, y: -25, label: '1' },
+      { id: '3', x: 10, y: -25, label: '3' },
+      { id: '2', x: -10, y: 25, label: '2' },
+      { id: '4', x: 10, y: 25, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, transform: 'rotate(-22 -10 -4)', when: 'off' },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, when: 'on' },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: 0 },
+      { t: 'rect', x: -16, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: -10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 25 },
+      // Pole 2: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, transform: 'rotate(-22 10 -4)', when: 'off' },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, when: 'on' },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: 0 },
+      { t: 'rect', x: 4, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: 10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 25 },
+      // Manual control box on left
+      { t: 'rect', x: -30, y: -16, w: 10, h: 10, fill: '#ffffff' },
+      { t: 'line', x1: -30, y1: -16, x2: -20, y2: -6 },
+      { t: 'line', x1: -20, y1: -16, x2: -30, y2: -6 },
+      { t: 'line', x1: -25, y1: -6, x2: -25, y2: 7, dash: true },
+      { t: 'line', x1: -25, y1: 7, x2: -16, y2: 7, dash: true },
+      { t: 'line', x1: -20, y1: -11, x2: -13, y2: -11, dash: true },
+    ],
+  },
+  {
+    id: 'mcb_magnetothermal_3p',
+    name: 'Interruttore Magnetotermico 3P',
+    category: 'Protezioni',
+    tagPrefix: '-Q',
+    terminals: [
+      { id: '1', x: -20, y: -25, label: '1' },
+      { id: '3', x: 0, y: -25, label: '3' },
+      { id: '5', x: 20, y: -25, label: '5' },
+      { id: '2', x: -20, y: 25, label: '2' },
+      { id: '4', x: 0, y: 25, label: '4' },
+      { id: '6', x: 20, y: 25, label: '6' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-20)
+      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -16 },
+      { t: 'line', x1: -20, y1: -4, x2: -20, y2: -16, transform: 'rotate(-22 -20 -4)', when: 'off' },
+      { t: 'line', x1: -20, y1: -4, x2: -20, y2: -16, when: 'on' },
+      { t: 'line', x1: -20, y1: -4, x2: -20, y2: 0 },
+      { t: 'rect', x: -26, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: -20, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: -20, y1: 14, x2: -20, y2: 25 },
+      // Pole 2: (0)
+      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -16 },
+      { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, transform: 'rotate(-22 0 -4)', when: 'off' },
+      { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, when: 'on' },
+      { t: 'line', x1: 0, y1: -4, x2: 0, y2: 0 },
+      { t: 'rect', x: -6, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: 0, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+      // Pole 3: (20)
+      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -16 },
+      { t: 'line', x1: 20, y1: -4, x2: 20, y2: -16, transform: 'rotate(-22 20 -4)', when: 'off' },
+      { t: 'line', x1: 20, y1: -4, x2: 20, y2: -16, when: 'on' },
+      { t: 'line', x1: 20, y1: -4, x2: 20, y2: 0 },
+      { t: 'rect', x: 14, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: 20, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: 20, y1: 14, x2: 20, y2: 25 },
+      // Manual control box on left
+      { t: 'rect', x: -40, y: -16, w: 10, h: 10, fill: '#ffffff' },
+      { t: 'line', x1: -40, y1: -16, x2: -30, y2: -6 },
+      { t: 'line', x1: -30, y1: -16, x2: -40, y2: -6 },
+      { t: 'line', x1: -35, y1: -6, x2: -35, y2: 7, dash: true },
+      { t: 'line', x1: -35, y1: 7, x2: -26, y2: 7, dash: true },
+      { t: 'line', x1: -30, y1: -11, x2: -23, y2: -11, dash: true },
+    ],
+  },
+  {
+    id: 'mcb_magnetothermal_3p_n',
+    name: 'Interruttore Magnetotermico 3P + N',
+    category: 'Protezioni',
+    tagPrefix: '-Q',
+    terminals: [
+      { id: '1', x: -30, y: -25, label: '1' },
+      { id: '3', x: -10, y: -25, label: '3' },
+      { id: '5', x: 10, y: -25, label: '5' },
+      { id: '7', x: 30, y: -25, label: '7' },
+      { id: '2', x: -30, y: 25, label: '2' },
+      { id: '4', x: -10, y: 25, label: '4' },
+      { id: '6', x: 10, y: 25, label: '6' },
+      { id: '8', x: 30, y: 25, label: '8' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-30)
+      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -16 },
+      { t: 'line', x1: -30, y1: -4, x2: -30, y2: -16, transform: 'rotate(-22 -30 -4)', when: 'off' },
+      { t: 'line', x1: -30, y1: -4, x2: -30, y2: -16, when: 'on' },
+      { t: 'line', x1: -30, y1: -4, x2: -30, y2: 0 },
+      { t: 'rect', x: -36, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: -30, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: -30, y1: 14, x2: -30, y2: 25 },
+      // Pole 2: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, transform: 'rotate(-22 -10 -4)', when: 'off' },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, when: 'on' },
+      { t: 'line', x1: -10, y1: -4, x2: -10, y2: 0 },
+      { t: 'rect', x: -16, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: -10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 25 },
+      // Pole 3: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, transform: 'rotate(-22 10 -4)', when: 'off' },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, when: 'on' },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: 0 },
+      { t: 'rect', x: 4, y: 0, w: 12, h: 14, fill: '#ffffff' },
+      { t: 'text', x: 10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 25 },
+      // Pole 4: Neutral blade (30)
+      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -16 },
+      { t: 'line', x1: 30, y1: -4, x2: 30, y2: -16, transform: 'rotate(-22 30 -4)', when: 'off' },
+      { t: 'line', x1: 30, y1: -4, x2: 30, y2: -16, when: 'on' },
+      { t: 'line', x1: 30, y1: -4, x2: 30, y2: 25 },
+      // Manual control box on left
+      { t: 'rect', x: -50, y: -16, w: 10, h: 10, fill: '#ffffff' },
+      { t: 'line', x1: -50, y1: -16, x2: -40, y2: -6 },
+      { t: 'line', x1: -40, y1: -16, x2: -50, y2: -6 },
+      { t: 'line', x1: -45, y1: -6, x2: -45, y2: 7, dash: true },
+      { t: 'line', x1: -45, y1: 7, x2: -36, y2: 7, dash: true },
+      { t: 'line', x1: -40, y1: -11, x2: -33, y2: -11, dash: true },
+    ],
+  },
+
+  // ==================== SCARICATORI DI SOVRATENSIONE (SPD) ====================
+  {
+    id: 'spd_surge_arrester_2p',
+    name: 'Scaricatore di Sovratensione SPD 2P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -25, label: '1' },
+      { id: '2', x: 10, y: -25, label: '2' },
+      { id: 'PE', x: 0, y: 25, label: 'PE' },
+    ],
+    behavior: { type: 'conductor', pairs: [] },
+    symbol: [
+      // Enclosing dashed box
+      { t: 'rect', x: -18, y: -16, w: 36, h: 32, dash: true },
+      // Pole 1: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -7 },
+      { t: 'path', d: 'M -14 -6 L -6 -6 L -10 0 Z', fill: '#0f172a' },
+      { t: 'path', d: 'M -14 6 L -6 6 L -10 0 Z', fill: '#0f172a' },
+      { t: 'line', x1: -10, y1: 7, x2: -10, y2: 14 },
+      // Pole 2: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -7 },
+      { t: 'path', d: 'M 6 -6 L 14 -6 L 10 0 Z', fill: '#0f172a' },
+      { t: 'path', d: 'M 6 6 L 14 6 L 10 0 Z', fill: '#0f172a' },
+      { t: 'line', x1: 10, y1: 7, x2: 10, y2: 14 },
+      // Common ground bus to PE terminal
+      { t: 'line', x1: -10, y1: 14, x2: 10, y2: 14 },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+    ],
+  },
+  {
+    id: 'spd_surge_arrester_4p',
+    name: 'Scaricatore di Sovratensione SPD 4P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -30, y: -25, label: '1' },
+      { id: '2', x: -10, y: -25, label: '2' },
+      { id: '3', x: 10, y: -25, label: '3' },
+      { id: '4', x: 30, y: -25, label: '4' },
+      { id: 'PE', x: 0, y: 25, label: 'PE' },
+    ],
+    behavior: { type: 'conductor', pairs: [] },
+    symbol: [
+      // Enclosing dashed box
+      { t: 'rect', x: -38, y: -16, w: 76, h: 32, dash: true },
+      // Pole 1: (-30)
+      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -7 },
+      { t: 'path', d: 'M -34 -6 L -26 -6 L -30 0 Z', fill: '#0f172a' },
+      { t: 'path', d: 'M -34 6 L -26 6 L -30 0 Z', fill: '#0f172a' },
+      { t: 'line', x1: -30, y1: 7, x2: -30, y2: 14 },
+      // Pole 2: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -7 },
+      { t: 'path', d: 'M -14 -6 L -6 -6 L -10 0 Z', fill: '#0f172a' },
+      { t: 'path', d: 'M -14 6 L -6 6 L -10 0 Z', fill: '#0f172a' },
+      { t: 'line', x1: -10, y1: 7, x2: -10, y2: 14 },
+      // Pole 3: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -7 },
+      { t: 'path', d: 'M 6 -6 L 14 -6 L 10 0 Z', fill: '#0f172a' },
+      { t: 'path', d: 'M 6 6 L 14 6 L 10 0 Z', fill: '#0f172a' },
+      { t: 'line', x1: 10, y1: 7, x2: 10, y2: 14 },
+      // Pole 4: (30)
+      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -7 },
+      { t: 'path', d: 'M 26 -6 L 34 -6 L 30 0 Z', fill: '#0f172a' },
+      { t: 'path', d: 'M 26 6 L 34 6 L 30 0 Z', fill: '#0f172a' },
+      { t: 'line', x1: 30, y1: 7, x2: 30, y2: 14 },
+      // Common ground bus to PE terminal
+      { t: 'line', x1: -30, y1: 14, x2: 30, y2: 14 },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+    ],
+  },
   {
     id: 'disconnector_3p',
     name: 'Sezionatore Magnetotermico 3P',
