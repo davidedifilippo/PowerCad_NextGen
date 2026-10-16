@@ -810,6 +810,14 @@ export const SchematicCanvas: React.FC<Props> = ({
               elementStates: { ...prev.elementStates, [elem.id]: !current },
             };
           });
+        } else if (def.behavior.actuation === 'linked') {
+          onSimStateChange((prev) => {
+            const current = prev.activeOutputs[elem.tag] ?? false;
+            return {
+              ...prev,
+              activeOutputs: { ...prev.activeOutputs, [elem.tag]: !current },
+            };
+          });
         }
       } else if (def.behavior.type === 'thermal') {
         onSimStateChange((prev) => {

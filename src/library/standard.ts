@@ -1177,6 +1177,417 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
 
+  // ==================== CONTATTORI & INTERRUTTORI ====================
+  // --- Gruppo 1: Contatti Principali di Potenza del Contattore (1P, 2P, 3P, 4P) ---
+  {
+    id: 'contactor_power_1p',
+    name: 'Contattore 1P',
+    category: 'Contattori',
+    tagPrefix: '-KM',
+    terminals: [
+      { id: '1', x: 0, y: -25, label: '1' },
+      { id: '2', x: 0, y: 25, label: '2' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [['1', '2']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
+    ],
+  },
+  {
+    id: 'contactor_power_2p',
+    name: 'Contattore 2P',
+    category: 'Contattori',
+    tagPrefix: '-KM',
+    terminals: [
+      { id: '1', x: -10, y: -25, label: '1' },
+      { id: '3', x: 10, y: -25, label: '3' },
+      { id: '2', x: -10, y: 25, label: '2' },
+      { id: '4', x: 10, y: 25, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
+      // Pole 2: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -13, y1: 1, x2: 7, y2: 1, dash: true, when: 'off' },
+      { t: 'line', x1: -10, y1: 0, x2: 10, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'contactor_power_3p',
+    name: 'Contattore 3P',
+    category: 'Contattori',
+    tagPrefix: '-KM',
+    terminals: [
+      { id: '1', x: -20, y: -25, label: '1' },
+      { id: '3', x: 0, y: -25, label: '3' },
+      { id: '5', x: 20, y: -25, label: '5' },
+      { id: '2', x: -20, y: 25, label: '2' },
+      { id: '4', x: 0, y: 25, label: '4' },
+      { id: '6', x: 20, y: 25, label: '6' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-20)
+      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: 10, x2: -26, y2: -8, when: 'off' },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
+      // Pole 2: (0)
+      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
+      // Pole 3: (20)
+      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: 10, x2: 14, y2: -8, when: 'off' },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -23, y1: 1, x2: 17, y2: 1, dash: true, when: 'off' },
+      { t: 'line', x1: -20, y1: 0, x2: 20, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'contactor_power_4p',
+    name: 'Contattore 4P',
+    category: 'Contattori',
+    tagPrefix: '-KM',
+    terminals: [
+      { id: '1', x: -30, y: -25, label: '1' },
+      { id: '3', x: -10, y: -25, label: '3' },
+      { id: '5', x: 10, y: -25, label: '5' },
+      { id: '7', x: 30, y: -25, label: '7' },
+      { id: '2', x: -30, y: 25, label: '2' },
+      { id: '4', x: -10, y: 25, label: '4' },
+      { id: '6', x: 10, y: 25, label: '6' },
+      { id: '8', x: 30, y: 25, label: '8' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-30)
+      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -10 },
+      { t: 'line', x1: -30, y1: 10, x2: -30, y2: 25 },
+      { t: 'line', x1: -30, y1: 10, x2: -36, y2: -8, when: 'off' },
+      { t: 'line', x1: -30, y1: 10, x2: -30, y2: -10, when: 'on' },
+      // Pole 2: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
+      // Pole 3: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
+      // Pole 4: (30)
+      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -10 },
+      { t: 'line', x1: 30, y1: 10, x2: 30, y2: 25 },
+      { t: 'line', x1: 30, y1: 10, x2: 24, y2: -8, when: 'off' },
+      { t: 'line', x1: 30, y1: 10, x2: 30, y2: -10, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -33, y1: 1, x2: 27, y2: 1, dash: true, when: 'off' },
+      { t: 'line', x1: -30, y1: 0, x2: 30, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+
+  // --- Gruppo 2: Contattore 3P con Simbolo ad Arco IEC (Row 2) ---
+  {
+    id: 'contactor_power_arc_3p',
+    name: 'Contattore 3P (Simbolo ad Arco IEC)',
+    category: 'Contattori',
+    tagPrefix: '-KM',
+    terminals: [
+      { id: '1', x: -20, y: -25, label: '1' },
+      { id: '3', x: 0, y: -25, label: '3' },
+      { id: '5', x: 20, y: -25, label: '5' },
+      { id: '2', x: -20, y: 25, label: '2' },
+      { id: '4', x: 0, y: 25, label: '4' },
+      { id: '6', x: 20, y: 25, label: '6' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-20)
+      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
+      { t: 'path', d: 'M -20 -16 A 3 3 0 0 0 -20 -10' },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: 10, x2: -26, y2: -8, when: 'off' },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
+      // Pole 2: (0)
+      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
+      { t: 'path', d: 'M 0 -16 A 3 3 0 0 0 0 -10' },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
+      // Pole 3: (20)
+      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
+      { t: 'path', d: 'M 20 -16 A 3 3 0 0 0 20 -10' },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: 10, x2: 14, y2: -8, when: 'off' },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -23, y1: 1, x2: 17, y2: 1, dash: true, when: 'off' },
+      { t: 'line', x1: -20, y1: 0, x2: 20, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+
+  // --- Gruppo 3: Interruttori di Manovra Manuale (Row 3, Tag -S) ---
+  {
+    id: 'switch_manual_1p',
+    name: 'Interruttore 1P',
+    category: 'Contattori',
+    tagPrefix: '-S',
+    terminals: [
+      { id: '1', x: 0, y: -25, label: '1' },
+      { id: '2', x: 0, y: 25, label: '2' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [['1', '2']],
+    },
+    symbol: [
+      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
+      // Manual switch detent operator on left
+      { t: 'line', x1: -18, y1: -5, x2: -18, y2: 5 },
+      { t: 'line', x1: -18, y1: 0, x2: -14, y2: 0 },
+      { t: 'line', x1: -14, y1: 0, x2: -11, y2: 5 },
+      { t: 'line', x1: -11, y1: 5, x2: -8, y2: 0 },
+      { t: 'line', x1: -8, y1: 0, x2: -3, y2: 0, when: 'off' },
+      { t: 'line', x1: -8, y1: 0, x2: 0, y2: 0, when: 'on' },
+    ],
+  },
+  {
+    id: 'switch_manual_2p',
+    name: 'Interruttore 2P',
+    category: 'Contattori',
+    tagPrefix: '-S',
+    terminals: [
+      { id: '1', x: -10, y: -25, label: '1' },
+      { id: '3', x: 10, y: -25, label: '3' },
+      { id: '2', x: -10, y: 25, label: '2' },
+      { id: '4', x: 10, y: 25, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
+      // Pole 2: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
+      // Manual operator on left
+      { t: 'line', x1: -28, y1: -5, x2: -28, y2: 5 },
+      { t: 'line', x1: -28, y1: 0, x2: -24, y2: 0 },
+      { t: 'line', x1: -24, y1: 0, x2: -21, y2: 5 },
+      { t: 'line', x1: -21, y1: 5, x2: -18, y2: 0 },
+      { t: 'line', x1: -18, y1: 0, x2: -13, y2: 0, when: 'off' },
+      { t: 'line', x1: -18, y1: 0, x2: -10, y2: 0, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -13, y1: 1, x2: 7, y2: 1, dash: true, when: 'off' },
+      { t: 'line', x1: -10, y1: 0, x2: 10, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'switch_manual_3p',
+    name: 'Interruttore 3P',
+    category: 'Contattori',
+    tagPrefix: '-S',
+    terminals: [
+      { id: '1', x: -20, y: -25, label: '1' },
+      { id: '3', x: 0, y: -25, label: '3' },
+      { id: '5', x: 20, y: -25, label: '5' },
+      { id: '2', x: -20, y: 25, label: '2' },
+      { id: '4', x: 0, y: 25, label: '4' },
+      { id: '6', x: 20, y: 25, label: '6' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-20)
+      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: 10, x2: -26, y2: -8, when: 'off' },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
+      // Pole 2: (0)
+      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
+      // Pole 3: (20)
+      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: 10, x2: 14, y2: -8, when: 'off' },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
+      // Manual operator on left
+      { t: 'line', x1: -38, y1: -5, x2: -38, y2: 5 },
+      { t: 'line', x1: -38, y1: 0, x2: -34, y2: 0 },
+      { t: 'line', x1: -34, y1: 0, x2: -31, y2: 5 },
+      { t: 'line', x1: -31, y1: 5, x2: -28, y2: 0 },
+      { t: 'line', x1: -28, y1: 0, x2: -23, y2: 0, when: 'off' },
+      { t: 'line', x1: -28, y1: 0, x2: -20, y2: 0, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -23, y1: 1, x2: 17, y2: 1, dash: true, when: 'off' },
+      { t: 'line', x1: -20, y1: 0, x2: 20, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+  {
+    id: 'switch_manual_4p',
+    name: 'Interruttore 4P',
+    category: 'Contattori',
+    tagPrefix: '-S',
+    terminals: [
+      { id: '1', x: -30, y: -25, label: '1' },
+      { id: '3', x: -10, y: -25, label: '3' },
+      { id: '5', x: 10, y: -25, label: '5' },
+      { id: '7', x: 30, y: -25, label: '7' },
+      { id: '2', x: -30, y: 25, label: '2' },
+      { id: '4', x: -10, y: 25, label: '4' },
+      { id: '6', x: 10, y: 25, label: '6' },
+      { id: '8', x: 30, y: 25, label: '8' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-30)
+      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -10 },
+      { t: 'line', x1: -30, y1: 10, x2: -30, y2: 25 },
+      { t: 'line', x1: -30, y1: 10, x2: -36, y2: -8, when: 'off' },
+      { t: 'line', x1: -30, y1: 10, x2: -30, y2: -10, when: 'on' },
+      // Pole 2: (-10)
+      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
+      // Pole 3: (10)
+      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
+      // Pole 4: (30)
+      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -10 },
+      { t: 'line', x1: 30, y1: 10, x2: 30, y2: 25 },
+      { t: 'line', x1: 30, y1: 10, x2: 24, y2: -8, when: 'off' },
+      { t: 'line', x1: 30, y1: 10, x2: 30, y2: -10, when: 'on' },
+      // Manual operator on left
+      { t: 'line', x1: -48, y1: -5, x2: -48, y2: 5 },
+      { t: 'line', x1: -48, y1: 0, x2: -44, y2: 0 },
+      { t: 'line', x1: -44, y1: 0, x2: -41, y2: 5 },
+      { t: 'line', x1: -41, y1: 5, x2: -38, y2: 0 },
+      { t: 'line', x1: -38, y1: 0, x2: -33, y2: 0, when: 'off' },
+      { t: 'line', x1: -38, y1: 0, x2: -30, y2: 0, when: 'on' },
+      // Mechanical link between blades
+      { t: 'line', x1: -33, y1: 1, x2: 27, y2: 1, dash: true, when: 'off' },
+      { t: 'line', x1: -30, y1: 0, x2: 30, y2: 0, dash: true, when: 'on' },
+    ],
+  },
+
+  // --- Gruppo 4: Interblocco Meccanico (Row 4) ---
+  {
+    id: 'mechanical_interlock',
+    name: 'Interblocco Meccanico Contattori',
+    category: 'Contattori',
+    terminals: [],
+    termLabels: false,
+    bounds: { x: -35, y: -15, w: 70, h: 25 },
+    behavior: { type: 'none' },
+    props: [
+      { key: 'km1', label: 'Sigla Contattore 1', type: 'text', default: '-KM1' },
+      { key: 'km2', label: 'Sigla Contattore 2', type: 'text', default: '-KM2' },
+    ],
+    symbol: [
+      // Left dashed line
+      { t: 'line', x1: -30, y1: 0, x2: -6, y2: 0, dash: true },
+      // Triangle down
+      { t: 'path', d: 'M -6 -5 L 6 -5 L 0 5 Z', fill: '#ffffff' },
+      // Right dashed line
+      { t: 'line', x1: 6, y1: 0, x2: 30, y2: 0, dash: true },
+      // Text labels -KM1 and -KM2
+      { t: 'text', x: -18, y: -4, text: '-KM1', size: 8.5, anchor: 'middle', fill: '#0284c7' },
+      { t: 'text', x: 18, y: -4, text: '-KM2', size: 8.5, anchor: 'middle', fill: '#0284c7' },
+    ],
+  },
+
   // ==================== COMANDO & PULSANTI ====================
   {
     id: 'btn_no',
@@ -1329,52 +1740,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -6, when: 'on' },
     ],
   },
-  {
-    id: 'contactor_power_3p',
-    name: 'Contatti Potenza Contattore 3P (Linked)',
-    category: 'Contatti',
-    tagPrefix: '-KM',
-    terminals: [
-      { id: '1', x: -20, y: -25, label: '1' },
-      { id: '3', x: 0, y: -25, label: '3' },
-      { id: '5', x: 20, y: -25, label: '5' },
-      { id: '2', x: -20, y: 25, label: '2' },
-      { id: '4', x: 0, y: 25, label: '4' },
-      { id: '6', x: 20, y: 25, label: '6' },
-    ],
-    behavior: {
-      type: 'contact',
-      actuation: 'linked',
-      no: [
-        ['1', '2'],
-        ['3', '4'],
-        ['5', '6'],
-      ],
-    },
-    symbol: [
-      // Pole 1
-      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
-      { t: 'circle', cx: -20, cy: -10, r: 2 },
-      { t: 'circle', cx: -20, cy: 10, r: 2 },
-      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
-      { t: 'line', x1: -20, y1: 10, x2: -14, y2: -8, when: 'off' },
-      { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
-      // Pole 2
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
-      { t: 'circle', cx: 0, cy: -10, r: 2 },
-      { t: 'circle', cx: 0, cy: 10, r: 2 },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
-      { t: 'line', x1: 0, y1: 10, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
-      // Pole 3
-      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
-      { t: 'circle', cx: 20, cy: -10, r: 2 },
-      { t: 'circle', cx: 20, cy: 10, r: 2 },
-      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
-      { t: 'line', x1: 20, y1: 10, x2: 26, y2: -8, when: 'off' },
-      { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
-    ],
-  },
+
   {
     id: 'contact_thermal_aux_nc_no',
     name: 'Contatti Ausiliari Relè Termico (95-96 NC, 97-98 NA)',
