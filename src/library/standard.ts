@@ -17,7 +17,6 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     symbol: [
       { t: 'circle', cx: 0, cy: 0, r: 4, fill: '#ef4444' },
       { t: 'line', x1: 0, y1: 4, x2: 0, y2: 10, stroke: '#ef4444' },
-      { t: 'text', x: 8, y: 2, text: 'L', size: 12, fill: '#ef4444' },
     ],
   },
   {
@@ -31,7 +30,6 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     symbol: [
       { t: 'circle', cx: 0, cy: 0, r: 4, fill: '#3b82f6' },
       { t: 'line', x1: 0, y1: 4, x2: 0, y2: 10, stroke: '#3b82f6' },
-      { t: 'text', x: 8, y: 2, text: 'N', size: 12, fill: '#3b82f6' },
     ],
   },
   {
@@ -47,7 +45,6 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: -10, y1: 0, x2: 10, y2: 0, stroke: '#10b981', w: 2 },
       { t: 'line', x1: -6, y1: 4, x2: 6, y2: 4, stroke: '#10b981', w: 2 },
       { t: 'line', x1: -2, y1: 8, x2: 2, y2: 8, stroke: '#10b981', w: 2 },
-      { t: 'text', x: 12, y: 4, text: 'PE', size: 10, fill: '#10b981' },
     ],
   },
   {

@@ -493,13 +493,18 @@ const ElementItem: React.FC<{
       {/* Tag Label - Offset cleanly to prevent collision with terminals or poles */}
       {elem.tag && (() => {
         const tagPos = getTagPosition(def);
+        let tagColor = '#0f172a';
+        if (def.id === 'pwr_l') tagColor = '#ef4444';
+        else if (def.id === 'pwr_n') tagColor = '#2563eb';
+        else if (def.id === 'pwr_pe') tagColor = '#16a34a';
+
         return (
           <text
             x={tagPos.x}
             y={tagPos.y}
             fontSize={11}
             fontWeight="bold"
-            fill="#0f172a"
+            fill={tagColor}
             textAnchor={tagPos.textAnchor}
             transform={`rotate(${-elem.rot})`}
           >
@@ -562,10 +567,10 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
     return { x: 0, y: -18, textAnchor: 'middle' };
   }
   if (def.id === 'pwr_l' || def.id === 'pwr_n') {
-    return { x: -14, y: 2, textAnchor: 'end' };
+    return { x: -10, y: 4, textAnchor: 'end' };
   }
   if (def.id === 'pwr_pe') {
-    return { x: -16, y: 4, textAnchor: 'end' };
+    return { x: -14, y: 4, textAnchor: 'end' };
   }
   if (def.id === 'pwr_dc_source') {
     return { x: 0, y: -20, textAnchor: 'middle' };
