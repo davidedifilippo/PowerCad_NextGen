@@ -590,19 +590,26 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
   if (def.id === 'psu_3p_dc') {
     return { x: -28, y: 4, textAnchor: 'end' };
   }
-  if (def.id.startsWith('motor_')) {
-    // Under the motor circle, completely away from U1, V1, W1 at top and PE at right
-    return { x: 0, y: 38, textAnchor: 'middle' };
+  if (def.id.startsWith('motor_') || def.id === 'electric_brake') {
+    // Left of the motor circle / brake body, clear of top/bottom terminals and right PE
+    return { x: -28, y: 4, textAnchor: 'end' };
+  }
+  if (def.id === 'linear_actuator') {
+    return { x: -42, y: 4, textAnchor: 'end' };
   }
 
   if (!def.terminals || def.terminals.length === 0) {
-    return { x: -18, y: -2, textAnchor: 'end' };
+    return { x: -22, y: -2, textAnchor: 'end' };
   }
 
-  if (def.id.startsWith('switch_manual_')) {
+  if (
+    def.category === 'Azionamenti' ||
+    def.category === 'Detectors' ||
+    def.id.startsWith('switch_manual_')
+  ) {
     const xs = def.terminals.map((t: { x: number }) => t.x);
     const minX = Math.min(...xs);
-    return { x: minX - 22, y: -2, textAnchor: 'end' };
+    return { x: minX - 25, y: 0, textAnchor: 'end' };
   }
 
   if (def.id.startsWith('contact_timer_') && def.terminals.length > 2) {

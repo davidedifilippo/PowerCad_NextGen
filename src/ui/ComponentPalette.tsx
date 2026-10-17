@@ -206,6 +206,7 @@ export const ComponentPalette: React.FC<Props> = ({
           return (
             <div
               key={comp.id}
+              title={comp.description ? `${comp.name}\n${comp.description}` : comp.name}
               onClick={() => {
                 if (disabled) return;
                 onSelectDef(isSelected ? null : comp);

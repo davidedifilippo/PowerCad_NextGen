@@ -133,12 +133,15 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         let isClosedNC = false;
 
         if (beh.actuation === 'momentary') {
-          const pressed = state.elementStates[elem.id] ?? false;
+          const pressed = Boolean(state.elementStates[elem.id] || (elem.tag && activeOutputs[elem.tag]));
           isClosedNO = pressed;
           isClosedNC = !pressed;
         } else if (beh.actuation === 'latching') {
           // If defaultOn was true (like a closed breaker), state true means toggled open
-          const toggled = state.elementStates[elem.id] ?? (beh.defaultOn ?? false);
+          const toggled = Boolean(
+            (state.elementStates[elem.id] ?? (beh.defaultOn ?? false)) ||
+              (elem.tag && activeOutputs[elem.tag])
+          );
           isClosedNO = toggled;
           isClosedNC = !toggled;
         } else if (beh.actuation === 'linked') {
@@ -304,6 +307,26 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         // Running if all 3 distinct phases are present
         if (pU && pV && pW && pU !== pV && pV !== pW && pU !== pW) {
           newActiveOutputs[elem.id] = true;
+        }
+      } else if (beh.type === 'motor3yd') {
+        const pU1 = terms.get(beh.u1) ? netPotentials[terms.get(beh.u1)!] : undefined;
+        const pV1 = terms.get(beh.v1) ? netPotentials[terms.get(beh.v1)!] : undefined;
+        const pW1 = terms.get(beh.w1) ? netPotentials[terms.get(beh.w1)!] : undefined;
+        const pU2 = terms.get(beh.u2) ? netPotentials[terms.get(beh.u2)!] : undefined;
+        const pV2 = terms.get(beh.v2) ? netPotentials[terms.get(beh.v2)!] : undefined;
+        const pW2 = terms.get(beh.w2) ? netPotentials[terms.get(beh.w2)!] : undefined;
+        const has1 = Boolean(pU1 && pV1 && pW1 && pU1 !== pV1 && pV1 !== pW1 && pU1 !== pW1);
+        const has2 = Boolean(pU2 && pV2 && pW2 && pU2 !== pV2 && pV2 !== pW2 && pU2 !== pW2);
+        if (has1 || has2) {
+          newActiveOutputs[elem.id] = true;
+        }
+      } else if (beh.type === 'contact' && (beh.actuation === 'momentary' || beh.actuation === 'latching')) {
+        if (state.elementStates[elem.id] && elem.tag) {
+          newActiveOutputs[elem.tag] = true;
+        }
+      } else if (beh.type === 'thermal') {
+        if (state.elementStates[elem.id] && elem.tag) {
+          newActiveOutputs[elem.tag] = true;
         }
       } else if (beh.type === 'converter') {
         const inputPots = beh.inputs.map((tid) => {

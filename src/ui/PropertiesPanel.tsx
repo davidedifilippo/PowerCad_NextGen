@@ -189,6 +189,22 @@ export const PropertiesPanel: React.FC<Props> = ({
           <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
             Categoria: {def?.category}
           </div>
+          {def?.description && (
+            <div
+              style={{
+                fontSize: 11,
+                color: '#475569',
+                marginTop: 6,
+                padding: '6px 8px',
+                backgroundColor: '#f8fafc',
+                borderRadius: 5,
+                borderLeft: '3px solid #3b82f6',
+                lineHeight: '15px',
+              }}
+            >
+              {def.description}
+            </div>
+          )}
         </div>
 
         {/* Tag / Sigla */}
