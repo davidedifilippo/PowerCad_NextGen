@@ -192,6 +192,20 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
             netPotentialMap.set(root, pot);
           }
         }
+      } else if (def.behavior.type === 'logic') {
+        const isLogicActive =
+          def.behavior.op === 'input'
+            ? Boolean(state.elementStates[elem.id])
+            : Boolean(activeOutputs[elem.id]);
+        if (isLogicActive && def.behavior.outputs) {
+          for (const termId of def.behavior.outputs) {
+            const k = terms.get(termId);
+            if (k) {
+              const root = stepDsu.find(k);
+              netPotentialMap.set(root, '+24V');
+            }
+          }
+        }
       }
     }
 
@@ -342,6 +356,95 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         }
         if (isEnergized) {
           newActiveOutputs[elem.id] = true;
+        }
+      } else if (beh.type === 'logic') {
+        const isHigh = (tid: string) => {
+          const k = terms.get(tid);
+          const pot = k ? netPotentials[k] : undefined;
+          return Boolean(pot && (pot.startsWith('L') || pot === '+24V'));
+        };
+        const ins = beh.inputs ?? [];
+        let outHigh = false;
+        switch (beh.op) {
+          case 'input':
+            outHigh = Boolean(state.elementStates[elem.id]);
+            break;
+          case 'output':
+          case 'display':
+          case 'or':
+          case 'tff':
+          case 'counter':
+          case 'decoder':
+            outHigh = ins.some(isHigh);
+            break;
+          case 'and':
+            outHigh = ins.length > 0 && ins.every(isHigh);
+            break;
+          case 'not':
+            outHigh = ins.length > 0 && !isHigh(ins[0]);
+            break;
+          case 'xor':
+            outHigh = ins.filter(isHigh).length % 2 === 1;
+            break;
+          case 'nand':
+            outHigh = !(ins.length > 0 && ins.every(isHigh));
+            break;
+          case 'nor':
+            outHigh = !ins.some(isHigh);
+            break;
+          case 'sr': {
+            const setH = ins[0] ? isHigh(ins[0]) : false;
+            const rstH = ins[1] ? isHigh(ins[1]) : false;
+            let latched = state.elementStates[elem.id] ?? false;
+            if (setH) latched = true;
+            if (rstH) latched = false;
+            state.elementStates[elem.id] = latched;
+            outHigh = latched;
+            break;
+          }
+          case 'ton': {
+            const delaySec = Number(elem.props?.delay ?? 2);
+            if (ins[0] && isHigh(ins[0])) {
+              const cur = (timerProgress[elem.id] ?? 0) + (iter === 0 ? dtSec : 0);
+              timerProgress[elem.id] = cur;
+              outHigh = cur >= delaySec;
+            } else {
+              timerProgress[elem.id] = 0;
+            }
+            break;
+          }
+          case 'tof': {
+            const delaySec = Number(elem.props?.delay ?? 2);
+            if (ins[0] && isHigh(ins[0])) {
+              timerProgress[elem.id] = delaySec;
+              outHigh = true;
+            } else {
+              const cur = (timerProgress[elem.id] ?? 0) - (iter === 0 ? dtSec : 0);
+              if (cur > 0) {
+                timerProgress[elem.id] = cur;
+                outHigh = true;
+              } else {
+                timerProgress[elem.id] = 0;
+              }
+            }
+            break;
+          }
+          case 'pulse':
+          case 'blink': {
+            const delaySec = Number(elem.props?.delay ?? 0.8);
+            if (ins[0] && isHigh(ins[0])) {
+              const cur = ((timerProgress[elem.id] ?? 0) + (iter === 0 ? dtSec : 0)) % (delaySec * 2);
+              timerProgress[elem.id] = cur;
+              outHigh = cur < delaySec;
+            } else {
+              timerProgress[elem.id] = 0;
+            }
+            break;
+          }
+        }
+        if (outHigh) {
+          newActiveOutputs[elem.id] = true;
+          if (elem.tag) newActiveOutputs[elem.tag] = true;
         }
       }
     }

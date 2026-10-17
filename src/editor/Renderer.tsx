@@ -597,6 +597,20 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
   if (def.id === 'linear_actuator') {
     return { x: -42, y: 4, textAnchor: 'end' };
   }
+  if (def.id === 'logic_input_var') {
+    return { x: -16, y: 4, textAnchor: 'end' };
+  }
+  if (def.id === 'logic_output_var') {
+    return { x: 16, y: 4, textAnchor: 'start' };
+  }
+  if (def.category === 'Logica') {
+    if (def.id === 'display_bcd_7seg' || def.id === 'display_7seg' || def.id === 'bcd_thumbwheel') {
+      return { x: 24, y: 24, textAnchor: 'start' };
+    }
+    const ys = def.terminals.map((t: { y: number }) => t.y);
+    const minY = ys.length > 0 ? Math.min(...ys) : -16;
+    return { x: 0, y: Math.min(minY - 12, -20), textAnchor: 'middle' };
+  }
 
   if (!def.terminals || def.terminals.length === 0) {
     return { x: -22, y: -2, textAnchor: 'end' };
@@ -610,6 +624,12 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
     const xs = def.terminals.map((t: { x: number }) => t.x);
     const minX = Math.min(...xs);
     return { x: minX - 25, y: 0, textAnchor: 'end' };
+  }
+
+  if (def.category === 'Potenza') {
+    const xs = def.terminals.map((t: { x: number }) => t.x);
+    const minX = Math.min(...xs);
+    return { x: minX - 14, y: -10, textAnchor: 'end' };
   }
 
   if (def.id.startsWith('contact_timer_') && def.terminals.length > 2) {

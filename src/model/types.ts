@@ -48,6 +48,30 @@ export type Behavior =
   | { type: 'thermal'; pairs: [string, string][] }
   /** Power converter (transformer, bridge rectifier, AC/DC PSU): outputs potentials when inputs are energized. */
   | { type: 'converter'; inputs: string[]; outputs: Record<string, string> }
+  /** Digital logic gate, flip-flop, timer, counter, or logic I/O element. */
+  | {
+      type: 'logic';
+      op:
+        | 'input'
+        | 'output'
+        | 'and'
+        | 'or'
+        | 'not'
+        | 'xor'
+        | 'nand'
+        | 'nor'
+        | 'sr'
+        | 'tff'
+        | 'ton'
+        | 'tof'
+        | 'pulse'
+        | 'blink'
+        | 'counter'
+        | 'decoder'
+        | 'display';
+      inputs?: string[];
+      outputs?: string[];
+    }
   | { type: 'none' };
 
 export interface ComponentDef {
