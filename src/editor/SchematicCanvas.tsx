@@ -8,6 +8,7 @@ import {
   Box,
   isElementInBox,
   isWireInBox,
+  isPointOnSegment,
   localToWorld,
 } from '../utils/geometry';
 import { SimState } from '../engine/simulation';
@@ -87,7 +88,7 @@ export const SchematicCanvas: React.FC<Props> = ({
   }
   const [floatingSelection, setFloatingSelection] = useState<FloatingSelection | null>(null);
 
-  // Drag state (elements, entire wires, wire stretch handles, multi-selection move, or box-select)
+  // Drag state (elements, individual wire segments with orthogonal sliding, wire stretch handles, multi-selection move, or box-select)
   type DragState =
     | {
         type: 'element';
@@ -103,6 +104,8 @@ export const SchematicCanvas: React.FC<Props> = ({
         id: string;
         startScreen: Pt;
         origPts: Pt[];
+        slideMode: 'horizontal-slide' | 'vertical-slide' | 'free';
+        connectedEnds: { wireId: string; pointIndex: number; origPt: Pt }[];
         wasSelectedAtStart: boolean;
         isDragging: boolean;
         hasRecordedHistory: boolean;
@@ -200,7 +203,19 @@ export const SchematicCanvas: React.FC<Props> = ({
       const endpoints = [wire.pts[0], wire.pts[wire.pts.length - 1]];
       for (const ep of endpoints) {
         const d = dist(worldPt, ep);
-        if (d <= maxDist && (!best || d < best.d)) {
+        // When not drafting, use a tighter radius on wire tips (7px, or 5px on shared corners)
+        // so clicking the body of short segments selects the segment cleanly
+        let allowedDist = maxDist;
+        if (wireDraft.length === 0 && !activeWireTool) {
+          const isSharedCorner = doc.wires.some(
+            (other) =>
+              other.id !== wire.id &&
+              other.pts.length > 0 &&
+              (dist(other.pts[0], ep) < 2 || dist(other.pts[other.pts.length - 1], ep) < 2)
+          );
+          allowedDist = Math.min(maxDist, isSharedCorner ? 5 : 7);
+        }
+        if (d <= allowedDist && (!best || d < best.d)) {
           best = {
             worldPos: snapPt(ep),
             d,
@@ -224,7 +239,7 @@ export const SchematicCanvas: React.FC<Props> = ({
       : { x: targetPt.x, y: start.y };
   };
 
-  // Helper to complete in-progress wire(s)
+  // Helper to complete in-progress wire(s) as independent 2-point orthogonal segments
   const completeWire = (rawTargetPt: Pt) => {
     if (wireDraft.length === 0) return;
     const start = wireDraft[wireDraft.length - 1];
@@ -236,52 +251,111 @@ export const SchematicCanvas: React.FC<Props> = ({
     }
     const corner = computeOrthogonalCorner(start, targetPt);
     const hasCorner = dist(start, corner) > 2 && dist(corner, targetPt) > 2;
+    const ts = Date.now();
 
     if (activeWireTool === '3p_vert') {
       const offsets = [-20, 0, 20];
-      const newWires: Wire[] = offsets.map((dx, i) => ({
-        id: `wire_${Date.now()}_${i}`,
-        kind: 'phase',
-        color: WIRE_COLOR_MAP['phase'],
-        pts: hasCorner
-          ? [
-              { x: start.x + dx, y: start.y },
-              { x: corner.x + dx, y: corner.y },
-              { x: targetPt.x + dx, y: targetPt.y },
-            ]
-          : [
+      const newWires: Wire[] = [];
+      offsets.forEach((dx, i) => {
+        if (hasCorner) {
+          newWires.push(
+            {
+              id: `wire_${ts}_${i}_a`,
+              kind: 'phase',
+              color: WIRE_COLOR_MAP['phase'],
+              pts: [
+                { x: start.x + dx, y: start.y },
+                { x: corner.x + dx, y: corner.y },
+              ],
+            },
+            {
+              id: `wire_${ts}_${i}_b`,
+              kind: 'phase',
+              color: WIRE_COLOR_MAP['phase'],
+              pts: [
+                { x: corner.x + dx, y: corner.y },
+                { x: targetPt.x + dx, y: targetPt.y },
+              ],
+            }
+          );
+        } else {
+          newWires.push({
+            id: `wire_${ts}_${i}`,
+            kind: 'phase',
+            color: WIRE_COLOR_MAP['phase'],
+            pts: [
               { x: start.x + dx, y: start.y },
               { x: targetPt.x + dx, y: targetPt.y },
             ],
-      }));
+          });
+        }
+      });
       onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     } else if (activeWireTool === '3p_horiz') {
       const offsets = [-20, 0, 20];
-      const newWires: Wire[] = offsets.map((dy, i) => ({
-        id: `wire_${Date.now()}_${i}`,
-        kind: 'phase',
-        color: WIRE_COLOR_MAP['phase'],
-        pts: hasCorner
-          ? [
-              { x: start.x, y: start.y + dy },
-              { x: corner.x, y: corner.y + dy },
-              { x: targetPt.x, y: targetPt.y + dy },
-            ]
-          : [
+      const newWires: Wire[] = [];
+      offsets.forEach((dy, i) => {
+        if (hasCorner) {
+          newWires.push(
+            {
+              id: `wire_${ts}_${i}_a`,
+              kind: 'phase',
+              color: WIRE_COLOR_MAP['phase'],
+              pts: [
+                { x: start.x, y: start.y + dy },
+                { x: corner.x, y: corner.y + dy },
+              ],
+            },
+            {
+              id: `wire_${ts}_${i}_b`,
+              kind: 'phase',
+              color: WIRE_COLOR_MAP['phase'],
+              pts: [
+                { x: corner.x, y: corner.y + dy },
+                { x: targetPt.x, y: targetPt.y + dy },
+              ],
+            }
+          );
+        } else {
+          newWires.push({
+            id: `wire_${ts}_${i}`,
+            kind: 'phase',
+            color: WIRE_COLOR_MAP['phase'],
+            pts: [
               { x: start.x, y: start.y + dy },
               { x: targetPt.x, y: targetPt.y + dy },
             ],
-      }));
+          });
+        }
+      });
       onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     } else {
-      const pts = hasCorner ? [start, corner, targetPt] : [start, targetPt];
-      const newWire: Wire = {
-        id: `wire_${Date.now()}`,
-        kind: activeWireTool || 'aux',
-        color: activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : undefined,
-        pts,
-      };
-      onDocChange({ ...doc, wires: [...doc.wires, newWire] });
+      const kind = activeWireTool || 'aux';
+      const color = activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : undefined;
+      const newWires: Wire[] = hasCorner
+        ? [
+            {
+              id: `wire_${ts}_a`,
+              kind,
+              color,
+              pts: [start, corner],
+            },
+            {
+              id: `wire_${ts}_b`,
+              kind,
+              color,
+              pts: [corner, targetPt],
+            },
+          ]
+        : [
+            {
+              id: `wire_${ts}`,
+              kind,
+              color,
+              pts: [start, targetPt],
+            },
+          ];
+      onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     }
     setWireDraft([]);
     setWireStartAxis(null);
@@ -709,18 +783,35 @@ export const SchematicCanvas: React.FC<Props> = ({
         });
         onDocChange({ ...doc, elements: updated }, shouldRecordHistory);
       } else if (dragRef.current.type === 'wire') {
-        const origPts = dragRef.current.origPts;
-        const wireId = dragRef.current.id;
+        const { id: wireId, origPts, slideMode, connectedEnds } = dragRef.current;
+        const effDx = slideMode === 'vertical-slide' ? 0 : snapDx;
+        const effDy = slideMode === 'horizontal-slide' ? 0 : snapDy;
 
         const updated = doc.wires.map((w) => {
-          if (w.id !== wireId) return w;
-          return {
-            ...w,
-            pts: origPts.map((p) => ({
-              x: p.x + snapDx,
-              y: p.y + snapDy,
-            })),
-          };
+          if (w.id === wireId) {
+            return {
+              ...w,
+              pts: origPts.map((p) => ({
+                x: p.x + effDx,
+                y: p.y + effDy,
+              })),
+            };
+          }
+          const matchingEnds = connectedEnds.filter((ce) => ce.wireId === w.id);
+          if (matchingEnds.length > 0) {
+            const newPts = w.pts.map((p, idx) => {
+              const ce = matchingEnds.find((m) => m.pointIndex === idx);
+              if (ce) {
+                return {
+                  x: ce.origPt.x + effDx,
+                  y: ce.origPt.y + effDy,
+                };
+              }
+              return p;
+            });
+            return { ...w, pts: newPts };
+          }
+          return w;
         });
         onDocChange({ ...doc, wires: updated }, shouldRecordHistory);
       } else if (dragRef.current.type === 'wire-handle') {
@@ -731,6 +822,17 @@ export const SchematicCanvas: React.FC<Props> = ({
           if (w.id !== wireId) return w;
           const newPts = origPts.map((p, idx) => {
             if (idx === pointIndex) {
+              // Keep 2-point orthogonal segments orthogonal when stretching their handles
+              if (origPts.length === 2) {
+                const isHoriz =
+                  Math.abs(origPts[0].y - origPts[1].y) < 1 &&
+                  Math.abs(origPts[0].x - origPts[1].x) >= 1;
+                const isVert =
+                  Math.abs(origPts[0].x - origPts[1].x) < 1 &&
+                  Math.abs(origPts[0].y - origPts[1].y) >= 1;
+                if (isHoriz) return { x: snapped.x, y: origPts[pointIndex].y };
+                if (isVert) return { x: origPts[pointIndex].x, y: snapped.y };
+              }
               return { x: snapped.x, y: snapped.y };
             }
             if (origPts.length === 3 && idx === 1) {
@@ -903,6 +1005,31 @@ export const SchematicCanvas: React.FC<Props> = ({
         return;
       }
 
+      // If clicking a legacy multi-segment wire (pts.length > 2), split it into individual 2-point segments
+      // so the user can select/delete/slide the exact horizontal or vertical segment they clicked!
+      if (wire.pts.length > 2) {
+        const segments: Wire[] = [];
+        let clickedSegId = `${wire.id}_s0`;
+        for (let i = 0; i < wire.pts.length - 1; i++) {
+          const segId = `${wire.id}_s${i}`;
+          const pA = wire.pts[i];
+          const pB = wire.pts[i + 1];
+          segments.push({
+            id: segId,
+            kind: wire.kind,
+            color: wire.color,
+            pts: [{ ...pA }, { ...pB }],
+          });
+          if (isPointOnSegment(world, pA, pB, 8)) {
+            clickedSegId = segId;
+          }
+        }
+        const newWires = doc.wires.flatMap((w) => (w.id === wire.id ? segments : [w]));
+        onDocChange({ ...doc, wires: newWires }, false);
+        onSelectIds(new Set([clickedSegId]));
+        return;
+      }
+
       if (isAlreadySelected && selectedIds.size > 1) {
         const origElemPositions = new Map<string, Pt>();
         for (const el of doc.elements) {
@@ -922,11 +1049,44 @@ export const SchematicCanvas: React.FC<Props> = ({
           hasRecordedHistory: false,
         };
       } else {
+        // Compute orthogonal sliding connections (connected perpendicular wire endpoints)
+        const connectedEnds: { wireId: string; pointIndex: number; origPt: Pt }[] = [];
+        let slideMode: 'horizontal-slide' | 'vertical-slide' | 'free' = 'free';
+
+        if (wire.pts.length === 2) {
+          const [p0, p1] = wire.pts;
+          const isVertical = Math.abs(p0.x - p1.x) < 1 && Math.abs(p0.y - p1.y) >= 1;
+          const isHorizontal = Math.abs(p0.y - p1.y) < 1 && Math.abs(p0.x - p1.x) >= 1;
+
+          for (const other of doc.wires) {
+            if (other.id === wire.id || other.pts.length < 2) continue;
+            const endIndices = [0, other.pts.length - 1];
+            for (const idx of endIndices) {
+              const ep = other.pts[idx];
+              const adj = idx === 0 ? other.pts[1] : other.pts[other.pts.length - 2];
+              if (!isPointOnSegment(ep, p0, p1, 2)) continue;
+              if (isVertical && Math.abs(ep.y - adj.y) < 1) {
+                connectedEnds.push({ wireId: other.id, pointIndex: idx, origPt: { ...ep } });
+              } else if (isHorizontal && Math.abs(ep.x - adj.x) < 1) {
+                connectedEnds.push({ wireId: other.id, pointIndex: idx, origPt: { ...ep } });
+              }
+            }
+          }
+
+          if (isVertical && connectedEnds.length > 0) {
+            slideMode = 'horizontal-slide';
+          } else if (isHorizontal && connectedEnds.length > 0) {
+            slideMode = 'vertical-slide';
+          }
+        }
+
         dragRef.current = {
           type: 'wire',
           id: wire.id,
           startScreen: { x: e.clientX, y: e.clientY },
           origPts: wire.pts.map((p) => ({ ...p })),
+          slideMode,
+          connectedEnds,
           wasSelectedAtStart: isAlreadySelected,
           isDragging: false,
           hasRecordedHistory: false,
