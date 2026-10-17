@@ -62,7 +62,7 @@ Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno,
 1. Clona il repository:
    ```bash
    git clone <URL_REPOSITORY>
-   cd cadesimu-next
+   cd ElectroForge
    ```
 2. Installa le dipendenze ed avvia il server di sviluppo:
    ```bash
