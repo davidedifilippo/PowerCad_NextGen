@@ -312,14 +312,27 @@ export const ComponentPalette: React.FC<Props> = ({
                     return null;
                   })}
                   {/* Power sources preview label */}
-                  {(comp.id === 'pwr_l' || comp.id === 'pwr_n' || comp.id === 'pwr_pe') && (
+                  {(comp.id === 'pwr_l' ||
+                    comp.id === 'pwr_n' ||
+                    comp.id === 'pwr_pe' ||
+                    comp.id === 'pwr_pe_line' ||
+                    comp.id === 'pwr_dc_plus' ||
+                    comp.id === 'pwr_dc_minus') && (
                     <text
                       x={-10}
                       y={4}
                       fontSize={11}
                       fontWeight="bold"
                       textAnchor="end"
-                      fill={comp.id === 'pwr_l' ? '#ef4444' : comp.id === 'pwr_n' ? '#2563eb' : '#16a34a'}
+                      fill={
+                        comp.id === 'pwr_l' || comp.id === 'pwr_dc_plus'
+                          ? '#ef4444'
+                          : comp.id === 'pwr_n'
+                          ? '#2563eb'
+                          : comp.id === 'pwr_dc_minus'
+                          ? '#0f172a'
+                          : '#16a34a'
+                      }
                     >
                       {comp.tagPrefix}
                     </text>

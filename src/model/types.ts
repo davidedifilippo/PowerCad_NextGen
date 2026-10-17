@@ -46,6 +46,8 @@ export type Behavior =
   | { type: 'motor3yd'; u1: string; v1: string; w1: string; u2: string; v2: string; w2: string }
   /** Thermal overload relay: power poles always conduct; user can trip it, tag drives its aux contacts. */
   | { type: 'thermal'; pairs: [string, string][] }
+  /** Power converter (transformer, bridge rectifier, AC/DC PSU): outputs potentials when inputs are energized. */
+  | { type: 'converter'; inputs: string[]; outputs: Record<string, string> }
   | { type: 'none' };
 
 export interface ComponentDef {

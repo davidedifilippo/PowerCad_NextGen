@@ -106,4 +106,31 @@ describe('Simulation Engine', () => {
     expect(sim2.activeOutputs['lamp_flash']).toBeFalsy();
     expect(sim2.activeOutputs['siren1']).toBe(true);
   });
+
+  it('correctly simulates AC/DC power supply (psu_1p_dc) fed by L+N source (pwr_l_n)', () => {
+    const psuDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // pwr_l_n at (100, 100): L at (90, 110), N at (110, 110)
+        { id: 'src_ln', def: 'pwr_l_n', x: 100, y: 100, rot: 0 as const, tag: '-X4', props: {} },
+        // psu_1p_dc at (100, 160): 1 at (90, 140), 2 at (110, 140), 3 (+) at (90, 180), 4 (-) at (110, 180)
+        { id: 'psu1', def: 'psu_1p_dc', x: 100, y: 160, rot: 0 as const, tag: '-T4', props: {} },
+        // pilot_lamp at (100, 240): X1 at (100, 220), X2 at (100, 260)
+        { id: 'lamp_dc', def: 'pilot_lamp', x: 100, y: 240, rot: 0 as const, tag: '-H1', props: {} },
+      ],
+      wires: [
+        // Connect L+N to PSU inputs 1 and 2
+        { id: 'w1', pts: [{ x: 90, y: 110 }, { x: 90, y: 140 }] },
+        { id: 'w2', pts: [{ x: 110, y: 110 }, { x: 110, y: 140 }] },
+        // Connect PSU DC outputs 3 (+) and 4 (-) to lamp X1 and X2
+        { id: 'w3', pts: [{ x: 90, y: 180 }, { x: 90, y: 220 }, { x: 100, y: 220 }] },
+        { id: 'w4', pts: [{ x: 110, y: 180 }, { x: 140, y: 180 }, { x: 140, y: 260 }, { x: 100, y: 260 }] },
+      ],
+    };
+
+    const sim = stepSimulation(psuDoc, { ...createInitialSimState(), running: true }, 0.05);
+    expect(sim.activeOutputs['psu1']).toBe(true);
+    expect(sim.activeOutputs['lamp_dc']).toBe(true);
+  });
 });
+

@@ -494,9 +494,9 @@ const ElementItem: React.FC<{
       {elem.tag && (() => {
         const tagPos = getTagPosition(def);
         let tagColor = '#0f172a';
-        if (def.id === 'pwr_l') tagColor = '#ef4444';
+        if (def.id === 'pwr_l' || def.id === 'pwr_dc_plus') tagColor = '#ef4444';
         else if (def.id === 'pwr_n') tagColor = '#2563eb';
-        else if (def.id === 'pwr_pe') tagColor = '#16a34a';
+        else if (def.id === 'pwr_pe' || def.id === 'pwr_pe_line') tagColor = '#16a34a';
 
         return (
           <text
@@ -566,7 +566,13 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
   if (def.id === 'pwr_3p_n_pe') {
     return { x: 0, y: -18, textAnchor: 'middle' };
   }
-  if (def.id === 'pwr_l' || def.id === 'pwr_n') {
+  if (
+    def.id === 'pwr_l' ||
+    def.id === 'pwr_n' ||
+    def.id === 'pwr_pe_line' ||
+    def.id === 'pwr_dc_plus' ||
+    def.id === 'pwr_dc_minus'
+  ) {
     return { x: -10, y: 4, textAnchor: 'end' };
   }
   if (def.id === 'pwr_pe') {
@@ -574,6 +580,15 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
   }
   if (def.id === 'pwr_dc_source') {
     return { x: 0, y: -20, textAnchor: 'middle' };
+  }
+  if (def.id === 'rectifier_bridge') {
+    return { x: -14, y: -14, textAnchor: 'end' };
+  }
+  if (def.id === 'psu_1p_dc') {
+    return { x: -20, y: 4, textAnchor: 'end' };
+  }
+  if (def.id === 'psu_3p_dc') {
+    return { x: -28, y: 4, textAnchor: 'end' };
   }
   if (def.id.startsWith('motor_')) {
     // Under the motor circle, completely away from U1, V1, W1 at top and PE at right

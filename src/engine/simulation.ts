@@ -165,33 +165,40 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
       }
     }
 
-    // Inject potentials from sources
+    // Inject potentials from sources and active converters
     const netPotentialMap = new Map<string, string>();
     for (const elem of doc.elements) {
       const def = registry.get(elem.def);
-      if (!def || def.behavior.type !== 'source') continue;
+      if (!def) continue;
       const terms = elemTermKeys.get(elem.id);
       if (!terms) continue;
 
-      for (const [termId, pot] of Object.entries(def.behavior.potentials)) {
-        const k = terms.get(termId);
-        if (k) {
-          const root = stepDsu.find(k);
-          netPotentialMap.set(root, pot);
+      if (def.behavior.type === 'source') {
+        for (const [termId, pot] of Object.entries(def.behavior.potentials)) {
+          const k = terms.get(termId);
+          if (k) {
+            const root = stepDsu.find(k);
+            netPotentialMap.set(root, pot);
+          }
+        }
+      } else if (def.behavior.type === 'converter' && activeOutputs[elem.id]) {
+        for (const [termId, pot] of Object.entries(def.behavior.outputs)) {
+          const k = terms.get(termId);
+          if (k) {
+            const root = stepDsu.find(k);
+            netPotentialMap.set(root, pot);
+          }
         }
       }
     }
 
     // Read potentials for all terminals & nodes
     netPotentials = {};
-    for (const elem of doc.elements) {
-      const terms = elemTermKeys.get(elem.id);
-      if (!terms) continue;
-      for (const [_, k] of terms.entries()) {
-        const root = stepDsu.find(k);
-        const pot = netPotentialMap.get(root);
-        if (pot) netPotentials[k] = pot;
-      }
+    for (const pt of allNetworkPoints) {
+      const k = ptKey(pt);
+      const root = stepDsu.find(k);
+      const pot = netPotentialMap.get(root);
+      if (pot) netPotentials[k] = pot;
     }
 
     // Now evaluate loads and coils
@@ -296,6 +303,21 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         const pW = kw ? netPotentials[kw] : undefined;
         // Running if all 3 distinct phases are present
         if (pU && pV && pW && pU !== pV && pV !== pW && pU !== pW) {
+          newActiveOutputs[elem.id] = true;
+        }
+      } else if (beh.type === 'converter') {
+        const inputPots = beh.inputs.map((tid) => {
+          const k = terms.get(tid);
+          return k ? netPotentials[k] : undefined;
+        });
+        let isEnergized = false;
+        if (inputPots.length === 2) {
+          isEnergized = isVoltageDifference(inputPots[0], inputPots[1]);
+        } else if (inputPots.length >= 3) {
+          const [p1, p2, p3] = inputPots;
+          isEnergized = Boolean(p1 && p2 && p3 && p1 !== p2 && p2 !== p3 && p1 !== p3);
+        }
+        if (isEnergized) {
           newActiveOutputs[elem.id] = true;
         }
       }
