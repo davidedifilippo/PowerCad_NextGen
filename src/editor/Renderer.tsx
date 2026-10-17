@@ -1,7 +1,7 @@
 import React from 'react';
 import { Doc, Element, Prim, Wire, Sheet, ComponentDef } from '../model/types';
 import { registry } from '../library/registry';
-import { localToWorld, getSheetDimensions, Box } from '../utils/geometry';
+import { localToWorld, getSheetDimensions, Box, isPointOnSegment, dist } from '../utils/geometry';
 import { SimState } from '../engine/simulation';
 
 interface Props {
@@ -18,8 +18,32 @@ interface Props {
   onWireHandleMouseDown?: (wire: Wire, pointIndex: number, e: React.MouseEvent) => void;
   onWireContextMenu?: (wire: Wire, e: React.MouseEvent) => void;
   onTerminalClick?: (elem: Element, termId: string, worldPos: { x: number; y: number }) => void;
+  onTerminalMouseDown?: (
+    elem: Element,
+    termId: string,
+    worldPos: { x: number; y: number },
+    e: React.MouseEvent
+  ) => void;
+  onTerminalMouseUp?: (
+    elem: Element,
+    termId: string,
+    worldPos: { x: number; y: number },
+    e: React.MouseEvent
+  ) => void;
   wireDraft?: { x: number; y: number }[];
   draftColor?: string;
+  ghostElement?: {
+    def: ComponentDef;
+    x: number;
+    y: number;
+    rot: 0 | 90 | 180 | 270;
+    tag: string;
+  } | null;
+  hoveredTerminal?: {
+    x: number;
+    y: number;
+    label?: string;
+  } | null;
 }
 
 export const Renderer: React.FC<Props> = ({
@@ -36,8 +60,12 @@ export const Renderer: React.FC<Props> = ({
   onWireHandleMouseDown,
   onWireContextMenu,
   onTerminalClick,
+  onTerminalMouseDown,
+  onTerminalMouseUp,
   wireDraft,
   draftColor,
+  ghostElement,
+  hoveredTerminal,
 }) => {
   const { sheet } = doc;
   const { w: sheetW, h: sheetH } = getSheetDimensions(sheet.format, sheet.orientation);
@@ -200,9 +228,85 @@ export const Renderer: React.FC<Props> = ({
             onMouseDown={(e) => onElementMouseDown?.(elem, e)}
             onContextMenu={(e) => onElementContextMenu?.(elem, e)}
             onTerminalClick={(termId, pos) => onTerminalClick?.(elem, termId, pos)}
+            onTerminalMouseDown={(termId, pos, e) => onTerminalMouseDown?.(elem, termId, pos, e)}
+            onTerminalMouseUp={(termId, pos, e) => onTerminalMouseUp?.(elem, termId, pos, e)}
           />
         ))}
+
+        {/* Ghost Preview of component being placed (rotatable with R before clicking!) */}
+        {ghostElement && !simState.running && (
+          <g
+            className="ghost-element-preview"
+            transform={`translate(${ghostElement.x}, ${ghostElement.y}) rotate(${ghostElement.rot})`}
+            opacity={0.62}
+            pointerEvents="none"
+          >
+            {ghostElement.def.symbol.map((prim, idx) => (
+              <PrimitiveItem
+                key={idx}
+                prim={prim}
+                isActive={false}
+                stepCount={0}
+                isRunning={false}
+              />
+            ))}
+            {ghostElement.def.terminals.map((term) => (
+              <circle
+                key={term.id}
+                cx={term.x}
+                cy={term.y}
+                r={3}
+                fill="#ffffff"
+                stroke="#2563eb"
+                strokeWidth={1.4}
+              />
+            ))}
+          </g>
+        )}
       </g>
+
+      {/* 4b. Magnetic Terminal Target Highlight Ring (CircuitLab-style snap indicator) */}
+      {hoveredTerminal && !simState.running && (
+        <g
+          className="terminal-target-highlight"
+          transform={`translate(${hoveredTerminal.x}, ${hoveredTerminal.y})`}
+          pointerEvents="none"
+        >
+          <circle
+            cx={0}
+            cy={0}
+            r={7}
+            fill="rgba(239, 68, 68, 0.14)"
+            stroke="#ef4444"
+            strokeWidth={1.8}
+          />
+          <circle cx={0} cy={0} r={2.5} fill="#ef4444" />
+          {hoveredTerminal.label && (
+            <g transform="translate(0, -12)">
+              <rect
+                x={-18}
+                y={-9}
+                width={36}
+                height={12}
+                rx={3}
+                fill="#ffffff"
+                stroke="#cbd5e1"
+                strokeWidth={0.8}
+              />
+              <text
+                x={0}
+                y={0}
+                fontSize={7.5}
+                fontWeight="700"
+                fill="#0f172a"
+                textAnchor="middle"
+              >
+                {hoveredTerminal.label}
+              </text>
+            </g>
+          )}
+        </g>
+      )}
 
       {/* 5. Marquee Selection Rectangle */}
       {selectionBox && (
@@ -415,7 +519,19 @@ const ElementItem: React.FC<{
   onMouseDown: (e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent) => void;
   onTerminalClick: (termId: string, pos: { x: number; y: number }) => void;
-}> = ({ elem, simState, isSelected, onClick, onMouseDown, onContextMenu, onTerminalClick }) => {
+  onTerminalMouseDown?: (termId: string, pos: { x: number; y: number }, e: React.MouseEvent) => void;
+  onTerminalMouseUp?: (termId: string, pos: { x: number; y: number }, e: React.MouseEvent) => void;
+}> = ({
+  elem,
+  simState,
+  isSelected,
+  onClick,
+  onMouseDown,
+  onContextMenu,
+  onTerminalClick,
+  onTerminalMouseDown,
+  onTerminalMouseUp,
+}) => {
   const def = registry.get(elem.def);
   if (!def) return null;
 
@@ -522,6 +638,14 @@ const ElementItem: React.FC<{
             transform={`translate(${term.x}, ${term.y})`}
             onMouseDown={(e) => {
               e.stopPropagation();
+              if (e.button === 0) {
+                onTerminalMouseDown?.(term.id, worldPos, e);
+              }
+            }}
+            onMouseUp={(e) => {
+              if (e.button === 0) {
+                onTerminalMouseUp?.(term.id, worldPos, e);
+              }
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -530,6 +654,8 @@ const ElementItem: React.FC<{
             className="terminal-group"
             style={{ cursor: 'crosshair' }}
           >
+            {/* Generous invisible hit circle for effortless drag-to-wire / click-to-wire */}
+            <circle cx={0} cy={0} r={7.5} fill="transparent" pointerEvents="all" />
             {/* Terminal connection circle */}
             <circle
               cx={0}
@@ -767,25 +893,59 @@ const PrimitiveItem: React.FC<{
   }
 };
 
-/** Compute wire junction nodes (points where 3+ wire segments meet) */
+/** Compute wire junction nodes (points where 3+ wire branches meet, including T-junctions on segments) */
 const WireJunctions: React.FC<{ wires: Wire[]; isRunning: boolean }> = ({ wires }) => {
+  const junctionMap = new Map<string, { x: number; y: number }>();
   const countMap = new Map<string, { pt: { x: number; y: number }; count: number }>();
 
   for (const wire of wires) {
-    for (const p of wire.pts) {
+    for (let i = 0; i < wire.pts.length; i++) {
+      const p = wire.pts[i];
       const key = `${p.x},${p.y}`;
       const entry = countMap.get(key) || { pt: p, count: 0 };
-      entry.count++;
+      // An interior vertex of a polyline connects 2 branches; an endpoint connects 1 branch
+      const isEndpoint = i === 0 || i === wire.pts.length - 1;
+      entry.count += isEndpoint ? 1 : 2;
       countMap.set(key, entry);
     }
   }
 
-  const junctions = Array.from(countMap.values()).filter((v) => v.count >= 3);
+  for (const [key, val] of countMap.entries()) {
+    if (val.count >= 3) {
+      junctionMap.set(key, val.pt);
+    }
+  }
+
+  // Also detect T-junctions where a wire endpoint touches the interior of another wire segment
+  for (let i = 0; i < wires.length; i++) {
+    const wA = wires[i];
+    if (wA.pts.length === 0) continue;
+    const endpoints = [wA.pts[0], wA.pts[wA.pts.length - 1]];
+    for (const ep of endpoints) {
+      const key = `${ep.x},${ep.y}`;
+      if (junctionMap.has(key)) continue;
+      for (let j = 0; j < wires.length; j++) {
+        if (i === j) continue;
+        const wB = wires[j];
+        for (let k = 0; k < wB.pts.length - 1; k++) {
+          const p1 = wB.pts[k];
+          const p2 = wB.pts[k + 1];
+          if (dist(ep, p1) > 1 && dist(ep, p2) > 1 && isPointOnSegment(ep, p1, p2, 2)) {
+            junctionMap.set(key, ep);
+            break;
+          }
+        }
+        if (junctionMap.has(key)) break;
+      }
+    }
+  }
+
+  const junctions = Array.from(junctionMap.values());
 
   return (
     <g className="junctions-layer">
-      {junctions.map((j, idx) => (
-        <circle key={idx} cx={j.pt.x} cy={j.pt.y} r={3.5} fill="#0f172a" />
+      {junctions.map((pt, idx) => (
+        <circle key={idx} cx={pt.x} cy={pt.y} r={3.5} fill="#0f172a" pointerEvents="none" />
       ))}
     </g>
   );

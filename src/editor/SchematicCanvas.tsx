@@ -1,7 +1,16 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Doc, Element, Wire, ComponentDef, Pt, WireKind } from '../model/types';
 import { registry } from '../library/registry';
-import { snapPt, snap, dist, Box, isElementInBox, isWireInBox } from '../utils/geometry';
+import {
+  snapPt,
+  snap,
+  dist,
+  Box,
+  isElementInBox,
+  isWireInBox,
+  localToWorld,
+  rotatePt,
+} from '../utils/geometry';
 import { SimState } from '../engine/simulation';
 import { Renderer } from './Renderer';
 import { ContextMenu } from '../ui/ContextMenu';
@@ -10,7 +19,7 @@ import { ClipboardContent } from '../App';
 
 interface Props {
   doc: Doc;
-  onDocChange: (newDoc: Doc) => void;
+  onDocChange: (newDoc: Doc, recordHistory?: boolean) => void;
   simState: SimState;
   onSimStateChange: React.Dispatch<React.SetStateAction<SimState>>;
   selectedIds: Set<string>;
@@ -62,6 +71,13 @@ export const SchematicCanvas: React.FC<Props> = ({
   // Marquee selection box state
   const [selectionBox, setSelectionBox] = useState<Box | null>(null);
 
+  // Pre-placement rotation state (press R while hovering a component to rotate before dropping!)
+  const [placementRot, setPlacementRot] = useState<0 | 90 | 180 | 270>(0);
+
+  useEffect(() => {
+    setPlacementRot(0);
+  }, [activeDefToPlace]);
+
   // Floating pasted selection state (attached to mouse until released with a click)
   interface FloatingSelection {
     startWorld: Pt;
@@ -81,6 +97,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         origElemPos: Pt;
         wasSelectedAtStart: boolean;
         isDragging: boolean;
+        hasRecordedHistory: boolean;
       }
     | {
         type: 'wire';
@@ -89,6 +106,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         origPts: Pt[];
         wasSelectedAtStart: boolean;
         isDragging: boolean;
+        hasRecordedHistory: boolean;
       }
     | {
         type: 'wire-handle';
@@ -97,6 +115,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         startScreen: Pt;
         origPts: Pt[];
         isDragging: boolean;
+        hasRecordedHistory: boolean;
       }
     | {
         type: 'selection-move';
@@ -104,6 +123,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         origElemPositions: Map<string, Pt>;
         origWirePts: Map<string, Pt[]>;
         isDragging: boolean;
+        hasRecordedHistory: boolean;
       }
     | {
         type: 'box-select';
@@ -123,6 +143,7 @@ export const SchematicCanvas: React.FC<Props> = ({
 
   // Wire routing state
   const [wireDraft, setWireDraft] = useState<Pt[]>([]);
+  const [wireStartAxis, setWireStartAxis] = useState<'vertical' | 'horizontal' | null>(null);
   const [mouseWorld, setMouseWorld] = useState<Pt | null>(null);
 
   // Convert screen coordinates to world coordinates
@@ -134,11 +155,75 @@ export const SchematicCanvas: React.FC<Props> = ({
     return { x, y };
   };
 
+  // Find nearest terminal within magnetic snap radius and compute its natural exit axis
+  const findNearestTerminal = (
+    worldPt: Pt,
+    maxDist = 12
+  ): {
+    elem: Element;
+    termId: string;
+    label: string;
+    worldPos: Pt;
+    exitAxis: 'vertical' | 'horizontal';
+  } | null => {
+    let best: {
+      elem: Element;
+      termId: string;
+      label: string;
+      worldPos: Pt;
+      exitAxis: 'vertical' | 'horizontal';
+      d: number;
+    } | null = null;
+
+    for (const elem of doc.elements) {
+      const def = registry.get(elem.def);
+      if (!def) continue;
+      for (const term of def.terminals) {
+        const tWorld = localToWorld(elem.x, elem.y, term, elem.rot);
+        const d = dist(worldPt, tWorld);
+        if (d <= maxDist && (!best || d < best.d)) {
+          const r = rotatePt({ x: term.x, y: term.y }, elem.rot);
+          const exitAxis: 'vertical' | 'horizontal' =
+            Math.abs(r.y) >= Math.abs(r.x) ? 'vertical' : 'horizontal';
+          const label = elem.tag ? `${elem.tag}.${term.label || term.id}` : term.label || term.id;
+          best = {
+            elem,
+            termId: term.id,
+            label,
+            worldPos: snapPt(tWorld),
+            exitAxis,
+            d,
+          };
+        }
+      }
+    }
+    return best;
+  };
+
+  // Compute smart orthogonal corner point based on starting terminal orientation
+  const computeOrthogonalCorner = (start: Pt, targetPt: Pt): Pt => {
+    const axis =
+      wireStartAxis ??
+      (Math.abs(targetPt.y - start.y) >= Math.abs(targetPt.x - start.x)
+        ? 'vertical'
+        : 'horizontal');
+    return axis === 'vertical'
+      ? { x: start.x, y: targetPt.y }
+      : { x: targetPt.x, y: start.y };
+  };
+
   // Helper to complete in-progress wire(s)
-  const completeWire = (targetPt: Pt) => {
+  const completeWire = (rawTargetPt: Pt) => {
     if (wireDraft.length === 0) return;
     const start = wireDraft[wireDraft.length - 1];
-    const corner = { x: targetPt.x, y: start.y };
+    const targetPt = snapPt(rawTargetPt);
+    if (dist(start, targetPt) < 2) {
+      setWireDraft([]);
+      setWireStartAxis(null);
+      return;
+    }
+    const corner = computeOrthogonalCorner(start, targetPt);
+    const hasCorner = dist(start, corner) > 2 && dist(corner, targetPt) > 2;
 
     if (activeWireTool === '3p_vert') {
       const offsets = [-20, 0, 20];
@@ -146,17 +231,16 @@ export const SchematicCanvas: React.FC<Props> = ({
         id: `wire_${Date.now()}_${i}`,
         kind: 'phase',
         color: WIRE_COLOR_MAP['phase'],
-        pts:
-          dist(start, corner) > 2
-            ? [
-                { x: start.x + dx, y: start.y },
-                { x: corner.x + dx, y: corner.y },
-                { x: targetPt.x + dx, y: targetPt.y },
-              ]
-            : [
-                { x: start.x + dx, y: start.y },
-                { x: targetPt.x + dx, y: targetPt.y },
-              ],
+        pts: hasCorner
+          ? [
+              { x: start.x + dx, y: start.y },
+              { x: corner.x + dx, y: corner.y },
+              { x: targetPt.x + dx, y: targetPt.y },
+            ]
+          : [
+              { x: start.x + dx, y: start.y },
+              { x: targetPt.x + dx, y: targetPt.y },
+            ],
       }));
       onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     } else if (activeWireTool === '3p_horiz') {
@@ -165,21 +249,20 @@ export const SchematicCanvas: React.FC<Props> = ({
         id: `wire_${Date.now()}_${i}`,
         kind: 'phase',
         color: WIRE_COLOR_MAP['phase'],
-        pts:
-          dist(start, corner) > 2
-            ? [
-                { x: start.x, y: start.y + dy },
-                { x: corner.x, y: corner.y + dy },
-                { x: targetPt.x, y: targetPt.y + dy },
-              ]
-            : [
-                { x: start.x, y: start.y + dy },
-                { x: targetPt.x, y: targetPt.y + dy },
-              ],
+        pts: hasCorner
+          ? [
+              { x: start.x, y: start.y + dy },
+              { x: corner.x, y: corner.y + dy },
+              { x: targetPt.x, y: targetPt.y + dy },
+            ]
+          : [
+              { x: start.x, y: start.y + dy },
+              { x: targetPt.x, y: targetPt.y + dy },
+            ],
       }));
       onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     } else {
-      const pts = dist(start, corner) > 2 ? [start, corner, targetPt] : [start, targetPt];
+      const pts = hasCorner ? [start, corner, targetPt] : [start, targetPt];
       const newWire: Wire = {
         id: `wire_${Date.now()}`,
         kind: activeWireTool || 'aux',
@@ -189,16 +272,30 @@ export const SchematicCanvas: React.FC<Props> = ({
       onDocChange({ ...doc, wires: [...doc.wires, newWire] });
     }
     setWireDraft([]);
+    setWireStartAxis(null);
   };
 
-  // Live dynamic wire preview
+  // Magnetic hovered terminal (when not placing a component or panning)
+  const hoveredTerminal = (() => {
+    if (!mouseWorld || simState.running || activeDefToPlace || isPanning) return null;
+    const near = findNearestTerminal(mouseWorld, 12);
+    if (!near) return null;
+    return {
+      x: near.worldPos.x,
+      y: near.worldPos.y,
+      label: near.label,
+    };
+  })();
+
+  // Live dynamic wire preview with magnetic terminal snapping & smart orthogonal L-bend
   const displayDraft = (() => {
     if (wireDraft.length === 0) return [];
     if (!mouseWorld) return wireDraft;
     const start = wireDraft[wireDraft.length - 1];
-    const snapped = snapPt(mouseWorld);
-    const corner = { x: snapped.x, y: start.y };
-    if (dist(start, corner) > 2) {
+    const nearTerm = findNearestTerminal(mouseWorld, 12);
+    const snapped = nearTerm ? nearTerm.worldPos : snapPt(mouseWorld);
+    const corner = computeOrthogonalCorner(start, snapped);
+    if (dist(start, corner) > 2 && dist(corner, snapped) > 2) {
       return [start, corner, snapped];
     }
     return [start, snapped];
@@ -302,16 +399,23 @@ export const SchematicCanvas: React.FC<Props> = ({
         return;
       }
 
-      // Rotate: R
-      if ((e.key === 'r' || e.key === 'R') && selectedIds.size > 0 && !simState.running) {
-        e.preventDefault();
-        const updated = doc.elements.map((el) => {
-          if (!selectedIds.has(el.id)) return el;
-          const nextRot = ((el.rot + 90) % 360) as 0 | 90 | 180 | 270;
-          return { ...el, rot: nextRot };
-        });
-        onDocChange({ ...doc, elements: updated });
-        return;
+      // Rotate: R (rotates ghost preview before placement, or selected elements on canvas)
+      if ((e.key === 'r' || e.key === 'R') && !simState.running) {
+        if (activeDefToPlace) {
+          e.preventDefault();
+          setPlacementRot((prev) => ((prev + 90) % 360) as 0 | 90 | 180 | 270);
+          return;
+        }
+        if (selectedIds.size > 0) {
+          e.preventDefault();
+          const updated = doc.elements.map((el) => {
+            if (!selectedIds.has(el.id)) return el;
+            const nextRot = ((el.rot + 90) % 360) as 0 | 90 | 180 | 270;
+            return { ...el, rot: nextRot };
+          });
+          onDocChange({ ...doc, elements: updated });
+          return;
+        }
       }
 
       // Escape
@@ -321,6 +425,7 @@ export const SchematicCanvas: React.FC<Props> = ({
           return;
         }
         setWireDraft([]);
+        setWireStartAxis(null);
         setSelectionBox(null);
         onPlacedDef();
         onSelectWireTool?.(null);
@@ -342,6 +447,7 @@ export const SchematicCanvas: React.FC<Props> = ({
     floatingSelection,
     mouseWorld,
     simState.running,
+    activeDefToPlace,
     onPlacedDef,
     onSelectWireTool,
   ]);
@@ -397,14 +503,14 @@ export const SchematicCanvas: React.FC<Props> = ({
     const world = screenToWorld(e.clientX, e.clientY);
     const snapped = snapPt(world);
 
-    // If placing a new component from palette
+    // If placing a new component from palette (uses placementRot rotatable via R!)
     if (activeDefToPlace && e.button === 0) {
       const newElem: Element = {
         id: `elem_${Date.now()}`,
         def: activeDefToPlace.id,
         x: snapped.x,
         y: snapped.y,
-        rot: 0,
+        rot: placementRot,
         tag: activeDefToPlace.tagPrefix
           ? `${activeDefToPlace.tagPrefix}${doc.elements.filter((el) => el.def === activeDefToPlace.id).length + 1}`
           : '',
@@ -419,15 +525,25 @@ export const SchematicCanvas: React.FC<Props> = ({
       return;
     }
 
+    const nearTerm = findNearestTerminal(world, 12);
+
     // If drafting a wire
     if (wireDraft.length > 0 && e.button === 0) {
-      completeWire(snapped);
+      completeWire(nearTerm ? nearTerm.worldPos : snapped);
+      return;
+    }
+
+    // If clicking within magnetic snap range of any terminal, start wire immediately
+    if (nearTerm && e.button === 0) {
+      setWireDraft([nearTerm.worldPos]);
+      setWireStartAxis(nearTerm.exitAxis);
       return;
     }
 
     // If activeWireTool is selected and wireDraft is empty, clicking starts wire routing
     if (activeWireTool && e.button === 0) {
       setWireDraft([snapped]);
+      setWireStartAxis(null);
       return;
     }
 
@@ -451,7 +567,7 @@ export const SchematicCanvas: React.FC<Props> = ({
       return;
     }
 
-    // If currently in floating paste mode, smoothly move the pasted elements with mouse!
+    // If currently in floating paste mode, smoothly move the pasted elements with mouse (without spamming Undo history)!
     if (floatingSelection) {
       const snapped = snapPt(world);
       const dx = snapped.x - floatingSelection.startWorld.x;
@@ -475,7 +591,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         };
       });
 
-      onDocChange({ ...doc, elements: updatedElements, wires: updatedWires });
+      onDocChange({ ...doc, elements: updatedElements, wires: updatedWires }, false);
       return;
     }
 
@@ -522,6 +638,8 @@ export const SchematicCanvas: React.FC<Props> = ({
       const dy = (e.clientY - dragRef.current.startScreen.y) / zoom;
       const snapDx = snap(dx);
       const snapDy = snap(dy);
+      const shouldRecordHistory = !dragRef.current.hasRecordedHistory;
+      dragRef.current.hasRecordedHistory = true;
 
       if (dragRef.current.type === 'selection-move') {
         const origElemPositions = dragRef.current.origElemPositions;
@@ -542,7 +660,10 @@ export const SchematicCanvas: React.FC<Props> = ({
           };
         });
 
-        onDocChange({ ...doc, elements: updatedElements, wires: updatedWires });
+        onDocChange(
+          { ...doc, elements: updatedElements, wires: updatedWires },
+          shouldRecordHistory
+        );
       } else if (dragRef.current.type === 'element') {
         const elemId = dragRef.current.id;
         const newX = snap(dragRef.current.origElemPos.x + dx);
@@ -552,7 +673,7 @@ export const SchematicCanvas: React.FC<Props> = ({
           if (el.id !== elemId) return el;
           return { ...el, x: newX, y: newY };
         });
-        onDocChange({ ...doc, elements: updated });
+        onDocChange({ ...doc, elements: updated }, shouldRecordHistory);
       } else if (dragRef.current.type === 'wire') {
         const origPts = dragRef.current.origPts;
         const wireId = dragRef.current.id;
@@ -567,7 +688,7 @@ export const SchematicCanvas: React.FC<Props> = ({
             })),
           };
         });
-        onDocChange({ ...doc, wires: updated });
+        onDocChange({ ...doc, wires: updated }, shouldRecordHistory);
       } else if (dragRef.current.type === 'wire-handle') {
         const { wireId, pointIndex, origPts } = dragRef.current;
         const snapped = snapPt(world);
@@ -596,13 +717,25 @@ export const SchematicCanvas: React.FC<Props> = ({
           });
           return { ...w, pts: newPts };
         });
-        onDocChange({ ...doc, wires: updated });
+        onDocChange({ ...doc, wires: updated }, shouldRecordHistory);
       }
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent) => {
     setIsPanning(false);
+
+    // If user dragged a wire from a terminal/point and released the mouse at another location, complete it!
+    if (wireDraft.length > 0 && !simState.running && e.button === 0) {
+      const world = screenToWorld(e.clientX, e.clientY);
+      const nearTerm = findNearestTerminal(world, 12);
+      const targetPt = nearTerm ? nearTerm.worldPos : snapPt(world);
+      if (dist(targetPt, wireDraft[0]) >= 10) {
+        completeWire(targetPt);
+        dragRef.current = null;
+        return;
+      }
+    }
 
     if (dragRef.current) {
       if (dragRef.current.type === 'box-select') {
@@ -640,7 +773,22 @@ export const SchematicCanvas: React.FC<Props> = ({
       return;
     }
 
-    if (simState.running || activeWireTool) return;
+    if (simState.running) return;
+
+    // If user clicked near a terminal on the element, start or finish wire directly!
+    const world = screenToWorld(e.clientX, e.clientY);
+    const nearTerm = findNearestTerminal(world, 10);
+    if (nearTerm && e.button === 0) {
+      if (wireDraft.length === 0) {
+        setWireDraft([nearTerm.worldPos]);
+        setWireStartAxis(nearTerm.exitAxis);
+      } else {
+        completeWire(nearTerm.worldPos);
+      }
+      return;
+    }
+
+    if (activeWireTool || wireDraft.length > 0) return;
 
     if (e.button === 0) {
       const isAlreadySelected = selectedIds.has(elem.id);
@@ -662,6 +810,7 @@ export const SchematicCanvas: React.FC<Props> = ({
           origElemPositions,
           origWirePts,
           isDragging: false,
+          hasRecordedHistory: false,
         };
       } else {
         // If not already selected, immediately select it for fast visual feedback
@@ -676,6 +825,7 @@ export const SchematicCanvas: React.FC<Props> = ({
           origElemPos: { x: elem.x, y: elem.y },
           wasSelectedAtStart: isAlreadySelected,
           isDragging: false,
+          hasRecordedHistory: false,
         };
       }
     }
@@ -690,7 +840,15 @@ export const SchematicCanvas: React.FC<Props> = ({
       return;
     }
 
-    if (simState.running || activeWireTool) return;
+    if (simState.running) return;
+
+    if (wireDraft.length > 0 && e.button === 0) {
+      const world = screenToWorld(e.clientX, e.clientY);
+      completeWire(snapPt(world));
+      return;
+    }
+
+    if (activeWireTool) return;
 
     if (e.button === 0) {
       const isAlreadySelected = selectedIds.has(wire.id);
@@ -711,6 +869,7 @@ export const SchematicCanvas: React.FC<Props> = ({
           origElemPositions,
           origWirePts,
           isDragging: false,
+          hasRecordedHistory: false,
         };
       } else {
         if (!isAlreadySelected) {
@@ -724,6 +883,7 @@ export const SchematicCanvas: React.FC<Props> = ({
           origPts: wire.pts.map((p) => ({ ...p })),
           wasSelectedAtStart: isAlreadySelected,
           isDragging: false,
+          hasRecordedHistory: false,
         };
       }
     }
@@ -748,6 +908,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         startScreen: { x: e.clientX, y: e.clientY },
         origPts: wire.pts.map((p) => ({ ...p })),
         isDragging: false,
+        hasRecordedHistory: false,
       };
     }
   };
@@ -840,8 +1001,13 @@ export const SchematicCanvas: React.FC<Props> = ({
     }
   };
 
-  // Click on terminal handle -> start or complete wire
-  const handleTerminalClick = (elem: Element, _termId: string, worldPos: Pt) => {
+  // MouseDown on terminal handle -> start drag-to-wire or finish click-to-wire
+  const handleTerminalMouseDown = (
+    elem: Element,
+    termId: string,
+    worldPos: Pt,
+    _e: React.MouseEvent
+  ) => {
     if (floatingSelection) {
       setFloatingSelection(null);
       return;
@@ -850,15 +1016,41 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (simState.running) return;
 
     const snapped = snapPt(worldPos);
+    const def = registry.get(elem.def);
+    const term = def?.terminals.find((t) => t.id === termId);
+    const r = term ? rotatePt({ x: term.x, y: term.y }, elem.rot) : { x: 0, y: 1 };
+    const exitAxis: 'vertical' | 'horizontal' =
+      Math.abs(r.y) >= Math.abs(r.x) ? 'vertical' : 'horizontal';
 
     if (wireDraft.length === 0) {
       setWireDraft([snapped]);
+      setWireStartAxis(exitAxis);
     } else {
       completeWire(snapped);
     }
   };
 
-  const handleWireClick = (wire: Wire, e: React.MouseEvent) => {
+  // MouseUp on terminal handle -> complete drag-to-wire if dragged from another terminal/point
+  const handleTerminalMouseUp = (
+    _elem: Element,
+    _termId: string,
+    worldPos: Pt,
+    e: React.MouseEvent
+  ) => {
+    if (simState.running || wireDraft.length === 0) return;
+    const snapped = snapPt(worldPos);
+    if (dist(snapped, wireDraft[0]) >= 5) {
+      e.stopPropagation();
+      completeWire(snapped);
+    }
+  };
+
+  // Click on terminal handle (fallback for accessibility/synthetic clicks)
+  const handleTerminalClick = (_elem: Element, _termId: string, _worldPos: Pt) => {
+    // Handled by handleTerminalMouseDown / handleTerminalMouseUp
+  };
+
+  const handleWireClick = (_wire: Wire, e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (floatingSelection) {
@@ -879,6 +1071,7 @@ export const SchematicCanvas: React.FC<Props> = ({
       const world = screenToWorld(e.clientX, e.clientY);
       const snapped = snapPt(world);
       setWireDraft([snapped]);
+      setWireStartAxis(null);
       return;
     }
   };
@@ -923,6 +1116,21 @@ export const SchematicCanvas: React.FC<Props> = ({
     });
   };
 
+  // Compute ghost element preview when placing a component
+  const ghostElement = (() => {
+    if (!activeDefToPlace || !mouseWorld || simState.running) return null;
+    const snapped = snapPt(mouseWorld);
+    return {
+      def: activeDefToPlace,
+      x: snapped.x,
+      y: snapped.y,
+      rot: placementRot,
+      tag: activeDefToPlace.tagPrefix
+        ? `${activeDefToPlace.tagPrefix}${doc.elements.filter((el) => el.def === activeDefToPlace.id).length + 1}`
+        : '',
+    };
+  })();
+
   return (
     <div
       ref={containerRef}
@@ -946,7 +1154,7 @@ export const SchematicCanvas: React.FC<Props> = ({
           ? 'grabbing'
           : activeDefToPlace
           ? 'copy'
-          : activeWireTool
+          : activeWireTool || wireDraft.length > 0 || hoveredTerminal
           ? 'crosshair'
           : floatingSelection
           ? 'move'
@@ -975,8 +1183,12 @@ export const SchematicCanvas: React.FC<Props> = ({
             onWireHandleMouseDown={handleWireHandleMouseDown}
             onWireContextMenu={handleWireContextMenu}
             onTerminalClick={handleTerminalClick}
+            onTerminalMouseDown={handleTerminalMouseDown}
+            onTerminalMouseUp={handleTerminalMouseUp}
             wireDraft={displayDraft}
             draftColor={activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : undefined}
+            ghostElement={ghostElement}
+            hoveredTerminal={hoveredTerminal}
           />
         </g>
       </svg>

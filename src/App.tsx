@@ -40,33 +40,35 @@ export const App: React.FC = () => {
   const [zoom, setZoom] = useState<number>(0.9);
   const [pan, setPan] = useState<Pt>({ x: 40, y: 30 });
 
-  // Update doc with history tracking
+  // Update doc with optional history tracking (recordHistory=false during intermediate drag steps)
   const handleDocChange = useCallback(
-    (newDoc: Doc) => {
-      setHistory((prev) => [...prev.slice(-30), doc]);
-      setRedoStack([]);
+    (newDoc: Doc, recordHistory: boolean = true) => {
+      if (recordHistory) {
+        setHistory((prev) => [...prev.slice(-40), doc]);
+        setRedoStack([]);
+      }
       setDoc(newDoc);
     },
     [doc]
   );
 
-  const handleUndo = () => {
-    if (history.length === 0) return;
+  const handleUndo = useCallback(() => {
+    if (history.length === 0 || simState.running) return;
     const previous = history[history.length - 1];
     setHistory((prev) => prev.slice(0, prev.length - 1));
     setRedoStack((prev) => [doc, ...prev]);
     setDoc(previous);
     setSelectedIds(new Set());
-  };
+  }, [history, doc, simState.running]);
 
-  const handleRedo = () => {
-    if (redoStack.length === 0) return;
+  const handleRedo = useCallback(() => {
+    if (redoStack.length === 0 || simState.running) return;
     const next = redoStack[0];
     setRedoStack((prev) => prev.slice(1));
     setHistory((prev) => [...prev, doc]);
     setDoc(next);
     setSelectedIds(new Set());
-  };
+  }, [redoStack, doc, simState.running]);
 
   // Simulation execution loop
   useEffect(() => {
@@ -174,18 +176,32 @@ export const App: React.FC = () => {
     window.print();
   }, []);
 
-  // Keyboard shortcut Ctrl+P / Cmd+P for dedicated CAD sheet printing
+  // Keyboard shortcuts: Ctrl+P (Print), Ctrl+Z (Undo), Ctrl+Y / Ctrl+Shift+Z (Redo)
   useEffect(() => {
-    const handlePrintShortcut = (e: KeyboardEvent) => {
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault();
         handlePrint();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === 'y' || e.key === 'Y' || (e.shiftKey && (e.key === 'z' || e.key === 'Z')))
+      ) {
+        e.preventDefault();
+        handleRedo();
+        return;
       }
     };
-    window.addEventListener('keydown', handlePrintShortcut);
-    return () => window.removeEventListener('keydown', handlePrintShortcut);
-  }, [handlePrint]);
+    window.addEventListener('keydown', handleGlobalShortcuts);
+    return () => window.removeEventListener('keydown', handleGlobalShortcuts);
+  }, [handlePrint, handleUndo, handleRedo]);
 
   // Zoom helpers
   const handleZoomIn = () => setZoom((z) => Math.min(z * 1.2, 4.0));
