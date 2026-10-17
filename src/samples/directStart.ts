@@ -189,11 +189,11 @@ export const SAMPLE_DIRECT_START: Doc = {
     { id: 'w9', pts: [{ x: 140, y: 335 }, { x: 140, y: 390 }] },
 
     // FR1 a Motore M1
-    { id: 'w10', pts: [{ x: 100, y: 430 }, { x: 105, y: 495 }] },
-    { id: 'w11', pts: [{ x: 120, y: 430 }, { x: 120, y: 495 }] },
-    { id: 'w12', pts: [{ x: 140, y: 430 }, { x: 135, y: 495 }] },
+    { id: 'w10', pts: [{ x: 100, y: 430 }, { x: 100, y: 490 }] },
+    { id: 'w11', pts: [{ x: 120, y: 430 }, { x: 120, y: 490 }] },
+    { id: 'w12', pts: [{ x: 140, y: 430 }, { x: 140, y: 490 }] },
     // Terra motore
-    { id: 'w_pe', pts: [{ x: 180, y: 110 }, { x: 180, y: 520 }, { x: 145, y: 520 }] },
+    { id: 'w_pe', pts: [{ x: 180, y: 110 }, { x: 180, y: 470 }, { x: 160, y: 470 }, { x: 160, y: 490 }] },
 
     // Comando: L -> Fusibile -> Stop NC
     { id: 'wc1', pts: [{ x: 400, y: 100 }, { x: 400, y: 130 }] },

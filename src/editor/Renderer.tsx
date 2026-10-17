@@ -540,14 +540,14 @@ const ElementItem: React.FC<{
               strokeWidth={1.2}
               className="term-handle"
             />
-            {/* Terminal Number (CADe_SIMU standard: on the right side) */}
+            {/* Terminal Number (CADe_SIMU standard: on the right side of the terminal) */}
             {def.termLabels !== false && term.label && (
               <text
-                x={term.x + 6}
-                y={term.y < 0 ? -4 : term.y > 0 ? 10 : 4}
+                x={5}
+                y={term.y < 0 ? 4 : term.y > 0 ? -1 : 3}
                 fontSize={8}
                 fontWeight="500"
-                fill="#64748b"
+                fill="#475569"
                 textAnchor="start"
                 transform={`rotate(${-elem.rot})`}
               >
