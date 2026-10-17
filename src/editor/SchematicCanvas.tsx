@@ -9,7 +9,6 @@ import {
   isElementInBox,
   isWireInBox,
   localToWorld,
-  rotatePt,
 } from '../utils/geometry';
 import { SimState } from '../engine/simulation';
 import { Renderer } from './Renderer';
@@ -155,26 +154,25 @@ export const SchematicCanvas: React.FC<Props> = ({
     return { x, y };
   };
 
-  // Find nearest terminal within magnetic snap radius and compute its natural exit axis
+  // Find nearest terminal or unselected wire tip within magnetic snap radius
   const findNearestTerminal = (
     worldPt: Pt,
     maxDist = 12
   ): {
-    elem: Element;
-    termId: string;
-    label: string;
+    elem?: Element;
+    termId?: string;
+    label?: string;
     worldPos: Pt;
-    exitAxis: 'vertical' | 'horizontal';
   } | null => {
     let best: {
-      elem: Element;
-      termId: string;
-      label: string;
+      elem?: Element;
+      termId?: string;
+      label?: string;
       worldPos: Pt;
-      exitAxis: 'vertical' | 'horizontal';
       d: number;
     } | null = null;
 
+    // 1. Check all component terminals
     for (const elem of doc.elements) {
       const def = registry.get(elem.def);
       if (!def) continue;
@@ -182,25 +180,39 @@ export const SchematicCanvas: React.FC<Props> = ({
         const tWorld = localToWorld(elem.x, elem.y, term, elem.rot);
         const d = dist(worldPt, tWorld);
         if (d <= maxDist && (!best || d < best.d)) {
-          const r = rotatePt({ x: term.x, y: term.y }, elem.rot);
-          const exitAxis: 'vertical' | 'horizontal' =
-            Math.abs(r.y) >= Math.abs(r.x) ? 'vertical' : 'horizontal';
           const label = elem.tag ? `${elem.tag}.${term.label || term.id}` : term.label || term.id;
           best = {
             elem,
             termId: term.id,
             label,
             worldPos: snapPt(tWorld),
-            exitAxis,
             d,
           };
         }
       }
     }
+
+    // 2. Check endpoints (tips) of wires (so user can restart or connect at any wire tip!)
+    for (const wire of doc.wires) {
+      if (wire.pts.length === 0) continue;
+      // When not actively drafting a wire, skip selected wires so their blue resize handles work normally
+      if (wireDraft.length === 0 && !activeWireTool && selectedIds.has(wire.id)) continue;
+      const endpoints = [wire.pts[0], wire.pts[wire.pts.length - 1]];
+      for (const ep of endpoints) {
+        const d = dist(worldPt, ep);
+        if (d <= maxDist && (!best || d < best.d)) {
+          best = {
+            worldPos: snapPt(ep),
+            d,
+          };
+        }
+      }
+    }
+
     return best;
   };
 
-  // Compute smart orthogonal corner point based on starting terminal orientation
+  // Compute smart orthogonal corner point based on initial pull direction from start
   const computeOrthogonalCorner = (start: Pt, targetPt: Pt): Pt => {
     const axis =
       wireStartAxis ??
@@ -533,10 +545,10 @@ export const SchematicCanvas: React.FC<Props> = ({
       return;
     }
 
-    // If clicking within magnetic snap range of any terminal, start wire immediately
+    // If clicking within magnetic snap range of any terminal or unselected wire tip, start wire immediately
     if (nearTerm && e.button === 0) {
       setWireDraft([nearTerm.worldPos]);
-      setWireStartAxis(nearTerm.exitAxis);
+      setWireStartAxis(null);
       return;
     }
 
@@ -561,6 +573,23 @@ export const SchematicCanvas: React.FC<Props> = ({
   const handleMouseMove = (e: React.MouseEvent) => {
     const world = screenToWorld(e.clientX, e.clientY);
     setMouseWorld(world);
+
+    // Dynamically lock initial pull axis (horizontal vs vertical) when drawing a wire
+    if (wireDraft.length > 0 && !simState.running) {
+      const start = wireDraft[wireDraft.length - 1];
+      const sWorld = snapPt(world);
+      const dx = Math.abs(sWorld.x - start.x);
+      const dy = Math.abs(sWorld.y - start.y);
+      if (dx < 10 && dy < 10) {
+        if (wireStartAxis !== null) setWireStartAxis(null);
+      } else if (dy === 0 && dx >= 10) {
+        if (wireStartAxis !== 'horizontal') setWireStartAxis('horizontal');
+      } else if (dx === 0 && dy >= 10) {
+        if (wireStartAxis !== 'vertical') setWireStartAxis('vertical');
+      } else if (wireStartAxis === null) {
+        setWireStartAxis(dx > dy ? 'horizontal' : 'vertical');
+      }
+    }
 
     if (isPanning) {
       onPanChange({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
@@ -624,6 +653,11 @@ export const SchematicCanvas: React.FC<Props> = ({
     }
 
     // 2. Dragging elements, wires, or multi-selection
+    // Note: For individual wires, only allow moving if the wire was ALREADY selected before mousedown!
+    if (dragRef.current.type === 'wire' && !dragRef.current.wasSelectedAtStart) {
+      return;
+    }
+
     const dScreen = Math.hypot(
       e.clientX - dragRef.current.startScreen.x,
       e.clientY - dragRef.current.startScreen.y
@@ -781,7 +815,7 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (nearTerm && e.button === 0) {
       if (wireDraft.length === 0) {
         setWireDraft([nearTerm.worldPos]);
-        setWireStartAxis(nearTerm.exitAxis);
+        setWireStartAxis(null);
       } else {
         completeWire(nearTerm.worldPos);
       }
@@ -842,16 +876,32 @@ export const SchematicCanvas: React.FC<Props> = ({
 
     if (simState.running) return;
 
+    const world = screenToWorld(e.clientX, e.clientY);
+
     if (wireDraft.length > 0 && e.button === 0) {
-      const world = screenToWorld(e.clientX, e.clientY);
-      completeWire(snapPt(world));
+      const nearTerm = findNearestTerminal(world, 12);
+      completeWire(nearTerm ? nearTerm.worldPos : snapPt(world));
       return;
     }
 
-    if (activeWireTool) return;
-
     if (e.button === 0) {
       const isAlreadySelected = selectedIds.has(wire.id);
+
+      // If wire is NOT selected, clicking/dragging near its tip starts a new wire from that tip!
+      if (!isAlreadySelected) {
+        const nearTerm = findNearestTerminal(world, 12);
+        if (nearTerm) {
+          setWireDraft([nearTerm.worldPos]);
+          setWireStartAxis(null);
+          return;
+        }
+      }
+
+      if (activeWireTool) {
+        setWireDraft([snapPt(world)]);
+        setWireStartAxis(null);
+        return;
+      }
 
       if (isAlreadySelected && selectedIds.size > 1) {
         const origElemPositions = new Map<string, Pt>();
@@ -872,10 +922,6 @@ export const SchematicCanvas: React.FC<Props> = ({
           hasRecordedHistory: false,
         };
       } else {
-        if (!isAlreadySelected) {
-          onSelectIds(new Set([wire.id]));
-        }
-
         dragRef.current = {
           type: 'wire',
           id: wire.id,
@@ -1003,8 +1049,8 @@ export const SchematicCanvas: React.FC<Props> = ({
 
   // MouseDown on terminal handle -> start drag-to-wire or finish click-to-wire
   const handleTerminalMouseDown = (
-    elem: Element,
-    termId: string,
+    _elem: Element,
+    _termId: string,
     worldPos: Pt,
     _e: React.MouseEvent
   ) => {
@@ -1016,15 +1062,10 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (simState.running) return;
 
     const snapped = snapPt(worldPos);
-    const def = registry.get(elem.def);
-    const term = def?.terminals.find((t) => t.id === termId);
-    const r = term ? rotatePt({ x: term.x, y: term.y }, elem.rot) : { x: 0, y: 1 };
-    const exitAxis: 'vertical' | 'horizontal' =
-      Math.abs(r.y) >= Math.abs(r.x) ? 'vertical' : 'horizontal';
 
     if (wireDraft.length === 0) {
       setWireDraft([snapped]);
-      setWireStartAxis(exitAxis);
+      setWireStartAxis(null);
     } else {
       completeWire(snapped);
     }
