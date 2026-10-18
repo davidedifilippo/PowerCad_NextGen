@@ -342,7 +342,11 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
       const closedBreakers = doc.elements.filter((elem) => {
         const def = registry.get(elem.def);
         if (!def) return false;
-        const isBreaker = elem.def.startsWith('mcb_') || elem.def.startsWith('disconnector_');
+        const isBreaker =
+          elem.def.startsWith('mcb_') ||
+          elem.def.startsWith('disconnector_') ||
+          elem.def.startsWith('rcd_') ||
+          (def.behavior as any).isRCD === true;
         if (!isBreaker) return false;
         return Boolean(elementStates[elem.id] ?? (def.behavior as any).defaultOn ?? false);
       });
@@ -367,9 +371,13 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
 
       if (protectingBreaker) {
         elementStates[protectingBreaker.id] = false;
+        const isRcd =
+          protectingBreaker.def.startsWith('rcd_') ||
+          (registry.get(protectingBreaker.def)?.behavior as any)?.isRCD === true;
+        const deviceName = isRcd ? 'Interruttore differenziale' : 'Interruttore magnetotermico';
         faultAlert = {
           type: 'short_circuit',
-          message: `Interruttore magnetotermico ${protectingBreaker.tag || '-QM'} scattato per corto circuito!`,
+          message: `${deviceName} ${protectingBreaker.tag || (isRcd ? '-F' : '-QM')} scattato per corto circuito!`,
           elemId: protectingBreaker.id,
           tag: protectingBreaker.tag,
           timestamp: Date.now(),
@@ -554,6 +562,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
             }
           } else {
             newActiveOutputs[elem.id] = true;
+            if (elem.tag) newActiveOutputs[elem.tag] = true;
           }
         } else {
           if (beh.kind === 'lamp_flasher') {

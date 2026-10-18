@@ -41,7 +41,7 @@ export type Behavior =
    */
   | { type: 'contact'; actuation: 'linked' | 'momentary' | 'latching'; no?: [string, string][]; nc?: [string, string][]; defaultOn?: boolean; isRCD?: boolean; inputs?: string[]; outputs?: string[] }
   | { type: 'coil'; a: string; b: string; mode: CoilMode }
-  | { type: 'load'; kind: 'lamp' | 'lamp_flasher' | 'buzzer' | 'bell' | 'siren' | 'horn' | 'motor1' | 'motordc'; a: string; b: string }
+  | { type: 'load'; kind: 'lamp' | 'lamp_flasher' | 'buzzer' | 'bell' | 'siren' | 'horn' | 'motor1' | 'motordc' | 'resistor'; a: string; b: string }
   | { type: 'motor3'; u: string; v: string; w: string }
   | { type: 'motor3yd'; u1: string; v1: string; w1: string; u2: string; v2: string; w2: string }
   /** Thermal overload relay: power poles always conduct; user can trip it, tag drives its aux contacts. */

@@ -230,5 +230,64 @@ describe('Simulation Engine', () => {
     expect(step.fault?.type).toBe('ground_fault');
     expect(step.fault?.message).toContain('Dispersione verso terra');
   });
+
+  it('does NOT trip RCD when a resistor load (-R1) is connected between line and neutral, and trips only when fault button (-S1) to PE is pressed', () => {
+    const userCircuitDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Power source L+N+PE at (100, 100): L at (80, 110), N at (100, 110), PE at (120, 110)
+        { id: 'src', def: 'pwr_l_n_pe', x: 100, y: 100, rot: 0 as const, tag: '-X1', props: {} },
+        // Interruttore Differenziale -F1 at (90, 160): 1 at (80, 140), 3 at (100, 140), 2 at (80, 180), 4 at (100, 180)
+        { id: 'rcd1', def: 'rcd_differential_1p_n', x: 90, y: 160, rot: 0 as const, tag: '-F1', props: {} },
+        // Resistor load -R1 at (90, 240): 1 at (90, 220), 2 at (90, 260)
+        { id: 'resistor1', def: 'resistor_1p', x: 90, y: 240, rot: 0 as const, tag: '-R1', props: {} },
+        // Pushbutton -S1 at (40, 200) connected to Phase and PE: 13 at (40, 180), 14 at (40, 220)
+        { id: 'btn_fault', def: 'btn_no', x: 40, y: 200, rot: 0 as const, tag: '-S1', props: {} },
+      ],
+      wires: [
+        // Source to RCD
+        { id: 'w_l_in', pts: [{ x: 80, y: 110 }, { x: 80, y: 140 }] },
+        { id: 'w_n_in', pts: [{ x: 100, y: 110 }, { x: 100, y: 140 }] },
+        // RCD outputs to Resistor load
+        { id: 'w_l_out', pts: [{ x: 80, y: 180 }, { x: 90, y: 180 }, { x: 90, y: 220 }] },
+        { id: 'w_n_out', pts: [{ x: 100, y: 180 }, { x: 100, y: 260 }, { x: 90, y: 260 }] },
+        // Fault branch: terminal 2 of RCD (80, 180) to terminal 13 of button (40, 180)
+        { id: 'w_fault_tap', pts: [{ x: 80, y: 180 }, { x: 40, y: 180 }] },
+        // Fault branch: terminal 14 of button (40, 220) to PE wire / source terminal (120, 110)
+        { id: 'w_fault_pe', pts: [{ x: 40, y: 220 }, { x: 40, y: 300 }, { x: 120, y: 300 }, { x: 120, y: 110 }] },
+      ],
+    };
+
+    // Step 1: User starts simulation and closes RCD -F1 (fault button -S1 is NOT pressed)
+    const normalState = {
+      ...createInitialSimState(),
+      running: true,
+      elementStates: { rcd1: true, btn_fault: false },
+    };
+    const step1 = stepSimulation(userCircuitDoc, normalState, 0.05);
+
+    // Resistor is active (operating normally between L and N)
+    expect(step1.activeOutputs['resistor1']).toBe(true);
+    // RCD MUST REMAIN CLOSED!
+    expect(step1.elementStates['rcd1']).toBe(true);
+    // NO fault must be triggered!
+    expect(step1.fault).toBeNull();
+    expect(step1.faultAlert).toBeNull();
+    expect(step1.running).toBe(true);
+
+    // Step 2: User presses fault button -S1 connecting Phase downstream of RCD to PE
+    const faultState = {
+      ...step1,
+      elementStates: { ...step1.elementStates, btn_fault: true },
+    };
+    const stepFault = stepSimulation(userCircuitDoc, faultState, 0.05);
+
+    // RCD trips!
+    expect(stepFault.elementStates['rcd1']).toBe(false);
+    expect(stepFault.faultAlert).not.toBeNull();
+    expect(stepFault.faultAlert?.type).toBe('rcd_tripped');
+    // Resistor load turns OFF because power is cut downstream
+    expect(stepFault.activeOutputs['resistor1']).toBeFalsy();
+  });
 });
 

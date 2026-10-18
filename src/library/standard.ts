@@ -4786,18 +4786,19 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
   // ==================== POTENZA ====================
   {
     id: 'resistor_1p',
-    name: 'Resistore per Avviamenti di MAT',
-    description: 'Resistore monofase di potenza per limitazione di corrente, avviamento reostatico o frenatura di motori elettrici (morsetti 1-2).',
+    name: 'Resistore / Carico Resistivo',
+    description: 'Resistore monofase di potenza / carico resistivo ed elemento riscaldante (morsetti 1-2).',
     category: 'Potenza',
     tagPrefix: '-R',
     terminals: [
       { id: '1', x: 0, y: -20, label: '1' },
       { id: '2', x: 0, y: 20, label: '2' },
     ],
-    behavior: { type: 'conductor', pairs: [['1', '2']] },
+    behavior: { type: 'load', kind: 'resistor', a: '1', b: '2' },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
-      { t: 'rect', x: -4, y: -12, w: 8, h: 24, fill: '#ffffff' },
+      { t: 'rect', x: -4, y: -12, w: 8, h: 24, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -4, y: -12, w: 8, h: 24, fill: '#fef08a', stroke: '#eab308', when: 'on' },
       { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
     ],
   },
