@@ -824,7 +824,7 @@ const ElementItem: React.FC<{
 };
 
 /** Compute non-overlapping tag position based on CADe_SIMU convention (tag on left, terminals on right) */
-function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 'start' | 'middle' | 'end' } {
+export function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 'start' | 'middle' | 'end' } {
   if (def.id === 'pwr_3p_n_pe') {
     return { x: 0, y: -18, textAnchor: 'middle' };
   }
@@ -878,6 +878,12 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
     const ys = def.terminals.map((t: { y: number }) => t.y);
     const minY = ys.length > 0 ? Math.min(...ys) : -16;
     return { x: 0, y: Math.min(minY - 12, -20), textAnchor: 'middle' };
+  }
+
+  if (def.id.startsWith('mcb_') || def.id.startsWith('rcd_')) {
+    const xs = def.terminals.map((t: { x: number }) => t.x);
+    const minX = xs.length > 0 ? Math.min(...xs) : 0;
+    return { x: minX - 28, y: -7, textAnchor: 'end' };
   }
 
   if (!def.terminals || def.terminals.length === 0) {

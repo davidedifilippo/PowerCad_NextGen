@@ -33,4 +33,36 @@ describe('Standard Library Grid Alignment', () => {
     expect(rcd3p?.behavior.type).toBe('contact');
     expect((rcd3p?.behavior as any).isRCD).toBe(true);
   });
+
+  it('places tag positions for MCB and RCD protections to the left of the manual trip box without overlap', async () => {
+    const { getTagPosition } = await import('../editor/Renderer');
+    const targetIds = [
+      'rcd_differential_1p_n',
+      'rcd_differential_3p',
+      'rcd_differential_3p_n',
+      'mcb_magnetothermal_1p',
+      'mcb_magnetothermal_1p_n',
+      'mcb_magnetothermal_2p',
+      'mcb_magnetothermal_3p',
+      'mcb_magnetothermal_3p_n',
+    ];
+
+    for (const id of targetIds) {
+      const def = STANDARD_LIBRARY.find((c) => c.id === id);
+      expect(def).toBeDefined();
+      if (!def) continue;
+
+      const tagPos = getTagPosition(def);
+      expect(tagPos.textAnchor).toBe('end');
+
+      // Find the leftmost mechanism box
+      let minBoxX = Infinity;
+      for (const prim of def.symbol) {
+        if (prim.t === 'rect') minBoxX = Math.min(minBoxX, prim.x);
+      }
+
+      // Tag anchor (where right-aligned text ends) must be to the left of the box with margin
+      expect(tagPos.x).toBeLessThanOrEqual(minBoxX - 5);
+    }
+  });
 });
