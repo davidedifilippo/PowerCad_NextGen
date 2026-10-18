@@ -131,11 +131,11 @@ export const SAMPLE_DIRECT_START: Doc = {
       tag: '-H1 (Marcia)',
       props: { color: 'Verde' },
     },
-    // 12. Lampada Segnalazione Arresto Rosso -H2
+    // 12. Lampada Segnalazione Arresto Rosso -H2 (spaziata +20px a x=660 per non sovrapporre l'etichetta)
     {
       id: 'h2_lamp',
       def: 'pilot_lamp',
-      x: 640,
+      x: 660,
       y: 440,
       rot: 0,
       tag: '-H2 (Arresto)',
@@ -145,7 +145,7 @@ export const SAMPLE_DIRECT_START: Doc = {
     {
       id: 'km1_aux_nc',
       def: 'contact_nc',
-      x: 640,
+      x: 660,
       y: 330,
       rot: 0,
       tag: '-KM1',
@@ -174,56 +174,56 @@ export const SAMPLE_DIRECT_START: Doc = {
   ],
   wires: [
     // Potenza L1-L2-L3 a QM1
-    { id: 'w1', pts: [{ x: 100, y: 110 }, { x: 100, y: 170 }] },
-    { id: 'w2', pts: [{ x: 120, y: 110 }, { x: 120, y: 170 }] },
-    { id: 'w3', pts: [{ x: 140, y: 110 }, { x: 140, y: 170 }] },
+    { id: 'w1', kind: 'phase', pts: [{ x: 100, y: 110 }, { x: 100, y: 170 }] },
+    { id: 'w2', kind: 'phase_l2', pts: [{ x: 120, y: 110 }, { x: 120, y: 170 }] },
+    { id: 'w3', kind: 'phase_l3', pts: [{ x: 140, y: 110 }, { x: 140, y: 170 }] },
 
     // QM1 a KM1
-    { id: 'w4', pts: [{ x: 100, y: 230 }, { x: 100, y: 280 }] },
-    { id: 'w5', pts: [{ x: 120, y: 230 }, { x: 120, y: 280 }] },
-    { id: 'w6', pts: [{ x: 140, y: 230 }, { x: 140, y: 280 }] },
+    { id: 'w4', kind: 'phase', pts: [{ x: 100, y: 230 }, { x: 100, y: 280 }] },
+    { id: 'w5', kind: 'phase_l2', pts: [{ x: 120, y: 230 }, { x: 120, y: 280 }] },
+    { id: 'w6', kind: 'phase_l3', pts: [{ x: 140, y: 230 }, { x: 140, y: 280 }] },
 
     // KM1 a FR1
-    { id: 'w7', pts: [{ x: 100, y: 340 }, { x: 100, y: 390 }] },
-    { id: 'w8', pts: [{ x: 120, y: 340 }, { x: 120, y: 390 }] },
-    { id: 'w9', pts: [{ x: 140, y: 340 }, { x: 140, y: 390 }] },
+    { id: 'w7', kind: 'phase', pts: [{ x: 100, y: 340 }, { x: 100, y: 390 }] },
+    { id: 'w8', kind: 'phase_l2', pts: [{ x: 120, y: 340 }, { x: 120, y: 390 }] },
+    { id: 'w9', kind: 'phase_l3', pts: [{ x: 140, y: 340 }, { x: 140, y: 390 }] },
 
     // FR1 a Motore M1
-    { id: 'w10', pts: [{ x: 100, y: 430 }, { x: 100, y: 490 }] },
-    { id: 'w11', pts: [{ x: 120, y: 430 }, { x: 120, y: 490 }] },
-    { id: 'w12', pts: [{ x: 140, y: 430 }, { x: 140, y: 490 }] },
+    { id: 'w10', kind: 'phase', pts: [{ x: 100, y: 430 }, { x: 100, y: 490 }] },
+    { id: 'w11', kind: 'phase_l2', pts: [{ x: 120, y: 430 }, { x: 120, y: 490 }] },
+    { id: 'w12', kind: 'phase_l3', pts: [{ x: 140, y: 430 }, { x: 140, y: 490 }] },
     // Terra motore
     { id: 'w_pe_a', kind: 'pe', pts: [{ x: 180, y: 110 }, { x: 180, y: 470 }] },
     { id: 'w_pe_b', kind: 'pe', pts: [{ x: 180, y: 470 }, { x: 160, y: 470 }] },
     { id: 'w_pe_c', kind: 'pe', pts: [{ x: 160, y: 470 }, { x: 160, y: 490 }] },
 
     // Comando: L -> Fusibile -> Stop NC
-    { id: 'wc1', pts: [{ x: 400, y: 100 }, { x: 400, y: 130 }] },
-    { id: 'wc2', pts: [{ x: 400, y: 170 }, { x: 400, y: 220 }] },
+    { id: 'wc1', kind: 'phase', pts: [{ x: 400, y: 100 }, { x: 400, y: 130 }] },
+    { id: 'wc2', kind: 'phase', pts: [{ x: 400, y: 170 }, { x: 400, y: 220 }] },
 
     // Stop NC -> Start NA e parallelo autoritenuta KM1
-    { id: 'wc3', pts: [{ x: 400, y: 260 }, { x: 400, y: 310 }] },
-    { id: 'wc4_h', pts: [{ x: 400, y: 280 }, { x: 480, y: 280 }] },
-    { id: 'wc4_v', pts: [{ x: 480, y: 280 }, { x: 480, y: 310 }] },
-    { id: 'wc5_h', pts: [{ x: 480, y: 280 }, { x: 640, y: 280 }] },
-    { id: 'wc5_v', pts: [{ x: 640, y: 280 }, { x: 640, y: 310 }] },
+    { id: 'wc3', kind: 'phase', pts: [{ x: 400, y: 260 }, { x: 400, y: 310 }] },
+    { id: 'wc4_h', kind: 'phase', pts: [{ x: 400, y: 280 }, { x: 480, y: 280 }] },
+    { id: 'wc4_v', kind: 'phase', pts: [{ x: 480, y: 280 }, { x: 480, y: 310 }] },
+    { id: 'wc5_h', kind: 'phase', pts: [{ x: 480, y: 280 }, { x: 660, y: 280 }] },
+    { id: 'wc5_v', kind: 'phase', pts: [{ x: 660, y: 280 }, { x: 660, y: 310 }] },
 
     // Start NA / Autoritenuta -> Bobina KM1 (A1)
-    { id: 'wc6', pts: [{ x: 400, y: 350 }, { x: 400, y: 420 }] },
-    { id: 'wc7_v', pts: [{ x: 480, y: 350 }, { x: 480, y: 380 }] },
-    { id: 'wc7_h', pts: [{ x: 480, y: 380 }, { x: 400, y: 380 }] },
+    { id: 'wc6', kind: 'phase', pts: [{ x: 400, y: 350 }, { x: 400, y: 420 }] },
+    { id: 'wc7_v', kind: 'phase', pts: [{ x: 480, y: 350 }, { x: 480, y: 380 }] },
+    { id: 'wc7_h', kind: 'phase', pts: [{ x: 480, y: 380 }, { x: 400, y: 380 }] },
     // Parallelo a Lampada Marcia H1
-    { id: 'wc8_h', pts: [{ x: 480, y: 380 }, { x: 560, y: 380 }] },
-    { id: 'wc8_v', pts: [{ x: 560, y: 380 }, { x: 560, y: 420 }] },
+    { id: 'wc8_h', kind: 'phase', pts: [{ x: 480, y: 380 }, { x: 560, y: 380 }] },
+    { id: 'wc8_v', kind: 'phase', pts: [{ x: 560, y: 380 }, { x: 560, y: 420 }] },
 
     // KM1 NC -> Lampada Arresto H2
-    { id: 'wc9', pts: [{ x: 640, y: 350 }, { x: 640, y: 420 }] },
+    { id: 'wc9', kind: 'phase', pts: [{ x: 660, y: 350 }, { x: 660, y: 420 }] },
 
     // Ritorno Neutro da Bobina, H1, H2 a Neutro
-    { id: 'wc10', pts: [{ x: 400, y: 460 }, { x: 400, y: 520 }] },
-    { id: 'wc11_v', pts: [{ x: 560, y: 460 }, { x: 560, y: 500 }] },
-    { id: 'wc11_h', pts: [{ x: 560, y: 500 }, { x: 400, y: 500 }] },
-    { id: 'wc12_v', pts: [{ x: 640, y: 460 }, { x: 640, y: 500 }] },
-    { id: 'wc12_h', pts: [{ x: 640, y: 500 }, { x: 560, y: 500 }] },
+    { id: 'wc10', kind: 'neutral', pts: [{ x: 400, y: 460 }, { x: 400, y: 520 }] },
+    { id: 'wc11_v', kind: 'neutral', pts: [{ x: 560, y: 460 }, { x: 560, y: 500 }] },
+    { id: 'wc11_h', kind: 'neutral', pts: [{ x: 560, y: 500 }, { x: 400, y: 500 }] },
+    { id: 'wc12_v', kind: 'neutral', pts: [{ x: 660, y: 460 }, { x: 660, y: 500 }] },
+    { id: 'wc12_h', kind: 'neutral', pts: [{ x: 660, y: 500 }, { x: 560, y: 500 }] },
   ],
 };
