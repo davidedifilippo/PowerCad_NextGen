@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ComponentDef } from '../model/types';
 import { registry } from '../library/registry';
-import { PlusCircle, Upload, Download, Search } from 'lucide-react';
+import { PlusCircle, Upload, Download, Search, Type } from 'lucide-react';
 
 interface Props {
   activeDef: ComponentDef | null;
@@ -236,16 +236,43 @@ export const ComponentPalette: React.FC<Props> = ({
                   marginBottom: 6,
                 }}
               >
-                <svg
-                  width="60"
-                  height="60"
-                  viewBox={
-                    comp.bounds
-                      ? `${comp.bounds.x - 4} ${comp.bounds.y - 4} ${comp.bounds.w + 8} ${comp.bounds.h + 8}`
-                      : '-35 -35 70 70'
-                  }
-                >
-                  {comp.symbol.map((p, idx) => {
+                {comp.id === 'text_label' ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    <Type size={28} color="#2563eb" />
+                    <span
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: '#2563eb',
+                        letterSpacing: '0.5px',
+                        backgroundColor: '#eff6ff',
+                        padding: '1px 5px',
+                        borderRadius: 3,
+                        border: '1px solid #bfdbfe',
+                      }}
+                    >
+                      Testo
+                    </span>
+                  </div>
+                ) : (
+                  <svg
+                    width="60"
+                    height="60"
+                    viewBox={
+                      comp.bounds
+                        ? `${comp.bounds.x - 4} ${comp.bounds.y - 4} ${comp.bounds.w + 8} ${comp.bounds.h + 8}`
+                        : '-35 -35 70 70'
+                    }
+                  >
+                    {comp.symbol.map((p, idx) => {
                     if (p.when === 'on') return null; // Default off state in preview
                     if (p.t === 'line') {
                       return (
@@ -353,6 +380,7 @@ export const ComponentPalette: React.FC<Props> = ({
                     </text>
                   )}
                 </svg>
+              )}
               </div>
 
               {/* Title & Tag */}

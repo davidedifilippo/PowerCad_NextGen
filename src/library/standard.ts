@@ -6797,5 +6797,88 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       ...valve53ClosedCenterSymbol(-4, 42),
     ],
   },
+  // ==================== TESTO E ANNOTAZIONI SCHEMA ====================
+  {
+    id: 'text_label',
+    name: 'Dicitura / Testo Schema',
+    description:
+      'Dicitura o etichetta di testo orientabile per indicare sezioni del circuito (es. Circuito di Comando, Circuito di Potenza, Sistema Monofase, Sistema Trifase), note tecniche e intestazioni.',
+    category: 'Testo',
+    tagPrefix: '',
+    termLabels: false,
+    terminals: [],
+    behavior: { type: 'none' },
+    props: [
+      { key: 'text', label: 'Testo', type: 'text', default: 'Circuito di comando' },
+      {
+        key: 'size',
+        label: 'Dimensione',
+        type: 'select',
+        options: [
+          { value: '11', label: 'Piccola (11 px)' },
+          { value: '14', label: 'Standard (14 px)' },
+          { value: '18', label: 'Grande (18 px)' },
+          { value: '24', label: 'Titolo (24 px)' },
+        ],
+        default: '14',
+      },
+      {
+        key: 'bold',
+        label: 'Grassetto',
+        type: 'select',
+        options: [
+          { value: 'true', label: 'Sì' },
+          { value: 'false', label: 'No' },
+        ],
+        default: 'true',
+      },
+      {
+        key: 'italic',
+        label: 'Corsivo / Italico',
+        type: 'select',
+        options: [
+          { value: 'true', label: 'Sì' },
+          { value: 'false', label: 'No' },
+        ],
+        default: 'false',
+      },
+      {
+        key: 'color',
+        label: 'Colore',
+        type: 'select',
+        options: [
+          { value: '#0f172a', label: 'Nero Carbone' },
+          { value: '#2563eb', label: 'Blu' },
+          { value: '#dc2626', label: 'Rosso' },
+          { value: '#16a34a', label: 'Verde' },
+          { value: '#64748b', label: 'Grigio' },
+          { value: '#d97706', label: 'Arancione' },
+        ],
+        default: '#0f172a',
+      },
+      {
+        key: 'frame',
+        label: 'Cornice / Stile',
+        type: 'select',
+        options: [
+          { value: 'none', label: 'Nessuna (Testo Libero)' },
+          { value: 'box', label: 'Riquadro con Bordo' },
+          { value: 'underline', label: 'Sottolineato' },
+        ],
+        default: 'none',
+      },
+    ],
+    symbol: [
+      {
+        t: 'text',
+        x: 0,
+        y: 0,
+        text: '$text',
+        size: '$size',
+        anchor: 'start',
+        fill: '$color',
+      },
+    ],
+  },
 ];
 

@@ -688,10 +688,13 @@ export const SchematicCanvas: React.FC<Props> = ({
         tag: activeDefToPlace.tagPrefix
           ? `${activeDefToPlace.tagPrefix}${doc.elements.filter((el) => el.def === activeDefToPlace.id).length + 1}`
           : '',
-        props: (activeDefToPlace.props || []).reduce(
-          (acc, p) => ({ ...acc, [p.key]: p.default }),
-          {}
-        ),
+        props: {
+          ...(activeDefToPlace.props || []).reduce(
+            (acc, p) => ({ ...acc, [p.key]: p.default }),
+            {}
+          ),
+          ...(activeDefToPlace.initialProps || {}),
+        },
       };
       onDocChange({ ...doc, elements: [...doc.elements, newElem] });
       onSelectIds(new Set([newElem.id]));
@@ -1430,6 +1433,13 @@ export const SchematicCanvas: React.FC<Props> = ({
       tag: activeDefToPlace.tagPrefix
         ? `${activeDefToPlace.tagPrefix}${doc.elements.filter((el) => el.def === activeDefToPlace.id).length + 1}`
         : '',
+      props: {
+        ...(activeDefToPlace.props || []).reduce(
+          (acc, p) => ({ ...acc, [p.key]: p.default }),
+          {}
+        ),
+        ...(activeDefToPlace.initialProps || {}),
+      },
     };
   })();
 

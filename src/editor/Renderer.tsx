@@ -38,6 +38,7 @@ interface Props {
     y: number;
     rot: 0 | 90 | 180 | 270;
     tag: string;
+    props?: Record<string, string | number>;
   } | null;
   hoveredTerminal?: {
     x: number;
@@ -252,6 +253,7 @@ export const Renderer: React.FC<Props> = ({
                 isActive={false}
                 stepCount={0}
                 isRunning={false}
+                elemProps={ghostElement.props}
                 defProps={ghostElement.def.props}
               />
             ))}
@@ -475,7 +477,20 @@ const GridBorderMarkers: React.FC<{ margin: number; innerW: number; innerH: numb
 };
 
 /** Compute a generous bounding box for component hit-testing and selection halo */
-export function getComponentBounds(def: ComponentDef) {
+export function getComponentBounds(def: ComponentDef, elemProps?: Record<string, string | number>) {
+  if (def.id === 'text_label') {
+    const textStr = String(elemProps?.text ?? (def.props?.find((p) => p.key === 'text')?.default ?? 'Testo'));
+    const fontSize = Number(elemProps?.size ?? 14);
+    const estW = Math.max(36, textStr.length * (fontSize * 0.6) + 16);
+    const estH = fontSize + 10;
+    return {
+      x: -6,
+      y: -fontSize - 4,
+      w: estW,
+      h: estH,
+    };
+  }
+
   let minX = -20;
   let maxX = 20;
   let minY = -20;
@@ -540,7 +555,7 @@ const ElementItem: React.FC<{
   const def = registry.get(elem.def);
   if (!def) return null;
 
-  const bounds = getComponentBounds(def);
+  const bounds = getComponentBounds(def, elem.props);
 
   // Determine active state for visual primitives
   const defaultState =
@@ -571,7 +586,7 @@ const ElementItem: React.FC<{
       onClick={onClick}
       onMouseDown={onMouseDown}
       onContextMenu={onContextMenu}
-      style={{ cursor: simState.running ? 'pointer' : 'move' }}
+      style={{ cursor: simState.running ? (def.id === 'text_label' ? 'default' : 'pointer') : 'move' }}
     >
       {/* Invisible broad hit-box so clicks anywhere on the component body register immediately */}
       <rect
@@ -614,7 +629,7 @@ const ElementItem: React.FC<{
       ))}
 
       {/* Tag Label - Offset cleanly to prevent collision with terminals or poles */}
-      {elem.tag && (() => {
+      {elem.tag && def.id !== 'text_label' && (() => {
         const tagPos = getTagPosition(def);
         let tagColor = '#0f172a';
         if (def.id === 'pwr_l' || def.id === 'pwr_dc_plus') tagColor = '#ef4444';
@@ -872,17 +887,81 @@ const PrimitiveItem: React.FC<{
             return defP !== undefined ? String(defP.default) : '';
           })
         : prim.text;
+
+      let fontSize = 13;
+      if (elemProps?.size !== undefined) {
+        fontSize = Number(elemProps.size) || 13;
+      } else if (typeof prim.size === 'number') {
+        fontSize = prim.size;
+      } else if (typeof prim.size === 'string' && prim.size.startsWith('$')) {
+        const key = prim.size.slice(1);
+        fontSize = Number(elemProps?.[key]) || 13;
+      }
+
+      const isBold =
+        elemProps?.bold !== undefined
+          ? String(elemProps.bold) === 'true' || elemProps.bold === 1
+          : prim.bold !== undefined
+          ? String(prim.bold) === 'true'
+          : true;
+
+      const isItalic =
+        elemProps?.italic !== undefined
+          ? String(elemProps.italic) === 'true' || elemProps.italic === 1
+          : prim.italic !== undefined
+          ? String(prim.italic) === 'true'
+          : false;
+
+      const textColor =
+        elemProps?.color !== undefined
+          ? String(elemProps.color)
+          : prim.fill && prim.fill.startsWith('$')
+          ? String(elemProps?.[prim.fill.slice(1)] || '#0f172a')
+          : prim.fill || '#0f172a';
+
+      const frame = elemProps?.frame !== undefined ? String(elemProps.frame) : (prim.frame || 'none');
+
+      const estWidth = Math.max(24, resolvedText.length * (fontSize * 0.58) + 12);
+      const estHeight = fontSize + 8;
+      const startX = prim.anchor === 'middle' ? prim.x - estWidth / 2 : prim.anchor === 'end' ? prim.x - estWidth : prim.x;
+
       return (
-        <text
-          x={prim.x}
-          y={prim.y}
-          fontSize={prim.size || 10}
-          fill={prim.fill || '#0f172a'}
-          textAnchor={prim.anchor || 'start'}
-          fontWeight="bold"
-        >
-          {resolvedText}
-        </text>
+        <g className="text-primitive-group">
+          {frame === 'box' && (
+            <rect
+              x={startX - 4}
+              y={prim.y - fontSize - 2}
+              width={estWidth}
+              height={estHeight}
+              fill="rgba(255, 255, 255, 0.92)"
+              stroke={textColor}
+              strokeWidth={1.2}
+              rx={3}
+            />
+          )}
+          {frame === 'underline' && (
+            <line
+              x1={startX}
+              y1={prim.y + 3}
+              x2={startX + estWidth - 10}
+              y2={prim.y + 3}
+              stroke={textColor}
+              strokeWidth={1.5}
+            />
+          )}
+          <text
+            x={prim.x}
+            y={prim.y}
+            fontSize={fontSize}
+            fill={textColor}
+            textAnchor={prim.anchor || 'start'}
+            fontWeight={isBold ? 'bold' : 'normal'}
+            fontStyle={isItalic ? 'italic' : 'normal'}
+            fontFamily="Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, sans-serif"
+          >
+            {resolvedText}
+          </text>
+        </g>
       );
     }
     case 'rotor': {

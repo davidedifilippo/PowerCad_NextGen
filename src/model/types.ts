@@ -12,7 +12,18 @@ export type Prim =
   | (PrimBase & { t: 'rect'; x: number; y: number; w: number; h: number; fill?: string; r?: number })
   | (PrimBase & { t: 'circle'; cx: number; cy: number; r: number; fill?: string })
   | (PrimBase & { t: 'path'; d: string; fill?: string })
-  | (PrimBase & { t: 'text'; x: number; y: number; text: string; size?: number | string; anchor?: 'start' | 'middle' | 'end'; fill?: string })
+  | (PrimBase & {
+      t: 'text';
+      x: number;
+      y: number;
+      text: string;
+      size?: number | string;
+      anchor?: 'start' | 'middle' | 'end';
+      fill?: string;
+      bold?: boolean | string;
+      italic?: boolean | string;
+      frame?: 'none' | 'box' | 'underline';
+    })
   /** Rotating rotor indicator, drawn only while a motor runs. */
   | (PrimBase & { t: 'rotor'; cx: number; cy: number; r: number });
 
@@ -109,6 +120,8 @@ export interface ComponentDef {
   props?: PropDef[];
   /** Local bounds; computed automatically when omitted. */
   bounds?: Rect;
+  /** Optional initial property values when placing the component */
+  initialProps?: Record<string, string | number>;
 }
 
 export interface Library { name: string; version?: number; components: ComponentDef[] }

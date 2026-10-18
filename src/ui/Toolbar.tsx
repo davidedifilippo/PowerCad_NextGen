@@ -16,6 +16,7 @@ import {
   FileText,
   AlertTriangle,
   ShieldAlert,
+  Type,
 } from 'lucide-react';
 
 interface Props {
@@ -29,6 +30,7 @@ interface Props {
   onUndo: () => void;
   onRedo: () => void;
   onPrint: () => void;
+  onOpenTextModal?: () => void;
   zoom: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -46,6 +48,7 @@ export const Toolbar: React.FC<Props> = ({
   onUndo,
   onRedo,
   onPrint,
+  onOpenTextModal,
   zoom,
   onZoomIn,
   onZoomOut,
@@ -246,6 +249,28 @@ export const Toolbar: React.FC<Props> = ({
           <Maximize2 size={15} />
         </button>
       </div>
+
+      {/* Text / Annotation Tool */}
+      {onOpenTextModal && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            title="Inserisci dicitura di testo sullo schema (es. Circuito di comando, Circuito di potenza...)"
+            style={{
+              ...btnStyle,
+              backgroundColor: '#2563eb',
+              borderColor: '#3b82f6',
+              color: '#ffffff',
+              fontWeight: 600,
+              padding: '6px 12px',
+              gap: 6,
+            }}
+            onClick={onOpenTextModal}
+          >
+            <Type size={15} />
+            <span>Testo</span>
+          </button>
+        </div>
+      )}
 
       {/* Simulation Controls (Play / Stop) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

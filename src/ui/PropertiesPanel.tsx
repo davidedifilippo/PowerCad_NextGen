@@ -1,8 +1,9 @@
 import React from 'react';
 import { Doc, WireKind } from '../model/types';
 import { registry } from '../library/registry';
-import { Trash2, RotateCw, Settings, Info, Layers, Copy, Check, Activity } from 'lucide-react';
+import { Trash2, RotateCw, Settings, Info, Layers, Copy, Check, Activity, Type, Bold, Italic, Sparkles } from 'lucide-react';
 import { WIRE_COLOR_MAP } from './WireToolbar';
+import { PRESET_TEXTS, FONT_SIZES, COLOR_OPTIONS, FRAME_OPTIONS } from './TextModal';
 
 interface Props {
   selectedId: string | null;
@@ -305,6 +306,228 @@ export const PropertiesPanel: React.FC<Props> = ({
     );
     onDocChange({ ...doc, elements: updated });
   };
+
+  if (elem.def === 'text_label') {
+    const curText = String(elem.props.text ?? 'Circuito di comando');
+    const curSize = String(elem.props.size ?? '14');
+    const curBold = elem.props.bold !== undefined ? String(elem.props.bold) === 'true' || elem.props.bold === 1 : true;
+    const curItalic = elem.props.italic !== undefined ? String(elem.props.italic) === 'true' || elem.props.italic === 1 : false;
+    const curColor = String(elem.props.color ?? '#0f172a');
+    const curFrame = String(elem.props.frame ?? 'none');
+
+    return (
+      <div style={panelContainerStyle}>
+        {/* Header */}
+        <div style={panelHeaderStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Type size={15} color="#2563eb" />
+            <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>Dicitura di Testo</span>
+          </div>
+          <button onClick={onDeleteSelected} style={deleteBtnStyle} title="Elimina testo (Canc)">
+            <Trash2 size={14} /> Elimina
+          </button>
+        </div>
+
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Text Input */}
+          <div>
+            <label style={labelStyle}>Contenuto del Testo</label>
+            <input
+              type="text"
+              value={curText}
+              onChange={(e) => handlePropChange('text', e.target.value)}
+              placeholder="es. Circuito di comando..."
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Preset chips */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+              <Sparkles size={11} color="#f59e0b" />
+              <span>Diciture Rapide:</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {PRESET_TEXTS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => handlePropChange('text', p.label)}
+                  style={{
+                    padding: '3px 7px',
+                    borderRadius: 5,
+                    border: curText === p.label ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+                    backgroundColor: curText === p.label ? '#eff6ff' : '#f8fafc',
+                    color: curText === p.label ? '#1d4ed8' : '#334155',
+                    fontSize: 10.5,
+                    fontWeight: curText === p.label ? 700 : 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Size */}
+          <div>
+            <label style={labelStyle}>Dimensione Carattere</label>
+            <div style={{ display: 'flex', backgroundColor: '#f1f5f9', borderRadius: 6, padding: 2, gap: 2 }}>
+              {FONT_SIZES.map((fs) => (
+                <button
+                  key={fs.value}
+                  type="button"
+                  onClick={() => handlePropChange('size', fs.value)}
+                  style={{
+                    flex: 1,
+                    padding: '5px 0',
+                    textAlign: 'center',
+                    fontSize: 11,
+                    fontWeight: curSize === fs.value ? 700 : 500,
+                    backgroundColor: curSize === fs.value ? '#2563eb' : 'transparent',
+                    color: curSize === fs.value ? '#ffffff' : '#334155',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {fs.short}px
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Style: Bold & Italic */}
+          <div>
+            <label style={labelStyle}>Stile del Carattere</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => handlePropChange('bold', curBold ? 'false' : 'true')}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  border: curBold ? '1.5px solid #2563eb' : '1px solid #cbd5e1',
+                  backgroundColor: curBold ? '#eff6ff' : '#ffffff',
+                  color: curBold ? '#1d4ed8' : '#334155',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                }}
+              >
+                <Bold size={14} />
+                <span>Grassetto</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePropChange('italic', curItalic ? 'false' : 'true')}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  border: curItalic ? '1.5px solid #2563eb' : '1px solid #cbd5e1',
+                  backgroundColor: curItalic ? '#eff6ff' : '#ffffff',
+                  color: curItalic ? '#1d4ed8' : '#334155',
+                  fontWeight: 600,
+                  fontStyle: 'italic',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                }}
+              >
+                <Italic size={14} />
+                <span>Corsivo</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Color */}
+          <div>
+            <label style={labelStyle}>Colore del Testo</label>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              {COLOR_OPTIONS.map((c) => {
+                const isCur = curColor === c.value;
+                return (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => handlePropChange('color', c.value)}
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      backgroundColor: c.value,
+                      border: isCur ? '2px solid #ffffff' : '1px solid rgba(0,0,0,0.15)',
+                      boxShadow: isCur ? `0 0 0 2px ${c.value}` : 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                    }}
+                    title={c.label}
+                  >
+                    {isCur && <Check size={13} strokeWidth={3} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Frame / Cornice */}
+          <div>
+            <label style={labelStyle}>Cornice / Decorazione</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              {FRAME_OPTIONS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  onClick={() => handlePropChange('frame', f.value)}
+                  style={{
+                    padding: '6px 4px',
+                    borderRadius: 6,
+                    border: curFrame === f.value ? '1.5px solid #2563eb' : '1px solid #cbd5e1',
+                    backgroundColor: curFrame === f.value ? '#eff6ff' : '#ffffff',
+                    color: curFrame === f.value ? '#1d4ed8' : '#334155',
+                    fontSize: 11,
+                    fontWeight: curFrame === f.value ? 700 : 500,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  {f.value === 'none' ? 'Nessuna' : f.value === 'box' ? 'Riquadro' : 'Sottolineato'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Rotation */}
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+            <label style={labelStyle}>Orientamento nello Schema</label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 13, color: '#334155', fontWeight: 700 }}>{elem.rot}°</span>
+              <button onClick={handleRotate} style={secondaryBtnStyle}>
+                <RotateCw size={13} /> Ruota di 90° (R)
+              </button>
+            </div>
+            <span style={{ fontSize: 10, color: '#94a3b8', marginTop: 4, display: 'block' }}>
+              Puoi anche premere <b>R</b> sulla tastiera mentre il testo è selezionato.
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={panelContainerStyle}>

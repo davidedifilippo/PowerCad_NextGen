@@ -10,6 +10,8 @@ import { SchematicCanvas } from './editor/SchematicCanvas';
 import { PropertiesPanel } from './ui/PropertiesPanel';
 import { Renderer } from './editor/Renderer';
 import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
+import { registry } from './library/registry';
+import { TextModal, TextConfig } from './ui/TextModal';
 
 export interface ClipboardContent {
   elements: Element[];
@@ -33,6 +35,27 @@ export const App: React.FC = () => {
   // Placement & Active Tools
   const [activeDefToPlace, setActiveDefToPlace] = useState<ComponentDef | null>(null);
   const [activeWireTool, setActiveWireTool] = useState<WireKind | null>(null);
+  const [showTextModal, setShowTextModal] = useState<boolean>(false);
+
+  const handleConfirmText = (config: TextConfig) => {
+    const textDef = registry.get('text_label');
+    if (!textDef) return;
+    const defToPlace: ComponentDef = {
+      ...textDef,
+      initialProps: {
+        text: config.text,
+        size: config.size,
+        bold: config.bold ? 'true' : 'false',
+        italic: config.italic ? 'true' : 'false',
+        color: config.color,
+        frame: config.frame,
+      },
+    };
+    setSelectedIds(new Set());
+    setActiveWireTool(null);
+    setActiveDefToPlace(defToPlace);
+    setShowTextModal(false);
+  };
 
   // Clipboard for Copy / Paste
   const [clipboard, setClipboard] = useState<ClipboardContent | null>(null);
@@ -237,6 +260,7 @@ export const App: React.FC = () => {
           onUndo={handleUndo}
           onRedo={handleRedo}
           onPrint={handlePrint}
+          onOpenTextModal={() => setShowTextModal(true)}
           zoom={zoom}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
@@ -438,6 +462,13 @@ export const App: React.FC = () => {
           />
         </svg>
       </div>
+
+      {/* 3. Text Insertion & Configuration Modal */}
+      <TextModal
+        isOpen={showTextModal}
+        onClose={() => setShowTextModal(false)}
+        onConfirm={handleConfirmText}
+      />
     </>
   );
 };
