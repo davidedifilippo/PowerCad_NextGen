@@ -14,6 +14,8 @@ import {
   Save,
   Printer,
   FileText,
+  AlertTriangle,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface Props {
@@ -247,6 +249,44 @@ export const Toolbar: React.FC<Props> = ({
 
       {/* Simulation Controls (Play / Stop) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {simState.faultAlert && (
+          <div
+            title={simState.faultAlert.message}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 10px',
+              backgroundColor: '#854d0e',
+              color: '#fef08a',
+              borderRadius: 5,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            <ShieldAlert size={15} color="#fde047" />
+            <span>Differenziale Scattato</span>
+          </div>
+        )}
+        {simState.fault && (
+          <div
+            title={simState.fault.message}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 10px',
+              backgroundColor: '#991b1b',
+              color: '#fee2e2',
+              borderRadius: 5,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            <AlertTriangle size={15} color="#fca5a5" />
+            <span>Guasto a Terra!</span>
+          </div>
+        )}
         {!simState.running ? (
           <button
             onClick={onStartSim}

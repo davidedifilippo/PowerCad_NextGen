@@ -1,7 +1,14 @@
-import { Doc } from '../model/types';
+import { Doc, Element, Pt } from '../model/types';
 import { registry } from '../library/registry';
 import { localToWorld, ptKey, isPointOnSegment } from '../utils/geometry';
-import { Pt } from '../model/types';
+
+export interface SimFault {
+  type: 'ground_fault' | 'short_circuit' | 'rcd_tripped';
+  message: string;
+  elemId?: string;
+  tag?: string;
+  timestamp?: number;
+}
 
 export interface SimState {
   running: boolean;
@@ -17,6 +24,10 @@ export interface SimState {
   /** Wire IDs that are energized */
   energizedWires: Set<string>;
   stepCount: number;
+  /** Active electrical fault if simulation was interrupted (unprotected ground fault or short circuit) */
+  fault?: SimFault | null;
+  /** Notification alert when a protection tripped (e.g. differential breaker / RCD tripped) */
+  faultAlert?: SimFault | null;
 }
 
 export function createInitialSimState(): SimState {
@@ -29,6 +40,8 @@ export function createInitialSimState(): SimState {
     nodePotentials: {},
     energizedWires: new Set(),
     stepCount: 0,
+    fault: null,
+    faultAlert: null,
   };
 }
 
@@ -55,10 +68,103 @@ class DisjointSet {
   }
 }
 
+/** Builds conductivity graph for wires and closed component contacts */
+function buildConductivityGraph(
+  doc: Doc,
+  allNetworkPoints: Pt[],
+  elemTermKeys: Map<string, Map<string, string>>,
+  activeOutputs: Record<string, boolean>,
+  elementStates: Record<string, boolean>,
+  ignoredElementIds?: Set<string>
+): DisjointSet {
+  const dsu = new DisjointSet();
+
+  // Wires and T-junction branching
+  for (const wire of doc.wires) {
+    for (let i = 0; i < wire.pts.length - 1; i++) {
+      const p1 = wire.pts[i];
+      const p2 = wire.pts[i + 1];
+      dsu.union(ptKey(p1), ptKey(p2));
+
+      for (const pt of allNetworkPoints) {
+        if (isPointOnSegment(pt, p1, p2)) {
+          dsu.union(ptKey(p1), ptKey(pt));
+        }
+      }
+    }
+  }
+
+  // Connect terminals through closed contacts / conductors
+  for (const elem of doc.elements) {
+    if (ignoredElementIds?.has(elem.id)) continue;
+    const def = registry.get(elem.def);
+    if (!def) continue;
+    const terms = elemTermKeys.get(elem.id);
+    if (!terms) continue;
+
+    const beh = def.behavior;
+
+    if (beh.type === 'conductor') {
+      for (const [t1, t2] of beh.pairs) {
+        const k1 = terms.get(t1);
+        const k2 = terms.get(t2);
+        if (k1 && k2) dsu.union(k1, k2);
+      }
+    } else if (beh.type === 'thermal') {
+      for (const [t1, t2] of beh.pairs) {
+        const k1 = terms.get(t1);
+        const k2 = terms.get(t2);
+        if (k1 && k2) dsu.union(k1, k2);
+      }
+    } else if (beh.type === 'contact') {
+      let isClosedNO = false;
+      let isClosedNC = false;
+
+      if (beh.actuation === 'momentary') {
+        const pressed = Boolean(elementStates[elem.id]);
+        isClosedNO = pressed;
+        isClosedNC = !pressed;
+      } else if (beh.actuation === 'latching') {
+        const toggled = Boolean(
+          elementStates[elem.id] ?? (beh.defaultOn ?? false)
+        );
+        isClosedNO = toggled;
+        isClosedNC = !toggled;
+      } else if (beh.actuation === 'linked') {
+        const isCoilActive = activeOutputs[elem.tag] ?? false;
+        isClosedNO = isCoilActive;
+        isClosedNC = !isCoilActive;
+      }
+
+      if (beh.no) {
+        for (const [t1, t2] of beh.no) {
+          const k1 = terms.get(t1);
+          const k2 = terms.get(t2);
+          if (k1 && k2 && isClosedNO) dsu.union(k1, k2);
+        }
+      }
+      if (beh.nc) {
+        for (const [t1, t2] of beh.nc) {
+          const k1 = terms.get(t1);
+          const k2 = terms.get(t2);
+          if (k1 && k2 && isClosedNC) dsu.union(k1, k2);
+        }
+      }
+    }
+  }
+
+  return dsu;
+}
+
 /**
- * Executes one electrical simulation step (solves circuit potentials, coil activations, and timer advances).
+ * Executes one electrical simulation step (solves circuit potentials, coil activations, timer advances,
+ * and detects ground leakage faults / short circuits with automatic differential breaker tripping).
  */
 export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05): SimState {
+  if (state.fault && (!state.running || state.paused)) {
+    return state;
+  }
+
   // Collect all network points (all wire vertices and all absolute terminal positions)
   const allNetworkPoints: Pt[] = [];
   for (const wire of doc.wires) {
@@ -80,93 +186,226 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     elemTermKeys.set(elem.id, termMap);
   }
 
-  // Multi-pass relaxation to handle feedback loops (e.g. self-holding contactors / autoritenuta)
+  // Collect terminal keys for Phase sources, Earth PE, and Neutral
+  const phaseTermKeys: string[] = [];
+  const peTermKeys: string[] = [];
+  const neutralTermKeys: string[] = [];
+
+  for (const elem of doc.elements) {
+    const def = registry.get(elem.def);
+    if (!def) continue;
+    const terms = elemTermKeys.get(elem.id);
+    if (!terms) continue;
+
+    if (def.behavior.type === 'source') {
+      for (const [termId, pot] of Object.entries(def.behavior.potentials)) {
+        const k = terms.get(termId);
+        if (!k) continue;
+        if (pot === 'L' || pot.startsWith('L') || pot === '+24V') {
+          phaseTermKeys.push(k);
+        } else if (pot === 'PE') {
+          peTermKeys.push(k);
+        } else if (pot === 'N') {
+          neutralTermKeys.push(k);
+        }
+      }
+    } else {
+      for (const term of def.terminals) {
+        if (term.id === 'PE' || term.label === 'PE') {
+          const k = terms.get(term.id);
+          if (k) peTermKeys.push(k);
+        }
+      }
+    }
+  }
+
+  // Add all vertices on PE wires
+  for (const wire of doc.wires) {
+    if (wire.kind === 'pe') {
+      for (const p of wire.pts) {
+        peTermKeys.push(ptKey(p));
+      }
+    }
+  }
+
+  let elementStates = { ...state.elementStates };
   let activeOutputs = { ...state.activeOutputs };
+  let faultAlert: SimFault | null = state.faultAlert ?? null;
+  let fault: SimFault | null = null;
+  let running = state.running;
+  let paused = state.paused;
+
+  // Initial connectivity check for ground faults & short circuits
+  const checkGraph = buildConductivityGraph(doc, allNetworkPoints, elemTermKeys, activeOutputs, elementStates);
+  const phaseRoots = new Set(phaseTermKeys.map((k) => checkGraph.find(k)));
+  const peRoots = new Set(peTermKeys.map((k) => checkGraph.find(k)));
+  const hasDirectGroundFault = [...phaseRoots].some((r) => peRoots.has(r));
+
+  let loadFaultElem: Element | null = null;
+  if (!hasDirectGroundFault) {
+    for (const elem of doc.elements) {
+      const def = registry.get(elem.def);
+      if (!def || def.behavior.type !== 'load') continue;
+      const terms = elemTermKeys.get(elem.id);
+      if (!terms) continue;
+      const ka = terms.get(def.behavior.a);
+      const kb = terms.get(def.behavior.b);
+      if (!ka || !kb) continue;
+      const rootA = checkGraph.find(ka);
+      const rootB = checkGraph.find(kb);
+      const aIsPhase = phaseRoots.has(rootA);
+      const bIsPhase = phaseRoots.has(rootB);
+      const aIsPe = peRoots.has(rootA);
+      const bIsPe = peRoots.has(rootB);
+      if ((aIsPhase && bIsPe) || (bIsPhase && aIsPe)) {
+        loadFaultElem = elem;
+        break;
+      }
+    }
+  }
+
+  const isGroundFault = hasDirectGroundFault || Boolean(loadFaultElem);
+
+  if (isGroundFault) {
+    // Find all closed RCDs (differenziali)
+    const closedRcds = doc.elements.filter((elem) => {
+      const def = registry.get(elem.def);
+      if (!def) return false;
+      const isRcd = elem.def.startsWith('rcd_') || (def.behavior as any).isRCD === true;
+      if (!isRcd) return false;
+      return Boolean(elementStates[elem.id] ?? (def.behavior as any).defaultOn ?? false);
+    });
+
+    let protectingRcd: Element | null = null;
+    for (const rcd of closedRcds) {
+      const testGraph = buildConductivityGraph(
+        doc,
+        allNetworkPoints,
+        elemTermKeys,
+        activeOutputs,
+        elementStates,
+        new Set([rcd.id])
+      );
+      const testPhaseRoots = new Set(phaseTermKeys.map((k) => testGraph.find(k)));
+      const testPeRoots = new Set(peTermKeys.map((k) => testGraph.find(k)));
+
+      if (hasDirectGroundFault) {
+        if (![...testPhaseRoots].some((r) => testPeRoots.has(r))) {
+          protectingRcd = rcd;
+          break;
+        }
+      } else if (loadFaultElem) {
+        const terms = elemTermKeys.get(loadFaultElem.id);
+        if (terms) {
+          const def = registry.get(loadFaultElem.def)!;
+          const beh = def.behavior as any;
+          const ka = terms.get(beh.a);
+          const kb = terms.get(beh.b);
+          const rootA = ka ? testGraph.find(ka) : null;
+          const rootB = kb ? testGraph.find(kb) : null;
+          const stillPhase = (rootA && testPhaseRoots.has(rootA)) || (rootB && testPhaseRoots.has(rootB));
+          if (!stillPhase) {
+            protectingRcd = rcd;
+            break;
+          }
+        }
+      }
+    }
+
+    if (protectingRcd) {
+      // Differential breaker tripped! Open its contacts
+      elementStates[protectingRcd.id] = false;
+      faultAlert = {
+        type: 'rcd_tripped',
+        message: `Interruttore differenziale ${protectingRcd.tag || '-F'} scattato per dispersione verso terra!`,
+        elemId: protectingRcd.id,
+        tag: protectingRcd.tag,
+        timestamp: Date.now(),
+      };
+    } else {
+      // Unprotected ground fault -> Halt simulation
+      fault = {
+        type: 'ground_fault',
+        message: 'Dispersione verso terra rilevata! Nessuna protezione differenziale presente: simulazione interrotta per sicurezza.',
+        timestamp: Date.now(),
+      };
+      running = false;
+      paused = true;
+    }
+  }
+
+  // Check short-circuit between Phase and Neutral
+  if (!fault && !isGroundFault) {
+    const neutralRoots = new Set(neutralTermKeys.map((k) => checkGraph.find(k)));
+    const hasShortCircuit = [...phaseRoots].some((r) => neutralRoots.has(r));
+    if (hasShortCircuit) {
+      const closedBreakers = doc.elements.filter((elem) => {
+        const def = registry.get(elem.def);
+        if (!def) return false;
+        const isBreaker = elem.def.startsWith('mcb_') || elem.def.startsWith('disconnector_');
+        if (!isBreaker) return false;
+        return Boolean(elementStates[elem.id] ?? (def.behavior as any).defaultOn ?? false);
+      });
+
+      let protectingBreaker: Element | null = null;
+      for (const brk of closedBreakers) {
+        const testGraph = buildConductivityGraph(
+          doc,
+          allNetworkPoints,
+          elemTermKeys,
+          activeOutputs,
+          elementStates,
+          new Set([brk.id])
+        );
+        const testPhaseRoots = new Set(phaseTermKeys.map((k) => testGraph.find(k)));
+        const testNeutralRoots = new Set(neutralTermKeys.map((k) => testGraph.find(k)));
+        if (![...testPhaseRoots].some((r) => testNeutralRoots.has(r))) {
+          protectingBreaker = brk;
+          break;
+        }
+      }
+
+      if (protectingBreaker) {
+        elementStates[protectingBreaker.id] = false;
+        faultAlert = {
+          type: 'short_circuit',
+          message: `Interruttore magnetotermico ${protectingBreaker.tag || '-QM'} scattato per corto circuito!`,
+          elemId: protectingBreaker.id,
+          tag: protectingBreaker.tag,
+          timestamp: Date.now(),
+        };
+      } else {
+        fault = {
+          type: 'short_circuit',
+          message: 'Corto circuito rilevato (Fase-Neutro)! Nessuna protezione presente: simulazione interrotta per sicurezza.',
+          timestamp: Date.now(),
+        };
+        running = false;
+        paused = true;
+      }
+    }
+  }
+
+  if (fault) {
+    return {
+      ...state,
+      running: false,
+      paused: true,
+      elementStates,
+      fault,
+      faultAlert: null,
+      stepCount: state.stepCount + 1,
+    };
+  }
+
+  // Multi-pass relaxation to handle feedback loops (e.g. self-holding contactors / autoritenuta)
   const timerProgress = { ...state.timerProgress };
   let netPotentials: Record<string, string> = {};
 
   const MAX_ITERATIONS = 5;
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
     // Re-create conductivity graph for this iteration
-    const stepDsu = new DisjointSet();
-
-    // Re-apply wires with T-junction branching support
-    for (const wire of doc.wires) {
-      for (let i = 0; i < wire.pts.length - 1; i++) {
-        const p1 = wire.pts[i];
-        const p2 = wire.pts[i + 1];
-        stepDsu.union(ptKey(p1), ptKey(p2));
-
-        // Connect any network point (other wire endpoint or terminal) that touches this segment
-        for (const pt of allNetworkPoints) {
-          if (isPointOnSegment(pt, p1, p2)) {
-            stepDsu.union(ptKey(p1), ptKey(pt));
-          }
-        }
-      }
-    }
-
-    // Connect terminals through closed contacts / conductors
-    for (const elem of doc.elements) {
-      const def = registry.get(elem.def);
-      if (!def) continue;
-      const terms = elemTermKeys.get(elem.id);
-      if (!terms) continue;
-
-      const beh = def.behavior;
-
-      if (beh.type === 'conductor') {
-        for (const [t1, t2] of beh.pairs) {
-          const k1 = terms.get(t1);
-          const k2 = terms.get(t2);
-          if (k1 && k2) stepDsu.union(k1, k2);
-        }
-      } else if (beh.type === 'thermal') {
-        // Power poles conduct
-        for (const [t1, t2] of beh.pairs) {
-          const k1 = terms.get(t1);
-          const k2 = terms.get(t2);
-          if (k1 && k2) stepDsu.union(k1, k2);
-        }
-      } else if (beh.type === 'contact') {
-        let isClosedNO = false;
-        let isClosedNC = false;
-
-        if (beh.actuation === 'momentary') {
-          const pressed = Boolean(state.elementStates[elem.id] || (elem.tag && activeOutputs[elem.tag]));
-          isClosedNO = pressed;
-          isClosedNC = !pressed;
-        } else if (beh.actuation === 'latching') {
-          // If defaultOn was true (like a closed breaker), state true means toggled open
-          const toggled = Boolean(
-            (state.elementStates[elem.id] ?? (beh.defaultOn ?? false)) ||
-              (elem.tag && activeOutputs[elem.tag])
-          );
-          isClosedNO = toggled;
-          isClosedNC = !toggled;
-        } else if (beh.actuation === 'linked') {
-          // Driven by coil or thermal relay with matching tag
-          const isCoilActive = activeOutputs[elem.tag] ?? false;
-          isClosedNO = isCoilActive;
-          isClosedNC = !isCoilActive;
-        }
-
-        if (beh.no) {
-          for (const [t1, t2] of beh.no) {
-            const k1 = terms.get(t1);
-            const k2 = terms.get(t2);
-            if (k1 && k2 && isClosedNO) stepDsu.union(k1, k2);
-          }
-        }
-        if (beh.nc) {
-          for (const [t1, t2] of beh.nc) {
-            const k1 = terms.get(t1);
-            const k2 = terms.get(t2);
-            if (k1 && k2 && isClosedNC) stepDsu.union(k1, k2);
-          }
-        }
-      }
-    }
+    const stepDsu = buildConductivityGraph(doc, allNetworkPoints, elemTermKeys, activeOutputs, elementStates);
 
     // Inject potentials from sources and active converters
     const netPotentialMap = new Map<string, string>();
@@ -205,6 +444,16 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
               netPotentialMap.set(root, '+24V');
             }
           }
+        }
+      }
+    }
+
+    // Ensure PE wires get potential 'PE' even without a pwr_pe source
+    for (const wire of doc.wires) {
+      if (wire.kind === 'pe' && wire.pts.length > 0) {
+        const root = stepDsu.find(ptKey(wire.pts[0]));
+        if (!netPotentialMap.has(root)) {
+          netPotentialMap.set(root, 'PE');
         }
       }
     }
@@ -508,21 +757,26 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
 
   return {
     ...state,
+    running,
+    paused,
+    elementStates,
     activeOutputs,
     timerProgress,
     nodePotentials: netPotentials,
     energizedWires,
+    fault: null,
+    faultAlert,
     stepCount: state.stepCount + 1,
   };
 }
 
-/** Check if two potentials provide valid voltage difference (e.g. L vs N, or +24V vs 0V) */
+/** Check if two potentials provide valid voltage difference (e.g. L vs N, L vs PE, or +24V vs 0V) */
 function isVoltageDifference(p1?: string, p2?: string): boolean {
   if (!p1 || !p2 || p1 === p2) return false;
-  // AC Phase vs Neutral
+  // AC Phase vs Neutral or Protective Earth (PE)
   if (
-    (p1.startsWith('L') && (p2 === 'N' || p2.startsWith('L'))) ||
-    (p2.startsWith('L') && (p1 === 'N' || p1.startsWith('L')))
+    (p1.startsWith('L') && (p2 === 'N' || p2 === 'PE' || p2.startsWith('L'))) ||
+    (p2.startsWith('L') && (p1 === 'N' || p1 === 'PE' || p1.startsWith('L')))
   ) {
     return true;
   }

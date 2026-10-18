@@ -1256,11 +1256,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     behavior: {
       type: 'contact',
       actuation: 'latching',
+      isRCD: true,
       defaultOn: false,
       no: [
         ['1', '2'],
         ['3', '4'],
       ],
+      inputs: ['1', '3'],
+      outputs: ['2', '4'],
     },
     symbol: [
       // Contact stubs
@@ -1305,6 +1308,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     behavior: {
       type: 'contact',
       actuation: 'latching',
+      isRCD: true,
       defaultOn: false,
       no: [
         ['1', '2'],
@@ -1312,6 +1316,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
         ['5', '6'],
         ['7', '8'],
       ],
+      inputs: ['1', '3', '5', '7'],
+      outputs: ['2', '4', '6', '8'],
     },
     symbol: [
       // Contact stubs

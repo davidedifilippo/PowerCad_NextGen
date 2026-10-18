@@ -9,6 +9,7 @@ import { ComponentPalette } from './ui/ComponentPalette';
 import { SchematicCanvas } from './editor/SchematicCanvas';
 import { PropertiesPanel } from './ui/PropertiesPanel';
 import { Renderer } from './editor/Renderer';
+import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
 
 export interface ClipboardContent {
   elements: Element[];
@@ -256,7 +257,99 @@ export const App: React.FC = () => {
         />
 
         {/* Main Workspace Area */}
-        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+          {/* Floating Fault Alert (e.g. Unprotected Ground Fault or Short Circuit) */}
+          {simState.fault && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 14,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 1000,
+                backgroundColor: '#991b1b',
+                color: '#ffffff',
+                padding: '12px 20px',
+                borderRadius: 8,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                border: '1px solid #f87171',
+                maxWidth: 620,
+              }}
+            >
+              <AlertTriangle size={24} color="#fca5a5" style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1, fontSize: 13, lineHeight: 1.45 }}>
+                <strong style={{ display: 'block', fontSize: 13.5, marginBottom: 2 }}>ATTENZIONE: GUASTO RILEVATO</strong>
+                {simState.fault.message}
+              </div>
+              <button
+                onClick={() => setSimState((prev) => ({ ...prev, fault: null }))}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: 4,
+                  padding: '5px 10px',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                Chiudi
+              </button>
+            </div>
+          )}
+
+          {/* Floating Protection Trip Toast (e.g. Differential Breaker / RCD Tripped) */}
+          {simState.faultAlert && !simState.fault && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 14,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 1000,
+                backgroundColor: '#854d0e',
+                color: '#fef08a',
+                padding: '11px 18px',
+                borderRadius: 8,
+                boxShadow: '0 8px 26px rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                border: '1px solid #facc15',
+                maxWidth: 600,
+              }}
+            >
+              <ShieldAlert size={22} color="#fef08a" style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1, fontSize: 13, lineHeight: 1.4, color: '#fefce8' }}>
+                <strong style={{ display: 'block', fontSize: 13, marginBottom: 2, color: '#fef08a' }}>
+                  PROTEZIONE INTERVENUTA
+                </strong>
+                {simState.faultAlert.message}
+              </div>
+              <button
+                onClick={() => setSimState((prev) => ({ ...prev, faultAlert: null }))}
+                style={{
+                  background: 'rgba(255,255,255,0.18)',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: 4,
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12,
+                }}
+              >
+                <X size={14} /> OK
+              </button>
+            </div>
+          )}
+
           {/* Left Component Palette */}
           <ComponentPalette
             activeDef={activeDefToPlace}

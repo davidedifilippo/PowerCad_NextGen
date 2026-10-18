@@ -39,7 +39,7 @@ export type Behavior =
    *  - linked: driven by the device with the same tag (coil, timer, thermal relay, breaker, button)
    *  - momentary / latching: operated by the user during simulation
    */
-  | { type: 'contact'; actuation: 'linked' | 'momentary' | 'latching'; no?: [string, string][]; nc?: [string, string][]; defaultOn?: boolean }
+  | { type: 'contact'; actuation: 'linked' | 'momentary' | 'latching'; no?: [string, string][]; nc?: [string, string][]; defaultOn?: boolean; isRCD?: boolean; inputs?: string[]; outputs?: string[] }
   | { type: 'coil'; a: string; b: string; mode: CoilMode }
   | { type: 'load'; kind: 'lamp' | 'lamp_flasher' | 'buzzer' | 'bell' | 'siren' | 'horn' | 'motor1' | 'motordc'; a: string; b: string }
   | { type: 'motor3'; u: string; v: string; w: string }

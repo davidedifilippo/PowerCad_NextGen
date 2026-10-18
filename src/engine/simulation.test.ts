@@ -132,5 +132,103 @@ describe('Simulation Engine', () => {
     expect(sim.activeOutputs['psu1']).toBe(true);
     expect(sim.activeOutputs['lamp_dc']).toBe(true);
   });
+
+  it('correctly detects earth leakage / ground fault and trips differential circuit breaker (RCD)', () => {
+    const rcdDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Source L+N+PE at (100, 100): L at (80, 110), N at (100, 110), PE at (120, 110)
+        { id: 'src', def: 'pwr_l_n_pe', x: 100, y: 100, rot: 0 as const, tag: '-X1', props: {} },
+        // Interruttore Differenziale 1P+N at (90, 160): 1 at (80, 140), 3 at (100, 140), 2 at (80, 180), 4 at (100, 180)
+        { id: 'rcd1', def: 'rcd_differential_1p_n', x: 90, y: 160, rot: 0 as const, tag: '-F1', props: {} },
+        // Pilot Lamp at (90, 240): X1 at (90, 220), X2 at (90, 260)
+        { id: 'lamp1', def: 'pilot_lamp', x: 90, y: 240, rot: 0 as const, tag: '-H1', props: {} },
+        // Pushbutton NO at (40, 200) simulating ground fault when pressed: 13 at (40, 180), 14 at (40, 220)
+        { id: 'btn_fault', def: 'btn_no', x: 40, y: 200, rot: 0 as const, tag: '-S1', props: {} },
+      ],
+      wires: [
+        // Power from Source to RCD inputs (1 and 3)
+        { id: 'w_l_in', pts: [{ x: 80, y: 110 }, { x: 80, y: 140 }] },
+        { id: 'w_n_in', pts: [{ x: 100, y: 110 }, { x: 100, y: 140 }] },
+        // RCD outputs to Lamp load
+        { id: 'w_l_out', pts: [{ x: 80, y: 180 }, { x: 90, y: 180 }, { x: 90, y: 220 }] },
+        { id: 'w_n_out', pts: [{ x: 100, y: 180 }, { x: 100, y: 260 }, { x: 90, y: 260 }] },
+        // Fault branch: wire from terminal 2 of RCD (80, 180) to terminal 13 of button (40, 180)
+        { id: 'w_fault_tap', pts: [{ x: 80, y: 180 }, { x: 40, y: 180 }] },
+        // Fault branch: wire from terminal 14 of button (40, 220) to PE source terminal (120, 110)
+        { id: 'w_fault_pe', pts: [{ x: 40, y: 220 }, { x: 40, y: 300 }, { x: 120, y: 300 }, { x: 120, y: 110 }], kind: 'pe' },
+      ],
+    };
+
+    // 1. Initial normal state: RCD is closed, fault button is not pressed
+    const normalState = {
+      ...createInitialSimState(),
+      running: true,
+      elementStates: { rcd1: true, btn_fault: false },
+    };
+    const step1 = stepSimulation(rcdDoc, normalState, 0.05);
+
+    // RCD should remain closed, no fault alert, and lamp must be ON
+    expect(step1.elementStates['rcd1']).toBe(true);
+    expect(step1.faultAlert).toBeNull();
+    expect(step1.fault).toBeNull();
+    expect(step1.activeOutputs['lamp1']).toBe(true);
+
+    // 2. Fault occurrence: User presses button -S1 connecting Phase (downstream of RCD) to PE
+    const faultState = {
+      ...step1,
+      elementStates: { ...step1.elementStates, btn_fault: true },
+    };
+    const stepFault = stepSimulation(rcdDoc, faultState, 0.05);
+
+    // The differential breaker MUST trip automatically (contacts pop open)!
+    expect(stepFault.elementStates['rcd1']).toBe(false);
+    expect(stepFault.faultAlert).not.toBeNull();
+    expect(stepFault.faultAlert?.type).toBe('rcd_tripped');
+    expect(stepFault.faultAlert?.message).toContain('Interruttore differenziale');
+    expect(stepFault.faultAlert?.message).toContain('scattato per dispersione verso terra');
+
+    // Downstream circuit must be de-energized immediately (lamp turns OFF)
+    expect(stepFault.activeOutputs['lamp1']).toBeFalsy();
+
+    // 3. User releases the button and re-closes the RCD: normal operation resumes
+    const recloseState = {
+      ...stepFault,
+      elementStates: { rcd1: true, btn_fault: false },
+    };
+    const stepRecover = stepSimulation(rcdDoc, recloseState, 0.05);
+    expect(stepRecover.elementStates['rcd1']).toBe(true);
+    expect(stepRecover.activeOutputs['lamp1']).toBe(true);
+  });
+
+  it('halts simulation when an unprotected earth fault occurs with no differential breaker', () => {
+    const unprotectedDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        { id: 'src', def: 'pwr_l_n_pe', x: 100, y: 100, rot: 0 as const, tag: '-X1', props: {} },
+        { id: 'btn_fault', def: 'btn_no', x: 100, y: 160, rot: 0 as const, tag: '-S1', props: {} },
+      ],
+      wires: [
+        // Direct wire from Phase L (80, 110) to Button terminal 13 (100, 140)
+        { id: 'w1', pts: [{ x: 80, y: 110 }, { x: 100, y: 110 }, { x: 100, y: 140 }] },
+        // Direct wire from Button terminal 14 (100, 180) to PE (120, 110)
+        { id: 'w2', pts: [{ x: 100, y: 180 }, { x: 120, y: 180 }, { x: 120, y: 110 }], kind: 'pe' },
+      ],
+    };
+
+    const initial = {
+      ...createInitialSimState(),
+      running: true,
+      elementStates: { btn_fault: true },
+    };
+    const step = stepSimulation(unprotectedDoc, initial, 0.05);
+
+    // Simulation should be halted due to unprotected earth leakage
+    expect(step.running).toBe(false);
+    expect(step.paused).toBe(true);
+    expect(step.fault).not.toBeNull();
+    expect(step.fault?.type).toBe('ground_fault');
+    expect(step.fault?.message).toContain('Dispersione verso terra');
+  });
 });
 
