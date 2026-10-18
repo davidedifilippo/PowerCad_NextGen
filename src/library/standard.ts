@@ -1291,6 +1291,61 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
   {
+    id: 'rcd_differential_3p',
+    name: 'Interruttore Differenziale 3P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -20, y: -20, label: '1' },
+      { id: '3', x: 0, y: -20, label: '3' },
+      { id: '5', x: 20, y: -20, label: '5' },
+      { id: '2', x: -20, y: 20, label: '2' },
+      { id: '4', x: 0, y: 20, label: '4' },
+      { id: '6', x: 20, y: 20, label: '6' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'latching',
+      isRCD: true,
+      defaultOn: false,
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+      ],
+      inputs: ['1', '3', '5'],
+      outputs: ['2', '4', '6'],
+    },
+    symbol: [
+      // Contact stubs
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -12 },
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -12 },
+      // Switch blades
+      { t: 'line', x1: -20, y1: 0, x2: -20, y2: -12, transform: 'rotate(-22 -20 0)', when: 'off' },
+      { t: 'line', x1: 0, y1: 0, x2: 0, y2: -12, transform: 'rotate(-22 0 0)', when: 'off' },
+      { t: 'line', x1: 20, y1: 0, x2: 20, y2: -12, transform: 'rotate(-22 20 0)', when: 'off' },
+      { t: 'line', x1: -20, y1: 0, x2: -20, y2: -12, when: 'on' },
+      { t: 'line', x1: 0, y1: 0, x2: 0, y2: -12, when: 'on' },
+      { t: 'line', x1: 20, y1: 0, x2: 20, y2: -12, when: 'on' },
+      // Bottom lines through toroid
+      { t: 'line', x1: -20, y1: 0, x2: -20, y2: 20 },
+      { t: 'line', x1: 0, y1: 0, x2: 0, y2: 20 },
+      { t: 'line', x1: 20, y1: 0, x2: 20, y2: 20 },
+      // Wide toroid oval
+      { t: 'rect', x: -26, y: 5, w: 52, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
+      // Link to trip relay
+      { t: 'line', x1: -26, y1: 9, x2: -34, y2: 9 },
+      { t: 'line', x1: -34, y1: 9, x2: -34, y2: -6 },
+      // Trip relay box
+      { t: 'rect', x: -40, y: -12, w: 12, h: 12, fill: '#ffffff' },
+      { t: 'line', x1: -40, y1: -12, x2: -28, y2: 0 },
+      { t: 'line', x1: -28, y1: -12, x2: -40, y2: 0 },
+      // Dashed actuator link to contacts
+      { t: 'line', x1: -28, y1: -6, x2: -22, y2: -6, dash: true },
+    ],
+  },
+  {
     id: 'rcd_differential_3p_n',
     name: 'Interruttore Differenziale 3P + N',
     category: 'Protezioni',
@@ -1404,8 +1459,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-Q',
     terminals: [
-      { id: '1', x: 0, y: -25, label: '1' },
-      { id: '2', x: 0, y: 25, label: '2' },
+      { id: '1', x: 0, y: -30, label: '1' },
+      { id: '2', x: 0, y: 30, label: '2' },
     ],
     behavior: {
       type: 'contact',
@@ -1414,7 +1469,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       no: [['1', '2']],
     },
     symbol: [
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -16 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -16 },
       // Contact blade
       { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, transform: 'rotate(-22 0 -4)', when: 'off' },
       { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, when: 'on' },
@@ -1422,7 +1477,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 0, y1: -4, x2: 0, y2: 0 },
       { t: 'rect', x: -6, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: 0, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 30 },
       // Manual control box on left
       { t: 'rect', x: -20, y: -16, w: 10, h: 10, fill: '#ffffff' },
       { t: 'line', x1: -20, y1: -16, x2: -10, y2: -6 },
@@ -1438,10 +1493,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-Q',
     terminals: [
-      { id: '1', x: -10, y: -25, label: '1' },
-      { id: '3', x: 10, y: -25, label: '3' },
-      { id: '2', x: -10, y: 25, label: '2' },
-      { id: '4', x: 10, y: 25, label: '4' },
+      { id: '1', x: -10, y: -30, label: '1' },
+      { id: '3', x: 10, y: -30, label: '3' },
+      { id: '2', x: -10, y: 30, label: '2' },
+      { id: '4', x: 10, y: 30, label: '4' },
     ],
     behavior: {
       type: 'contact',
@@ -1454,18 +1509,18 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: Phase with I > trip (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -16 },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, transform: 'rotate(-22 -10 -4)', when: 'off' },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, when: 'on' },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: 0 },
       { t: 'rect', x: -16, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: -10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 30 },
       // Pole 2: Neutral blade (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -16 },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, transform: 'rotate(-22 10 -4)', when: 'off' },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, when: 'on' },
-      { t: 'line', x1: 10, y1: -4, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: -4, x2: 10, y2: 30 },
       // Manual control box on left
       { t: 'rect', x: -30, y: -16, w: 10, h: 10, fill: '#ffffff' },
       { t: 'line', x1: -30, y1: -16, x2: -20, y2: -6 },
@@ -1481,10 +1536,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-Q',
     terminals: [
-      { id: '1', x: -10, y: -25, label: '1' },
-      { id: '3', x: 10, y: -25, label: '3' },
-      { id: '2', x: -10, y: 25, label: '2' },
-      { id: '4', x: 10, y: 25, label: '4' },
+      { id: '1', x: -10, y: -30, label: '1' },
+      { id: '3', x: 10, y: -30, label: '3' },
+      { id: '2', x: -10, y: 30, label: '2' },
+      { id: '4', x: 10, y: 30, label: '4' },
     ],
     behavior: {
       type: 'contact',
@@ -1497,21 +1552,21 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -16 },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, transform: 'rotate(-22 -10 -4)', when: 'off' },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, when: 'on' },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: 0 },
       { t: 'rect', x: -16, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: -10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 30 },
       // Pole 2: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -16 },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, transform: 'rotate(-22 10 -4)', when: 'off' },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, when: 'on' },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: 0 },
       { t: 'rect', x: 4, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: 10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 30 },
       // Manual control box on left
       { t: 'rect', x: -30, y: -16, w: 10, h: 10, fill: '#ffffff' },
       { t: 'line', x1: -30, y1: -16, x2: -20, y2: -6 },
@@ -1527,12 +1582,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-Q',
     terminals: [
-      { id: '1', x: -20, y: -25, label: '1' },
-      { id: '3', x: 0, y: -25, label: '3' },
-      { id: '5', x: 20, y: -25, label: '5' },
-      { id: '2', x: -20, y: 25, label: '2' },
-      { id: '4', x: 0, y: 25, label: '4' },
-      { id: '6', x: 20, y: 25, label: '6' },
+      { id: '1', x: -20, y: -30, label: '1' },
+      { id: '3', x: 0, y: -30, label: '3' },
+      { id: '5', x: 20, y: -30, label: '5' },
+      { id: '2', x: -20, y: 30, label: '2' },
+      { id: '4', x: 0, y: 30, label: '4' },
+      { id: '6', x: 20, y: 30, label: '6' },
     ],
     behavior: {
       type: 'contact',
@@ -1546,29 +1601,29 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-20)
-      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -16 },
+      { t: 'line', x1: -20, y1: -30, x2: -20, y2: -16 },
       { t: 'line', x1: -20, y1: -4, x2: -20, y2: -16, transform: 'rotate(-22 -20 -4)', when: 'off' },
       { t: 'line', x1: -20, y1: -4, x2: -20, y2: -16, when: 'on' },
       { t: 'line', x1: -20, y1: -4, x2: -20, y2: 0 },
       { t: 'rect', x: -26, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: -20, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: -20, y1: 14, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: 14, x2: -20, y2: 30 },
       // Pole 2: (0)
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -16 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -16 },
       { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, transform: 'rotate(-22 0 -4)', when: 'off' },
       { t: 'line', x1: 0, y1: -4, x2: 0, y2: -16, when: 'on' },
       { t: 'line', x1: 0, y1: -4, x2: 0, y2: 0 },
       { t: 'rect', x: -6, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: 0, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 30 },
       // Pole 3: (20)
-      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -16 },
+      { t: 'line', x1: 20, y1: -30, x2: 20, y2: -16 },
       { t: 'line', x1: 20, y1: -4, x2: 20, y2: -16, transform: 'rotate(-22 20 -4)', when: 'off' },
       { t: 'line', x1: 20, y1: -4, x2: 20, y2: -16, when: 'on' },
       { t: 'line', x1: 20, y1: -4, x2: 20, y2: 0 },
       { t: 'rect', x: 14, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: 20, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: 20, y1: 14, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: 14, x2: 20, y2: 30 },
       // Manual control box on left
       { t: 'rect', x: -40, y: -16, w: 10, h: 10, fill: '#ffffff' },
       { t: 'line', x1: -40, y1: -16, x2: -30, y2: -6 },
@@ -1584,14 +1639,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-Q',
     terminals: [
-      { id: '1', x: -30, y: -25, label: '1' },
-      { id: '3', x: -10, y: -25, label: '3' },
-      { id: '5', x: 10, y: -25, label: '5' },
-      { id: '7', x: 30, y: -25, label: '7' },
-      { id: '2', x: -30, y: 25, label: '2' },
-      { id: '4', x: -10, y: 25, label: '4' },
-      { id: '6', x: 10, y: 25, label: '6' },
-      { id: '8', x: 30, y: 25, label: '8' },
+      { id: '1', x: -30, y: -30, label: '1' },
+      { id: '3', x: -10, y: -30, label: '3' },
+      { id: '5', x: 10, y: -30, label: '5' },
+      { id: '7', x: 30, y: -30, label: '7' },
+      { id: '2', x: -30, y: 30, label: '2' },
+      { id: '4', x: -10, y: 30, label: '4' },
+      { id: '6', x: 10, y: 30, label: '6' },
+      { id: '8', x: 30, y: 30, label: '8' },
     ],
     behavior: {
       type: 'contact',
@@ -1606,34 +1661,34 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-30)
-      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -16 },
+      { t: 'line', x1: -30, y1: -30, x2: -30, y2: -16 },
       { t: 'line', x1: -30, y1: -4, x2: -30, y2: -16, transform: 'rotate(-22 -30 -4)', when: 'off' },
       { t: 'line', x1: -30, y1: -4, x2: -30, y2: -16, when: 'on' },
       { t: 'line', x1: -30, y1: -4, x2: -30, y2: 0 },
       { t: 'rect', x: -36, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: -30, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: -30, y1: 14, x2: -30, y2: 25 },
+      { t: 'line', x1: -30, y1: 14, x2: -30, y2: 30 },
       // Pole 2: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -16 },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, transform: 'rotate(-22 -10 -4)', when: 'off' },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, when: 'on' },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: 0 },
       { t: 'rect', x: -16, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: -10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 30 },
       // Pole 3: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -16 },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, transform: 'rotate(-22 10 -4)', when: 'off' },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, when: 'on' },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: 0 },
       { t: 'rect', x: 4, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: 10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 30 },
       // Pole 4: Neutral blade (30)
-      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -16 },
+      { t: 'line', x1: 30, y1: -30, x2: 30, y2: -16 },
       { t: 'line', x1: 30, y1: -4, x2: 30, y2: -16, transform: 'rotate(-22 30 -4)', when: 'off' },
       { t: 'line', x1: 30, y1: -4, x2: 30, y2: -16, when: 'on' },
-      { t: 'line', x1: 30, y1: -4, x2: 30, y2: 25 },
+      { t: 'line', x1: 30, y1: -4, x2: 30, y2: 30 },
       // Manual control box on left
       { t: 'rect', x: -50, y: -16, w: 10, h: 10, fill: '#ffffff' },
       { t: 'line', x1: -50, y1: -16, x2: -40, y2: -6 },
@@ -1651,27 +1706,27 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-F',
     terminals: [
-      { id: '1', x: -10, y: -25, label: '1' },
-      { id: '2', x: 10, y: -25, label: '2' },
-      { id: 'PE', x: 0, y: 25, label: 'PE' },
+      { id: '1', x: -10, y: -30, label: '1' },
+      { id: '2', x: 10, y: -30, label: '2' },
+      { id: 'PE', x: 0, y: 30, label: 'PE' },
     ],
     behavior: { type: 'conductor', pairs: [] },
     symbol: [
       // Enclosing dashed box
       { t: 'rect', x: -18, y: -16, w: 36, h: 32, dash: true },
       // Pole 1: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -7 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -7 },
       { t: 'path', d: 'M -14 -6 L -6 -6 L -10 0 Z', fill: '#0f172a' },
       { t: 'path', d: 'M -14 6 L -6 6 L -10 0 Z', fill: '#0f172a' },
       { t: 'line', x1: -10, y1: 7, x2: -10, y2: 14 },
       // Pole 2: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -7 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -7 },
       { t: 'path', d: 'M 6 -6 L 14 -6 L 10 0 Z', fill: '#0f172a' },
       { t: 'path', d: 'M 6 6 L 14 6 L 10 0 Z', fill: '#0f172a' },
       { t: 'line', x1: 10, y1: 7, x2: 10, y2: 14 },
       // Common ground bus to PE terminal
       { t: 'line', x1: -10, y1: 14, x2: 10, y2: 14 },
-      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 30 },
     ],
   },
   {
@@ -1680,39 +1735,39 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-F',
     terminals: [
-      { id: '1', x: -30, y: -25, label: '1' },
-      { id: '2', x: -10, y: -25, label: '2' },
-      { id: '3', x: 10, y: -25, label: '3' },
-      { id: '4', x: 30, y: -25, label: '4' },
-      { id: 'PE', x: 0, y: 25, label: 'PE' },
+      { id: '1', x: -30, y: -30, label: '1' },
+      { id: '2', x: -10, y: -30, label: '2' },
+      { id: '3', x: 10, y: -30, label: '3' },
+      { id: '4', x: 30, y: -30, label: '4' },
+      { id: 'PE', x: 0, y: 30, label: 'PE' },
     ],
     behavior: { type: 'conductor', pairs: [] },
     symbol: [
       // Enclosing dashed box
       { t: 'rect', x: -38, y: -16, w: 76, h: 32, dash: true },
       // Pole 1: (-30)
-      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -7 },
+      { t: 'line', x1: -30, y1: -30, x2: -30, y2: -7 },
       { t: 'path', d: 'M -34 -6 L -26 -6 L -30 0 Z', fill: '#0f172a' },
       { t: 'path', d: 'M -34 6 L -26 6 L -30 0 Z', fill: '#0f172a' },
       { t: 'line', x1: -30, y1: 7, x2: -30, y2: 14 },
       // Pole 2: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -7 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -7 },
       { t: 'path', d: 'M -14 -6 L -6 -6 L -10 0 Z', fill: '#0f172a' },
       { t: 'path', d: 'M -14 6 L -6 6 L -10 0 Z', fill: '#0f172a' },
       { t: 'line', x1: -10, y1: 7, x2: -10, y2: 14 },
       // Pole 3: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -7 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -7 },
       { t: 'path', d: 'M 6 -6 L 14 -6 L 10 0 Z', fill: '#0f172a' },
       { t: 'path', d: 'M 6 6 L 14 6 L 10 0 Z', fill: '#0f172a' },
       { t: 'line', x1: 10, y1: 7, x2: 10, y2: 14 },
       // Pole 4: (30)
-      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -7 },
+      { t: 'line', x1: 30, y1: -30, x2: 30, y2: -7 },
       { t: 'path', d: 'M 26 -6 L 34 -6 L 30 0 Z', fill: '#0f172a' },
       { t: 'path', d: 'M 26 6 L 34 6 L 30 0 Z', fill: '#0f172a' },
       { t: 'line', x1: 30, y1: 7, x2: 30, y2: 14 },
       // Common ground bus to PE terminal
       { t: 'line', x1: -30, y1: 14, x2: 30, y2: 14 },
-      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 14, x2: 0, y2: 30 },
     ],
   },
   {
@@ -1721,12 +1776,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-QM',
     terminals: [
-      { id: '1', x: -20, y: -25, label: '1' },
-      { id: '3', x: 0, y: -25, label: '3' },
-      { id: '5', x: 20, y: -25, label: '5' },
-      { id: '2', x: -20, y: 25, label: '2' },
-      { id: '4', x: 0, y: 25, label: '4' },
-      { id: '6', x: 20, y: 25, label: '6' },
+      { id: '1', x: -20, y: -30, label: '1' },
+      { id: '3', x: 0, y: -30, label: '3' },
+      { id: '5', x: 20, y: -30, label: '5' },
+      { id: '2', x: -20, y: 30, label: '2' },
+      { id: '4', x: 0, y: 30, label: '4' },
+      { id: '6', x: 20, y: 30, label: '6' },
     ],
     behavior: {
       type: 'contact',
@@ -1740,24 +1795,24 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1
-      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
+      { t: 'line', x1: -20, y1: -30, x2: -20, y2: -10 },
       { t: 'circle', cx: -20, cy: -10, r: 2 },
       { t: 'circle', cx: -20, cy: 10, r: 2 },
-      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 30 },
       { t: 'line', x1: -20, y1: 10, x2: -14, y2: -8, when: 'off' },
       { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
       // Pole 2
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -10 },
       { t: 'circle', cx: 0, cy: -10, r: 2 },
       { t: 'circle', cx: 0, cy: 10, r: 2 },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 30 },
       { t: 'line', x1: 0, y1: 10, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
       // Pole 3
-      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
+      { t: 'line', x1: 20, y1: -30, x2: 20, y2: -10 },
       { t: 'circle', cx: 20, cy: -10, r: 2 },
       { t: 'circle', cx: 20, cy: 10, r: 2 },
-      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 30 },
       { t: 'line', x1: 20, y1: 10, x2: 26, y2: -8, when: 'off' },
       { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
       // Connection bar
@@ -1808,8 +1863,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-KM',
     terminals: [
-      { id: '1', x: 0, y: -25, label: '1' },
-      { id: '2', x: 0, y: 25, label: '2' },
+      { id: '1', x: 0, y: -30, label: '1' },
+      { id: '2', x: 0, y: 30, label: '2' },
     ],
     behavior: {
       type: 'contact',
@@ -1817,8 +1872,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       no: [['1', '2']],
     },
     symbol: [
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 30 },
       { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
     ],
@@ -1829,10 +1884,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-KM',
     terminals: [
-      { id: '1', x: -10, y: -25, label: '1' },
-      { id: '3', x: 10, y: -25, label: '3' },
-      { id: '2', x: -10, y: 25, label: '2' },
-      { id: '4', x: 10, y: 25, label: '4' },
+      { id: '1', x: -10, y: -30, label: '1' },
+      { id: '3', x: 10, y: -30, label: '3' },
+      { id: '2', x: -10, y: 30, label: '2' },
+      { id: '4', x: 10, y: 30, label: '4' },
     ],
     behavior: {
       type: 'contact',
@@ -1844,13 +1899,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
-      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 30 },
       { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
       { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
       // Pole 2: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
-      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 30 },
       { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
       { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
       // Mechanical link between blades
@@ -1864,12 +1919,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-KM',
     terminals: [
-      { id: '1', x: -20, y: -25, label: '1' },
-      { id: '3', x: 0, y: -25, label: '3' },
-      { id: '5', x: 20, y: -25, label: '5' },
-      { id: '2', x: -20, y: 25, label: '2' },
-      { id: '4', x: 0, y: 25, label: '4' },
-      { id: '6', x: 20, y: 25, label: '6' },
+      { id: '1', x: -20, y: -30, label: '1' },
+      { id: '3', x: 0, y: -30, label: '3' },
+      { id: '5', x: 20, y: -30, label: '5' },
+      { id: '2', x: -20, y: 30, label: '2' },
+      { id: '4', x: 0, y: 30, label: '4' },
+      { id: '6', x: 20, y: 30, label: '6' },
     ],
     behavior: {
       type: 'contact',
@@ -1882,18 +1937,18 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-20)
-      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
-      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: -30, x2: -20, y2: -10 },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 30 },
       { t: 'line', x1: -20, y1: 10, x2: -26, y2: -8, when: 'off' },
       { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
       // Pole 2: (0)
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 30 },
       { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
       // Pole 3: (20)
-      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
-      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: -30, x2: 20, y2: -10 },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 30 },
       { t: 'line', x1: 20, y1: 10, x2: 14, y2: -8, when: 'off' },
       { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
       // Mechanical link between blades
@@ -1907,14 +1962,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-KM',
     terminals: [
-      { id: '1', x: -30, y: -25, label: '1' },
-      { id: '3', x: -10, y: -25, label: '3' },
-      { id: '5', x: 10, y: -25, label: '5' },
-      { id: '7', x: 30, y: -25, label: '7' },
-      { id: '2', x: -30, y: 25, label: '2' },
-      { id: '4', x: -10, y: 25, label: '4' },
-      { id: '6', x: 10, y: 25, label: '6' },
-      { id: '8', x: 30, y: 25, label: '8' },
+      { id: '1', x: -30, y: -30, label: '1' },
+      { id: '3', x: -10, y: -30, label: '3' },
+      { id: '5', x: 10, y: -30, label: '5' },
+      { id: '7', x: 30, y: -30, label: '7' },
+      { id: '2', x: -30, y: 30, label: '2' },
+      { id: '4', x: -10, y: 30, label: '4' },
+      { id: '6', x: 10, y: 30, label: '6' },
+      { id: '8', x: 30, y: 30, label: '8' },
     ],
     behavior: {
       type: 'contact',
@@ -1928,23 +1983,23 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-30)
-      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -10 },
-      { t: 'line', x1: -30, y1: 10, x2: -30, y2: 25 },
+      { t: 'line', x1: -30, y1: -30, x2: -30, y2: -10 },
+      { t: 'line', x1: -30, y1: 10, x2: -30, y2: 30 },
       { t: 'line', x1: -30, y1: 10, x2: -36, y2: -8, when: 'off' },
       { t: 'line', x1: -30, y1: 10, x2: -30, y2: -10, when: 'on' },
       // Pole 2: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
-      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 30 },
       { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
       { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
       // Pole 3: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
-      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 30 },
       { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
       { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
       // Pole 4: (30)
-      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -10 },
-      { t: 'line', x1: 30, y1: 10, x2: 30, y2: 25 },
+      { t: 'line', x1: 30, y1: -30, x2: 30, y2: -10 },
+      { t: 'line', x1: 30, y1: 10, x2: 30, y2: 30 },
       { t: 'line', x1: 30, y1: 10, x2: 24, y2: -8, when: 'off' },
       { t: 'line', x1: 30, y1: 10, x2: 30, y2: -10, when: 'on' },
       // Mechanical link between blades
@@ -1960,12 +2015,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-KM',
     terminals: [
-      { id: '1', x: -20, y: -25, label: '1' },
-      { id: '3', x: 0, y: -25, label: '3' },
-      { id: '5', x: 20, y: -25, label: '5' },
-      { id: '2', x: -20, y: 25, label: '2' },
-      { id: '4', x: 0, y: 25, label: '4' },
-      { id: '6', x: 20, y: 25, label: '6' },
+      { id: '1', x: -20, y: -30, label: '1' },
+      { id: '3', x: 0, y: -30, label: '3' },
+      { id: '5', x: 20, y: -30, label: '5' },
+      { id: '2', x: -20, y: 30, label: '2' },
+      { id: '4', x: 0, y: 30, label: '4' },
+      { id: '6', x: 20, y: 30, label: '6' },
     ],
     behavior: {
       type: 'contact',
@@ -1978,21 +2033,21 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-20)
-      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
+      { t: 'line', x1: -20, y1: -30, x2: -20, y2: -10 },
       { t: 'path', d: 'M -20 -16 A 3 3 0 0 0 -20 -10' },
-      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 30 },
       { t: 'line', x1: -20, y1: 10, x2: -26, y2: -8, when: 'off' },
       { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
       // Pole 2: (0)
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -10 },
       { t: 'path', d: 'M 0 -16 A 3 3 0 0 0 0 -10' },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 30 },
       { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
       // Pole 3: (20)
-      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
+      { t: 'line', x1: 20, y1: -30, x2: 20, y2: -10 },
       { t: 'path', d: 'M 20 -16 A 3 3 0 0 0 20 -10' },
-      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 30 },
       { t: 'line', x1: 20, y1: 10, x2: 14, y2: -8, when: 'off' },
       { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
       // Mechanical link between blades
@@ -2008,8 +2063,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-S',
     terminals: [
-      { id: '1', x: 0, y: -25, label: '1' },
-      { id: '2', x: 0, y: 25, label: '2' },
+      { id: '1', x: 0, y: -30, label: '1' },
+      { id: '2', x: 0, y: 30, label: '2' },
     ],
     behavior: {
       type: 'contact',
@@ -2018,8 +2073,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       no: [['1', '2']],
     },
     symbol: [
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 30 },
       { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
       // Manual switch detent operator on left
@@ -2037,10 +2092,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-S',
     terminals: [
-      { id: '1', x: -10, y: -25, label: '1' },
-      { id: '3', x: 10, y: -25, label: '3' },
-      { id: '2', x: -10, y: 25, label: '2' },
-      { id: '4', x: 10, y: 25, label: '4' },
+      { id: '1', x: -10, y: -30, label: '1' },
+      { id: '3', x: 10, y: -30, label: '3' },
+      { id: '2', x: -10, y: 30, label: '2' },
+      { id: '4', x: 10, y: 30, label: '4' },
     ],
     behavior: {
       type: 'contact',
@@ -2053,13 +2108,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
-      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 30 },
       { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
       { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
       // Pole 2: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
-      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 30 },
       { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
       { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
       // Manual operator on left
@@ -2080,12 +2135,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-S',
     terminals: [
-      { id: '1', x: -20, y: -25, label: '1' },
-      { id: '3', x: 0, y: -25, label: '3' },
-      { id: '5', x: 20, y: -25, label: '5' },
-      { id: '2', x: -20, y: 25, label: '2' },
-      { id: '4', x: 0, y: 25, label: '4' },
-      { id: '6', x: 20, y: 25, label: '6' },
+      { id: '1', x: -20, y: -30, label: '1' },
+      { id: '3', x: 0, y: -30, label: '3' },
+      { id: '5', x: 20, y: -30, label: '5' },
+      { id: '2', x: -20, y: 30, label: '2' },
+      { id: '4', x: 0, y: 30, label: '4' },
+      { id: '6', x: 20, y: 30, label: '6' },
     ],
     behavior: {
       type: 'contact',
@@ -2099,18 +2154,18 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-20)
-      { t: 'line', x1: -20, y1: -25, x2: -20, y2: -10 },
-      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 25 },
+      { t: 'line', x1: -20, y1: -30, x2: -20, y2: -10 },
+      { t: 'line', x1: -20, y1: 10, x2: -20, y2: 30 },
       { t: 'line', x1: -20, y1: 10, x2: -26, y2: -8, when: 'off' },
       { t: 'line', x1: -20, y1: 10, x2: -20, y2: -10, when: 'on' },
       // Pole 2: (0)
-      { t: 'line', x1: 0, y1: -25, x2: 0, y2: -10 },
-      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 25 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -10 },
+      { t: 'line', x1: 0, y1: 10, x2: 0, y2: 30 },
       { t: 'line', x1: 0, y1: 10, x2: -6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 10, x2: 0, y2: -10, when: 'on' },
       // Pole 3: (20)
-      { t: 'line', x1: 20, y1: -25, x2: 20, y2: -10 },
-      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 25 },
+      { t: 'line', x1: 20, y1: -30, x2: 20, y2: -10 },
+      { t: 'line', x1: 20, y1: 10, x2: 20, y2: 30 },
       { t: 'line', x1: 20, y1: 10, x2: 14, y2: -8, when: 'off' },
       { t: 'line', x1: 20, y1: 10, x2: 20, y2: -10, when: 'on' },
       // Manual operator on left
@@ -2131,14 +2186,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Contattori',
     tagPrefix: '-S',
     terminals: [
-      { id: '1', x: -30, y: -25, label: '1' },
-      { id: '3', x: -10, y: -25, label: '3' },
-      { id: '5', x: 10, y: -25, label: '5' },
-      { id: '7', x: 30, y: -25, label: '7' },
-      { id: '2', x: -30, y: 25, label: '2' },
-      { id: '4', x: -10, y: 25, label: '4' },
-      { id: '6', x: 10, y: 25, label: '6' },
-      { id: '8', x: 30, y: 25, label: '8' },
+      { id: '1', x: -30, y: -30, label: '1' },
+      { id: '3', x: -10, y: -30, label: '3' },
+      { id: '5', x: 10, y: -30, label: '5' },
+      { id: '7', x: 30, y: -30, label: '7' },
+      { id: '2', x: -30, y: 30, label: '2' },
+      { id: '4', x: -10, y: 30, label: '4' },
+      { id: '6', x: 10, y: 30, label: '6' },
+      { id: '8', x: 30, y: 30, label: '8' },
     ],
     behavior: {
       type: 'contact',
@@ -2153,23 +2208,23 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Pole 1: (-30)
-      { t: 'line', x1: -30, y1: -25, x2: -30, y2: -10 },
-      { t: 'line', x1: -30, y1: 10, x2: -30, y2: 25 },
+      { t: 'line', x1: -30, y1: -30, x2: -30, y2: -10 },
+      { t: 'line', x1: -30, y1: 10, x2: -30, y2: 30 },
       { t: 'line', x1: -30, y1: 10, x2: -36, y2: -8, when: 'off' },
       { t: 'line', x1: -30, y1: 10, x2: -30, y2: -10, when: 'on' },
       // Pole 2: (-10)
-      { t: 'line', x1: -10, y1: -25, x2: -10, y2: -10 },
-      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 25 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -10 },
+      { t: 'line', x1: -10, y1: 10, x2: -10, y2: 30 },
       { t: 'line', x1: -10, y1: 10, x2: -16, y2: -8, when: 'off' },
       { t: 'line', x1: -10, y1: 10, x2: -10, y2: -10, when: 'on' },
       // Pole 3: (10)
-      { t: 'line', x1: 10, y1: -25, x2: 10, y2: -10 },
-      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 25 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -10 },
+      { t: 'line', x1: 10, y1: 10, x2: 10, y2: 30 },
       { t: 'line', x1: 10, y1: 10, x2: 4, y2: -8, when: 'off' },
       { t: 'line', x1: 10, y1: 10, x2: 10, y2: -10, when: 'on' },
       // Pole 4: (30)
-      { t: 'line', x1: 30, y1: -25, x2: 30, y2: -10 },
-      { t: 'line', x1: 30, y1: 10, x2: 30, y2: 25 },
+      { t: 'line', x1: 30, y1: -30, x2: 30, y2: -10 },
+      { t: 'line', x1: 30, y1: 10, x2: 30, y2: 30 },
       { t: 'line', x1: 30, y1: 10, x2: 24, y2: -8, when: 'off' },
       { t: 'line', x1: 30, y1: 10, x2: 30, y2: -10, when: 'on' },
       // Manual operator on left
