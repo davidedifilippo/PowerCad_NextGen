@@ -2331,15 +2331,15 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       // Blade
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       // Push-button bracket [ on left + dashed link
       { t: 'path', d: 'M -11 -4 L -14 -4 L -14 4 L -11 4' },
       { t: 'line', x1: -14, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'line', x1: -14, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
     ],
   },
   {
@@ -2453,14 +2453,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       // Mushroom cap on left
       { t: 'path', d: 'M -12 -5 A 5 5 0 0 0 -12 5 Z', fill: '#ffffff' },
       { t: 'line', x1: -12, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -12, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'line', x1: -12, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
     ],
   },
   {
@@ -2575,13 +2575,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       { t: 'path', d: 'M -16 3 L -13 3 L -13 -3 L -10 -3' },
       { t: 'line', x1: -13, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -13, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'line', x1: -13, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
     ],
   },
   {
@@ -2802,14 +2802,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       // Roller circle on left
       { t: 'circle', cx: -14, cy: 0, r: 3.5, fill: '#ffffff' },
       { t: 'line', x1: -10.5, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -10.5, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'line', x1: -10.5, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
     ],
   },
   {
@@ -2889,8 +2889,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
     behavior: {
       type: 'contact',
-      actuation: 'latching',
-      defaultOn: false,
+      actuation: 'linked',
       no: [['97', '98']],
     },
     symbol: [
@@ -2902,7 +2901,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'path', d: 'M -15 4 L -15 -1 L -12 -1 L -12 4' },
       { t: 'line', x1: -12, y1: 0, x2: -3, y2: 0, dash: true, when: 'off' },
       { t: 'line', x1: -12, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
-      { t: 'path', d: 'M 4 -4 L 7 -4 L 7 2 L 4 2' },
+      { t: 'path', d: 'M -8 -4 L -5 -4 L -5 2 L -8 2', when: 'off' },
+      { t: 'path', d: 'M -2 -4 L 1 -4 L 1 2 L -2 2', when: 'on' },
     ],
   },
   {
@@ -2917,20 +2917,22 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
     behavior: {
       type: 'contact',
-      actuation: 'latching',
-      defaultOn: false,
+      actuation: 'linked',
       nc: [['95', '96']],
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      // Horizontal closing bar: present when untripped/closed, disappears when tripped/open!
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      // Blade: closed touching (6, -8) when off; tilted open to (10, -8) when on (leaving clear gap)
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       { t: 'path', d: 'M -15 4 L -15 -1 L -12 -1 L -12 4' },
       { t: 'line', x1: -12, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -12, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
-      { t: 'path', d: 'M 4 -4 L 7 -4 L 7 2 L 4 2' },
+      { t: 'line', x1: -12, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
+      { t: 'path', d: 'M 4 -4 L 7 -4 L 7 2 L 4 2', when: 'off' },
+      { t: 'path', d: 'M 8 -4 L 11 -4 L 11 2 L 8 2', when: 'on' },
     ],
   },
   {
@@ -2947,17 +2949,19 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
     behavior: {
       type: 'contact',
-      actuation: 'latching',
+      actuation: 'linked',
       defaultOn: false,
       nc: [['95', '96']],
       no: [['97', '98']],
     },
     symbol: [
+      // 95-96 NC
       { t: 'line', x1: -10, y1: -20, x2: -10, y2: -8 },
-      { t: 'line', x1: -10, y1: -8, x2: -4, y2: -8 },
+      { t: 'line', x1: -10, y1: -8, x2: -4, y2: -8, when: 'off' },
       { t: 'line', x1: -10, y1: 8, x2: -10, y2: 20 },
       { t: 'line', x1: -10, y1: 8, x2: -4, y2: -8, when: 'off' },
-      { t: 'line', x1: -10, y1: 8, x2: -10, y2: -8, when: 'on' },
+      { t: 'line', x1: -10, y1: 8, x2: 0, y2: -8, when: 'on' },
+      // 97-98 NO
       { t: 'line', x1: 10, y1: -20, x2: 10, y2: -8 },
       { t: 'line', x1: 10, y1: 8, x2: 10, y2: 20 },
       { t: 'line', x1: 10, y1: 8, x2: 4, y2: -8, when: 'off' },
@@ -2981,7 +2985,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
     behavior: {
       type: 'contact',
-      actuation: 'latching',
+      actuation: 'linked',
       defaultOn: false,
       nc: [['95', '96']],
       no: [['95', '98']],
@@ -2989,9 +2993,9 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
       { t: 'line', x1: -10, y1: 20, x2: -10, y2: 8 },
-      { t: 'line', x1: -10, y1: 8, x2: -5, y2: 8 },
+      { t: 'line', x1: -10, y1: 8, x2: -5, y2: 8, when: 'off' },
       { t: 'line', x1: 10, y1: 20, x2: 10, y2: 8 },
-      { t: 'line', x1: 10, y1: 8, x2: 5, y2: 8 },
+      { t: 'line', x1: 10, y1: 8, x2: 5, y2: 8, when: 'on' },
       { t: 'line', x1: 0, y1: -8, x2: -5, y2: 8, when: 'off' },
       { t: 'line', x1: 0, y1: -8, x2: 5, y2: 8, when: 'on' },
       { t: 'path', d: 'M -15 4 L -15 -1 L -12 -1 L -12 4' },
@@ -3549,10 +3553,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
     ],
   },
   {
@@ -3661,13 +3665,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       // Timer actuator shaft with cup opening right (convex left)
       { t: 'line', x1: -14, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'line', x1: -14, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
       { t: 'path', d: 'M -8 -5 A 5 5 0 0 0 -8 5' },
     ],
   },
@@ -3782,13 +3786,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       // Timer actuator shaft with cup opening left (convex right)
       { t: 'line', x1: -14, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'line', x1: -14, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
       { t: 'path', d: 'M -12 -5 A 5 5 0 0 1 -12 5' },
     ],
   },
@@ -3904,13 +3908,13 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8 },
+      { t: 'line', x1: 0, y1: -8, x2: 6, y2: -8, when: 'off' },
       { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
       { t: 'line', x1: 0, y1: 8, x2: 6, y2: -8, when: 'off' },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: -8, when: 'on' },
+      { t: 'line', x1: 0, y1: 8, x2: 10, y2: -8, when: 'on' },
       // Double cup (umbrella in both directions)
       { t: 'line', x1: -14, y1: 0, x2: 3, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -14, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
+      { t: 'line', x1: -14, y1: 0, x2: 5, y2: 0, dash: true, when: 'on' },
       { t: 'path', d: 'M -7 -5 A 4 4 0 0 0 -7 5' },
       { t: 'path', d: 'M -11 -5 A 4 4 0 0 1 -11 5' },
     ],

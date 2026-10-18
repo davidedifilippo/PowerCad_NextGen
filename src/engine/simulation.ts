@@ -597,7 +597,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
           newActiveOutputs[elem.tag] = true;
         }
       } else if (beh.type === 'thermal') {
-        if (state.elementStates[elem.id] && elem.tag) {
+        if ((state.elementStates[elem.id] || state.activeOutputs[elem.tag] || activeOutputs[elem.tag]) && elem.tag) {
           newActiveOutputs[elem.tag] = true;
         }
       } else if (beh.type === 'converter') {

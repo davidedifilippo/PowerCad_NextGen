@@ -289,5 +289,74 @@ describe('Simulation Engine', () => {
     // Resistor load turns OFF because power is cut downstream
     expect(stepFault.activeOutputs['resistor1']).toBeFalsy();
   });
+
+  it('correctly toggles auxiliary NC (95-96) and NO (97-98) contacts when thermal relay trips', () => {
+    const thermalDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Power source L+N at (100, 100): L at (90, 110), N at (110, 110)
+        { id: 'src', def: 'pwr_l_n', x: 100, y: 100, rot: 0 as const, tag: '-X1', props: {} },
+        // Thermal relay -F1 at (100, 160)
+        { id: 'th1', def: 'thermal_bimetal_relay_3p', x: 100, y: 160, rot: 0 as const, tag: '-F1', props: {} },
+        // Auxiliary NC contact (95-96) with matching tag -F1
+        { id: 'th_nc', def: 'thermal_contact_nc', x: 200, y: 150, rot: 0 as const, tag: '-F1', props: {} },
+        // Lamp -H2 (Arresto) connected in series with NC contact
+        { id: 'lamp_nc', def: 'pilot_lamp', x: 200, y: 210, rot: 0 as const, tag: '-H2', props: {} },
+        // Auxiliary NO contact (97-98) with matching tag -F1
+        { id: 'th_no', def: 'thermal_contact_no', x: 300, y: 150, rot: 0 as const, tag: '-F1', props: {} },
+        // Lamp -H1 (Allarme Sovraccarico) connected in series with NO contact
+        { id: 'lamp_no', def: 'pilot_lamp', x: 300, y: 210, rot: 0 as const, tag: '-H1', props: {} },
+      ],
+      wires: [
+        // L bus at y=80 to NC 95 at (200, 130)
+        { id: 'w_l_nc', pts: [{ x: 90, y: 110 }, { x: 90, y: 80 }, { x: 200, y: 80 }, { x: 200, y: 130 }] },
+        // NC 96 at (200, 170) to Lamp -H2 X1 at (200, 190)
+        { id: 'w_nc_lamp', pts: [{ x: 200, y: 170 }, { x: 200, y: 190 }] },
+        // Lamp -H2 X2 at (200, 230) to N bus at y=250 and back to N source at (110, 110)
+        { id: 'w_lamp_n', pts: [{ x: 200, y: 230 }, { x: 200, y: 250 }, { x: 110, y: 250 }, { x: 110, y: 110 }] },
+        // L bus at y=80 branched to NO 97 at (300, 130)
+        { id: 'w_l_no', pts: [{ x: 200, y: 80 }, { x: 300, y: 80 }, { x: 300, y: 130 }] },
+        // NO 98 at (300, 170) to Lamp -H1 X1 at (300, 190)
+        { id: 'w_no_lamp', pts: [{ x: 300, y: 170 }, { x: 300, y: 190 }] },
+        // Lamp -H1 X2 at (300, 230) to N bus at (200, 250)
+        { id: 'w_lamp_no_n', pts: [{ x: 300, y: 230 }, { x: 300, y: 250 }, { x: 200, y: 250 }] },
+      ],
+    };
+
+    // 1. Untripped state: -F1 is not tripped
+    const normalState = {
+      ...createInitialSimState(),
+      running: true,
+      activeOutputs: {},
+    };
+    const stepNormal = stepSimulation(thermalDoc, normalState, 0.05);
+
+    // Lamp on NC contact (-H2) MUST be ON
+    expect(stepNormal.activeOutputs['lamp_nc']).toBe(true);
+    // Lamp on NO contact (-H1) MUST be OFF
+    expect(stepNormal.activeOutputs['lamp_no']).toBeFalsy();
+
+    // 2. Tripped state: Thermal relay trips (-F1 is active via activeOutputs)
+    const trippedState = {
+      ...stepNormal,
+      activeOutputs: { '-F1': true },
+    };
+    const stepTripped = stepSimulation(thermalDoc, trippedState, 0.05);
+
+    // NC contact opens: Lamp on NC contact (-H2) MUST be turned OFF (interrupted!)
+    expect(stepTripped.activeOutputs['lamp_nc']).toBeFalsy();
+    // NO contact closes: Lamp on NO contact (-H1) MUST be turned ON
+    expect(stepTripped.activeOutputs['lamp_no']).toBe(true);
+
+    // 3. Tripped state: Thermal relay trips via direct element interactive state (th1 in elementStates)
+    const trippedByElemState = {
+      ...stepNormal,
+      elementStates: { th1: true },
+      activeOutputs: {},
+    };
+    const stepTripped2 = stepSimulation(thermalDoc, trippedByElemState, 0.05);
+    expect(stepTripped2.activeOutputs['lamp_nc']).toBeFalsy();
+    expect(stepTripped2.activeOutputs['lamp_no']).toBe(true);
+  });
 });
 

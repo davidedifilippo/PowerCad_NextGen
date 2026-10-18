@@ -653,6 +653,7 @@ const ElementItem: React.FC<{
   const isInteractivePressed = simState.elementStates[elem.id] ?? defaultState;
   const isOutputActive = simState.activeOutputs[elem.id] || simState.activeOutputs[elem.tag] || false;
   const isActive = isInteractivePressed || isOutputActive;
+  const isThermalTripped = def.behavior.type === 'thermal' && isActive;
 
   // Color resolution for pilot lamp
   let customGlowColor: string | undefined;
@@ -702,12 +703,36 @@ const ElementItem: React.FC<{
         />
       )}
 
+      {/* Thermal Overload Tripped Indicator Halo and Badge */}
+      {isThermalTripped && (
+        <g className="thermal-tripped-feedback" pointerEvents="none">
+          <rect
+            x={bounds.x - 4}
+            y={bounds.y - 4}
+            width={bounds.w + 8}
+            height={bounds.h + 8}
+            rx={6}
+            fill="rgba(234, 88, 12, 0.14)"
+            stroke="#ea580c"
+            strokeWidth={1.8}
+            strokeDasharray="4 2"
+          />
+          <g transform={`translate(${bounds.x + bounds.w / 2}, ${bounds.y - 9})`}>
+            <rect x={-35} y={-8} width={70} height={16} rx={4} fill="#ea580c" />
+            <text x={0} y={3.5} fontSize={7.5} fontWeight="bold" fill="#ffffff" textAnchor="middle">
+              ⚠ SCATTATO
+            </text>
+          </g>
+        </g>
+      )}
+
       {/* Primitives */}
       {def.symbol.map((prim, idx) => (
         <PrimitiveItem
           key={idx}
           prim={prim}
           isActive={isActive}
+          isThermalTripped={isThermalTripped}
           stepCount={simState.stepCount}
           isRunning={simState.running}
           customGlowColor={customGlowColor}
@@ -720,7 +745,8 @@ const ElementItem: React.FC<{
       {elem.tag && def.id !== 'text_label' && (() => {
         const tagPos = getTagPosition(def);
         let tagColor = '#0f172a';
-        if (def.id === 'pwr_l' || def.id === 'pwr_dc_plus') tagColor = '#ef4444';
+        if (isThermalTripped) tagColor = '#ea580c';
+        else if (def.id === 'pwr_l' || def.id === 'pwr_dc_plus') tagColor = '#ef4444';
         else if (def.id === 'pwr_n') tagColor = '#2563eb';
         else if (def.id === 'pwr_pe' || def.id === 'pwr_pe_line') tagColor = '#16a34a';
 
@@ -897,20 +923,27 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
 const PrimitiveItem: React.FC<{
   prim: Prim;
   isActive: boolean;
+  isThermalTripped?: boolean;
   stepCount: number;
   isRunning: boolean;
   customGlowColor?: string;
   elemProps?: Record<string, string | number>;
   defProps?: PropDef[];
-}> = ({ prim, isActive, stepCount, isRunning, customGlowColor, elemProps, defProps }) => {
+}> = ({ prim, isActive, isThermalTripped, stepCount, isRunning, customGlowColor, elemProps, defProps }) => {
   if (prim.when === 'on' && !isActive) return null;
   if (prim.when === 'off' && isActive) return null;
 
-  const stroke = prim.stroke || '#0f172a';
+  const stroke = isThermalTripped ? '#ea580c' : (prim.stroke || '#0f172a');
   const strokeWidth = prim.t === 'line' ? (prim.w || 1.5) : 1.5;
   const strokeDasharray = prim.dash ? '3 3' : undefined;
   const primFill = 'fill' in prim && prim.fill ? prim.fill : 'none';
-  const fill = (prim.when === 'on' && customGlowColor && prim.t === 'circle') ? customGlowColor : primFill;
+  const fill = isThermalTripped
+    ? (primFill !== 'none' && primFill !== '#ffffff' && primFill !== 'white'
+        ? '#ea580c'
+        : prim.t === 'rect'
+        ? 'rgba(234, 88, 12, 0.25)'
+        : primFill)
+    : (prim.when === 'on' && customGlowColor && prim.t === 'circle') ? customGlowColor : primFill;
 
   switch (prim.t) {
     case 'line':
