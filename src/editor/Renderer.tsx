@@ -1,5 +1,5 @@
 import React from 'react';
-import { Doc, Element, Prim, Wire, Sheet, ComponentDef } from '../model/types';
+import { Doc, Element, Prim, Wire, Sheet, ComponentDef, PropDef } from '../model/types';
 import { registry } from '../library/registry';
 import { localToWorld, getSheetDimensions, Box, isPointOnSegment, dist } from '../utils/geometry';
 import { SimState } from '../engine/simulation';
@@ -248,6 +248,7 @@ export const Renderer: React.FC<Props> = ({
                 isActive={false}
                 stepCount={0}
                 isRunning={false}
+                defProps={ghostElement.def.props}
               />
             ))}
             {ghostElement.def.terminals.map((term) => (
@@ -603,6 +604,8 @@ const ElementItem: React.FC<{
           stepCount={simState.stepCount}
           isRunning={simState.running}
           customGlowColor={customGlowColor}
+          elemProps={elem.props}
+          defProps={def.props}
         />
       ))}
 
@@ -723,6 +726,12 @@ function getTagPosition(def: ComponentDef): { x: number; y: number; textAnchor: 
   if (def.id === 'linear_actuator') {
     return { x: -42, y: 4, textAnchor: 'end' };
   }
+  if (def.category === 'Attuatori Pneumatici') {
+    if (def.id === 'pneumatic_suction_cup') {
+      return { x: -18, y: 12, textAnchor: 'end' };
+    }
+    return { x: -48, y: -24, textAnchor: 'end' };
+  }
   if (def.id === 'logic_input_var') {
     return { x: -16, y: 4, textAnchor: 'end' };
   }
@@ -784,7 +793,9 @@ const PrimitiveItem: React.FC<{
   stepCount: number;
   isRunning: boolean;
   customGlowColor?: string;
-}> = ({ prim, isActive, stepCount, isRunning, customGlowColor }) => {
+  elemProps?: Record<string, string | number>;
+  defProps?: PropDef[];
+}> = ({ prim, isActive, stepCount, isRunning, customGlowColor, elemProps, defProps }) => {
   if (prim.when === 'on' && !isActive) return null;
   if (prim.when === 'off' && isActive) return null;
 
@@ -849,7 +860,14 @@ const PrimitiveItem: React.FC<{
           transform={prim.transform}
         />
       );
-    case 'text':
+    case 'text': {
+      const resolvedText = prim.text.includes('$')
+        ? prim.text.replace(/\$([a-zA-Z0-9_]+)/g, (_, key) => {
+            if (elemProps && elemProps[key] !== undefined) return String(elemProps[key]);
+            const defP = defProps?.find((p) => p.key === key);
+            return defP !== undefined ? String(defP.default) : '';
+          })
+        : prim.text;
       return (
         <text
           x={prim.x}
@@ -859,9 +877,10 @@ const PrimitiveItem: React.FC<{
           textAnchor={prim.anchor || 'start'}
           fontWeight="bold"
         >
-          {prim.text}
+          {resolvedText}
         </text>
       );
+    }
     case 'rotor': {
       // Rotating motor indicator animation when active
       const angle = isRunning && isActive ? (stepCount * 36) % 360 : 0;

@@ -1195,7 +1195,10 @@ export const SchematicCanvas: React.FC<Props> = ({
             activeOutputs: { ...prev.activeOutputs, [elem.tag]: !current },
           };
         });
-      } else if (def.behavior.type === 'logic' && def.behavior.op === 'input') {
+      } else if (
+        (def.behavior.type === 'logic' && def.behavior.op === 'input') ||
+        def.behavior.type === 'pneumatic'
+      ) {
         onSimStateChange((prev) => {
           const current = prev.elementStates[elem.id] ?? false;
           return {

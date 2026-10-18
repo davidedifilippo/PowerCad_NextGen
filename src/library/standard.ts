@@ -1,4 +1,181 @@
-import { ComponentDef } from '../model/types';
+import { ComponentDef, Prim } from '../model/types';
+
+/** Helper: ISO 1219 magnetic reed sensor / limit switch symbol (-B1, -B2, etc.) */
+function pneumaticSensorSymbol(
+  cx: number,
+  cy: number,
+  labelVar: string,
+  activeWhen: 'off' | 'on'
+): Prim[] {
+  return [
+    { t: 'rect', x: cx - 4, y: cy - 4, w: 8, h: 8, fill: '#ffffff', when: activeWhen === 'off' ? 'on' : 'off' },
+    { t: 'rect', x: cx - 4, y: cy - 4, w: 8, h: 8, fill: '#dcfce7', when: activeWhen },
+    { t: 'path', d: `M ${cx} ${cy - 3.5} L ${cx + 3.5} ${cy} L ${cx} ${cy + 3.5} L ${cx - 3.5} ${cy} Z` },
+    { t: 'line', x1: cx, y1: cy - 2, x2: cx, y2: cy + 2 },
+    { t: 'text', x: cx, y: cy - 6, text: labelVar, size: 6.5, anchor: 'middle' },
+  ];
+}
+
+/** Helper: ISO 1219 unidirectional flow control valve (throttle + check valve in parallel) with % label */
+function flowRegulatorSymbol(cx: number, cy: number, labelVar = '$flowRate%'): Prim[] {
+  return [
+    { t: 'rect', x: cx - 8, y: cy - 8, w: 16, h: 16, fill: '#f8fafc' },
+    // Main vertical line through throttle (left side of box)
+    { t: 'line', x1: cx - 3, y1: cy - 8, x2: cx - 3, y2: cy + 8 },
+    // Opposing throttle arcs )(
+    { t: 'path', d: `M ${cx - 5.5} ${cy - 3.5} Q ${cx - 3.5} ${cy} ${cx - 5.5} ${cy + 3.5}` },
+    { t: 'path', d: `M ${cx - 0.5} ${cy - 3.5} Q ${cx - 2.5} ${cy} ${cx - 0.5} ${cy + 3.5}` },
+    // Variable adjustment diagonal arrow
+    { t: 'line', x1: cx - 6.5, y1: cy + 4.5, x2: cx + 0.5, y2: cy - 4.5 },
+    { t: 'path', d: `M ${cx + 0.5} ${cy - 4.5} L ${cx - 2} ${cy - 3.5} L ${cx - 0.5} ${cy - 2} Z`, fill: '#0f172a' },
+    // Parallel bypass with check valve on right side
+    { t: 'path', d: `M ${cx - 3} ${cy - 5.5} L ${cx + 4} ${cy - 5.5} L ${cx + 4} ${cy + 5.5} L ${cx - 3} ${cy + 5.5}` },
+    { t: 'path', d: `M ${cx + 2} ${cy - 1} L ${cx + 4} ${cy + 1.5} L ${cx + 6} ${cy - 1}` },
+    { t: 'circle', cx: cx + 4, cy: cy - 1, r: 1.5, fill: '#ffffff' },
+    // Flow rate percentage text
+    { t: 'text', x: cx + 10, y: cy + 2, text: labelVar, size: 6.5, anchor: 'start' },
+  ];
+}
+
+/** Helper: ISO 1219 3/2 bistable directional solenoid valve (ports 1, 2, 3 and coils $solenoidA, $solenoidB) */
+function valve32BistableSymbol(cx: number, cy: number): Prim[] {
+  return [
+    // Two 16x14 valve position squares (total w=32, h=14)
+    { t: 'rect', x: cx - 16, y: cy - 7, w: 16, h: 14, fill: '#dcfce7', when: 'on' },
+    { t: 'rect', x: cx - 16, y: cy - 7, w: 16, h: 14, fill: '#f8fafc', when: 'off' },
+    { t: 'rect', x: cx, y: cy - 7, w: 16, h: 14, fill: '#dcfce7', when: 'off' },
+    { t: 'rect', x: cx, y: cy - 7, w: 16, h: 14, fill: '#f8fafc', when: 'on' },
+    // Left square (actuated position: 1 -> 2, 3 blocked)
+    { t: 'line', x1: cx - 12, y1: cy + 7, x2: cx - 12, y2: cy - 7 },
+    { t: 'path', d: `M ${cx - 12} ${cy - 7} L ${cx - 13.5} ${cy - 3.5} L ${cx - 10.5} ${cy - 3.5} Z`, fill: '#0f172a' },
+    { t: 'line', x1: cx - 4, y1: cy + 7, x2: cx - 4, y2: cy + 4 },
+    { t: 'line', x1: cx - 6, y1: cy + 4, x2: cx - 2, y2: cy + 4 },
+    // Right square (rest position: 2 -> 3 exhaust, 1 blocked)
+    { t: 'line', x1: cx + 4, y1: cy + 7, x2: cx + 4, y2: cy + 4 },
+    { t: 'line', x1: cx + 2, y1: cy + 4, x2: cx + 6, y2: cy + 4 },
+    { t: 'line', x1: cx + 4, y1: cy - 7, x2: cx + 12, y2: cy + 7 },
+    { t: 'path', d: `M ${cx + 12} ${cy + 7} L ${cx + 9.5} ${cy + 4.5} L ${cx + 12} ${cy + 3.5} Z`, fill: '#0f172a' },
+    // Left solenoid pilot ($solenoidA)
+    { t: 'rect', x: cx - 26, y: cy - 3, w: 10, h: 6, fill: '#fde68a', when: 'on' },
+    { t: 'rect', x: cx - 26, y: cy - 3, w: 10, h: 6, fill: '#ffffff', when: 'off' },
+    { t: 'line', x1: cx - 23, y1: cy + 3, x2: cx - 19, y2: cy - 3 },
+    { t: 'text', x: cx - 28, y: cy + 12, text: '$solenoidA', size: 6.5, anchor: 'end' },
+    // Right solenoid pilot ($solenoidB)
+    { t: 'rect', x: cx + 16, y: cy - 3, w: 10, h: 6, fill: '#ffffff' },
+    { t: 'line', x1: cx + 19, y1: cy + 3, x2: cx + 23, y2: cy - 3 },
+    { t: 'text', x: cx + 28, y: cy + 12, text: '$solenoidB', size: 6.5, anchor: 'start' },
+    // Valve tag ($valveTag)
+    { t: 'text', x: cx - 16, y: cy + 13, text: '$valveTag', size: 6.5, anchor: 'middle' },
+    // Port 1 pneumatic source triangle (bottom at cx+4)
+    { t: 'line', x1: cx + 4, y1: cy + 7, x2: cx + 4, y2: cy + 13 },
+    { t: 'path', d: `M ${cx + 4} ${cy + 13} L ${cx + 1} ${cy + 18} L ${cx + 7} ${cy + 18} Z`, fill: '#ffffff' },
+    // Port 3 exhaust triangle (bottom at cx+12)
+    { t: 'line', x1: cx + 12, y1: cy + 7, x2: cx + 12, y2: cy + 11 },
+    { t: 'path', d: `M ${cx + 12} ${cy + 15} L ${cx + 9.5} ${cy + 11} L ${cx + 14.5} ${cy + 11} Z`, fill: '#ffffff' },
+    // Port numbers 2, 1, 3
+    { t: 'text', x: cx + 6, y: cy - 9, text: '2', size: 5.5, anchor: 'start' },
+    { t: 'text', x: cx + 1.5, y: cy + 12, text: '1', size: 5.5, anchor: 'end' },
+    { t: 'text', x: cx + 14.5, y: cy + 11, text: '3', size: 5.5, anchor: 'start' },
+  ];
+}
+
+/** Helper: ISO 1219 5/2 bistable directional solenoid valve (ports 4, 2, 3, 1, 5 and coils $solenoidA, $solenoidB) */
+function valve52BistableSymbol(cx: number, cy: number): Prim[] {
+  return [
+    // Two 18x14 valve position squares (total w=36, h=14)
+    { t: 'rect', x: cx - 18, y: cy - 7, w: 18, h: 14, fill: '#dcfce7', when: 'on' },
+    { t: 'rect', x: cx - 18, y: cy - 7, w: 18, h: 14, fill: '#f8fafc', when: 'off' },
+    { t: 'rect', x: cx, y: cy - 7, w: 18, h: 14, fill: '#dcfce7', when: 'off' },
+    { t: 'rect', x: cx, y: cy - 7, w: 18, h: 14, fill: '#f8fafc', when: 'on' },
+    // Left square arrows (1 -> 4, 2 -> 5)
+    { t: 'line', x1: cx - 9, y1: cy + 7, x2: cx - 13, y2: cy - 7 },
+    { t: 'path', d: `M ${cx - 13} ${cy - 7} L ${cx - 14} ${cy - 3.5} L ${cx - 11.5} ${cy - 4} Z`, fill: '#0f172a' },
+    { t: 'line', x1: cx - 5, y1: cy - 7, x2: cx - 5, y2: cy + 7 },
+    { t: 'path', d: `M ${cx - 5} ${cy + 7} L ${cx - 6.5} ${cy + 3.5} L ${cx - 3.5} ${cy + 3.5} Z`, fill: '#0f172a' },
+    { t: 'line', x1: cx - 14, y1: cy + 7, x2: cx - 14, y2: cy + 4 },
+    { t: 'line', x1: cx - 15.5, y1: cy + 4, x2: cx - 12.5, y2: cy + 4 },
+    // Right square arrows (1 -> 2, 4 -> 3)
+    { t: 'line', x1: cx + 5, y1: cy - 7, x2: cx + 5, y2: cy + 7 },
+    { t: 'path', d: `M ${cx + 5} ${cy + 7} L ${cx + 3.5} ${cy + 3.5} L ${cx + 6.5} ${cy + 3.5} Z`, fill: '#0f172a' },
+    { t: 'line', x1: cx + 9, y1: cy + 7, x2: cx + 13, y2: cy - 7 },
+    { t: 'path', d: `M ${cx + 13} ${cy - 7} L ${cx + 11.5} ${cy - 4} L ${cx + 14} ${cy - 3.5} Z`, fill: '#0f172a' },
+    { t: 'line', x1: cx + 14, y1: cy + 7, x2: cx + 14, y2: cy + 4 },
+    { t: 'line', x1: cx + 12.5, y1: cy + 4, x2: cx + 15.5, y2: cy + 4 },
+    // Left solenoid pilot ($solenoidA)
+    { t: 'rect', x: cx - 28, y: cy - 3, w: 10, h: 6, fill: '#fde68a', when: 'on' },
+    { t: 'rect', x: cx - 28, y: cy - 3, w: 10, h: 6, fill: '#ffffff', when: 'off' },
+    { t: 'line', x1: cx - 25, y1: cy + 3, x2: cx - 21, y2: cy - 3 },
+    { t: 'text', x: cx - 30, y: cy + 12, text: '$solenoidA', size: 6.5, anchor: 'end' },
+    // Right solenoid pilot ($solenoidB)
+    { t: 'rect', x: cx + 18, y: cy - 3, w: 10, h: 6, fill: '#ffffff' },
+    { t: 'line', x1: cx + 21, y1: cy + 3, x2: cx + 25, y2: cy - 3 },
+    { t: 'text', x: cx + 30, y: cy + 12, text: '$solenoidB', size: 6.5, anchor: 'start' },
+    // Valve tag ($valveTag)
+    { t: 'text', x: cx - 18, y: cy + 13, text: '$valveTag', size: 6.5, anchor: 'middle' },
+    // Bottom port 3 (exhaust), port 1 (supply), port 5 (exhaust)
+    { t: 'line', x1: cx + 5, y1: cy + 7, x2: cx + 5, y2: cy + 11 },
+    { t: 'path', d: `M ${cx + 5} ${cy + 15} L ${cx + 2.8} ${cy + 11} L ${cx + 7.2} ${cy + 11} Z`, fill: '#ffffff' },
+    { t: 'line', x1: cx + 9, y1: cy + 7, x2: cx + 9, y2: cy + 14 },
+    { t: 'path', d: `M ${cx + 9} ${cy + 14} L ${cx + 6} ${cy + 19} L ${cx + 12} ${cy + 19} Z`, fill: '#ffffff' },
+    { t: 'line', x1: cx + 14, y1: cy + 7, x2: cx + 14, y2: cy + 11 },
+    { t: 'path', d: `M ${cx + 14} ${cy + 15} L ${cx + 11.8} ${cy + 11} L ${cx + 16.2} ${cy + 11} Z`, fill: '#ffffff' },
+    // Port labels 4, 2, 3, 1, 5
+    { t: 'text', x: cx + 2, y: cy - 9, text: '4', size: 5.5, anchor: 'end' },
+    { t: 'text', x: cx + 15, y: cy - 9, text: '2', size: 5.5, anchor: 'start' },
+    { t: 'text', x: cx + 2, y: cy + 11, text: '3', size: 5, anchor: 'end' },
+    { t: 'text', x: cx + 8, y: cy + 13, text: '1', size: 5, anchor: 'end' },
+    { t: 'text', x: cx + 17, y: cy + 11, text: '5', size: 5, anchor: 'start' },
+  ];
+}
+
+/** Helper: ISO 1219 5/3 closed-center spring-centered directional solenoid valve (1V10 in 10A) */
+function valve53ClosedCenterSymbol(cx: number, cy: number): Prim[] {
+  return [
+    // Three 14x14 valve position squares (total w=42, h=14)
+    { t: 'rect', x: cx - 21, y: cy - 7, w: 14, h: 14, fill: '#dcfce7', when: 'on' },
+    { t: 'rect', x: cx - 21, y: cy - 7, w: 14, h: 14, fill: '#f8fafc', when: 'off' },
+    { t: 'rect', x: cx - 7, y: cy - 7, w: 14, h: 14, fill: '#dcfce7', when: 'off' },
+    { t: 'rect', x: cx - 7, y: cy - 7, w: 14, h: 14, fill: '#f8fafc', when: 'on' },
+    { t: 'rect', x: cx + 7, y: cy - 7, w: 14, h: 14, fill: '#f8fafc' },
+    // Left square arrows
+    { t: 'line', x1: cx - 14, y1: cy + 7, x2: cx - 17, y2: cy - 7 },
+    { t: 'line', x1: cx - 11, y1: cy - 7, x2: cx - 11, y2: cy + 7 },
+    // Center square closed ports (T stops)
+    { t: 'line', x1: cx - 4, y1: cy - 7, x2: cx - 4, y2: cy - 4 },
+    { t: 'line', x1: cx - 5.5, y1: cy - 4, x2: cx - 2.5, y2: cy - 4 },
+    { t: 'line', x1: cx + 4, y1: cy - 7, x2: cx + 4, y2: cy - 4 },
+    { t: 'line', x1: cx + 2.5, y1: cy - 4, x2: cx + 5.5, y2: cy - 4 },
+    { t: 'line', x1: cx - 4, y1: cy + 7, x2: cx - 4, y2: cy + 4 },
+    { t: 'line', x1: cx, y1: cy + 7, x2: cx, y2: cy + 4 },
+    { t: 'line', x1: cx + 4, y1: cy + 7, x2: cx + 4, y2: cy + 4 },
+    // Right square arrows
+    { t: 'line', x1: cx + 11, y1: cy - 7, x2: cx + 11, y2: cy + 7 },
+    { t: 'line', x1: cx + 14, y1: cy + 7, x2: cx + 17, y2: cy - 7 },
+    // Left solenoid + centering spring
+    { t: 'rect', x: cx - 31, y: cy + 1, w: 10, h: 6, fill: '#fde68a', when: 'on' },
+    { t: 'rect', x: cx - 31, y: cy + 1, w: 10, h: 6, fill: '#ffffff', when: 'off' },
+    { t: 'line', x1: cx - 28, y1: cy + 7, x2: cx - 24, y2: cy + 1 },
+    { t: 'path', d: `M ${cx - 30} ${cy - 1} L ${cx - 28} ${cy - 6} L ${cx - 26} ${cy - 1} L ${cx - 24} ${cy - 6} L ${cx - 21} ${cy - 1}` },
+    { t: 'text', x: cx - 32, y: cy + 14, text: '$solenoidA', size: 6.5, anchor: 'end' },
+    // Right solenoid + centering spring
+    { t: 'rect', x: cx + 21, y: cy + 1, w: 10, h: 6, fill: '#ffffff' },
+    { t: 'line', x1: cx + 24, y1: cy + 7, x2: cx + 28, y2: cy + 1 },
+    { t: 'path', d: `M ${cx + 21} ${cy - 1} L ${cx + 24} ${cy - 6} L ${cx + 26} ${cy - 1} L ${cx + 28} ${cy - 6} L ${cx + 30} ${cy - 1}` },
+    { t: 'text', x: cx + 32, y: cy + 14, text: '$solenoidB', size: 6.5, anchor: 'start' },
+    // Valve tag ($valveTag)
+    { t: 'text', x: cx - 18, y: cy + 14, text: '$valveTag', size: 6.5, anchor: 'middle' },
+    // Supply & exhaust triangles on center square
+    { t: 'line', x1: cx - 4, y1: cy + 7, x2: cx - 4, y2: cy + 11 },
+    { t: 'path', d: `M ${cx - 4} ${cy + 15} L ${cx - 6} ${cy + 11} L ${cx - 2} ${cy + 11} Z`, fill: '#ffffff' },
+    { t: 'line', x1: cx, y1: cy + 7, x2: cx, y2: cy + 14 },
+    { t: 'path', d: `M ${cx} ${cy + 14} L ${cx - 3} ${cy + 19} L ${cx + 3} ${cy + 19} Z`, fill: '#ffffff' },
+    { t: 'line', x1: cx + 4, y1: cy + 7, x2: cx + 4, y2: cy + 11 },
+    { t: 'path', d: `M ${cx + 4} ${cy + 15} L ${cx + 2} ${cy + 11} L ${cx + 6} ${cy + 11} Z`, fill: '#ffffff' },
+    // Port labels
+    { t: 'text', x: cx - 5, y: cy - 9, text: '4', size: 5.5, anchor: 'end' },
+    { t: 'text', x: cx + 5, y: cy - 9, text: '2', size: 5.5, anchor: 'start' },
+  ];
+}
 
 /**
  * Standard IEC-like symbols library defined declaratively with JSON-serializable primitives.
@@ -6091,4 +6268,527 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'rect', x: 5.5, y: 1, w: 2.5, h: 7, fill: '#0f172a' },
     ],
   },
+
+  // ==================== ATTUATORI PNEUMATICI (ISO 1219 - Tavola 2.5) ====================
+  {
+    id: 'pneumatic_cyl_single',
+    name: 'Comando Cilindro a Semplice Effetto',
+    description:
+      'Attuatore pneumatico lineare a semplice effetto con rientro a molla (1A), completo di sensori magnetici di finecorsa (-B1 retratto, -B2 esteso), regolatori di flusso unidirezionali (50%) in serie ed elettrovalvola direzionale 3/2 bistabile (1V1, bobine -M1, -M2).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '1A',
+    terminals: [],
+    bounds: { x: -55, y: -56, w: 120, h: 122 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V1' },
+      { key: 'solenoidA', label: 'Bobina Uscita Stelo (+)', type: 'text', default: '-M1' },
+      { key: 'solenoidB', label: 'Bobina Rientro Stelo (-)', type: 'text', default: '-M2' },
+      { key: 'sensorA', label: 'Sensore Stelo Retratto', type: 'text', default: '-B1' },
+      { key: 'sensorB', label: 'Sensore Stelo Esteso', type: 'text', default: '-B2' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'cyl_single',
+      defaultValveTag: '1V1',
+      defaultSolenoidA: '-M1',
+      defaultSolenoidB: '-M2',
+      defaultSensorRetracted: '-B1',
+      defaultSensorExtended: '-B2',
+    },
+    symbol: [
+      // Magnetic sensors -B1 (left) and -B2 (right) above cylinder barrel
+      ...pneumaticSensorSymbol(-26, -42, '$sensorA', 'off'),
+      ...pneumaticSensorSymbol(12, -42, '$sensorB', 'on'),
+      // Cylinder barrel (x: -40..24, y: -38..-16)
+      { t: 'rect', x: -40, y: -38, w: 64, h: 22, fill: '#f8fafc' },
+      // Rear port triangle (left chamber) & front exhaust triangle (right chamber)
+      { t: 'path', d: 'M -34 -16 L -36 -20 L -32 -20 Z', fill: '#ffffff' },
+      { t: 'line', x1: 18, y1: -16, x2: 18, y2: -13 },
+      { t: 'path', d: 'M 18 -9 L 15.5 -13 L 20.5 -13 Z', fill: '#ffffff' },
+      // OFF state (retracted piston at x=-28..24, return spring uncompressed)
+      { t: 'rect', x: -29, y: -38, w: 6, h: 22, fill: '#cbd5e1', when: 'off' },
+      { t: 'rect', x: -23, y: -30, w: 56, h: 6, fill: '#e2e8f0', when: 'off' },
+      { t: 'rect', x: 33, y: -31, w: 5, h: 8, fill: '#ffffff', when: 'off' },
+      {
+        t: 'path',
+        d: 'M -23 -38 L -16 -16 L -9 -38 L -2 -16 L 5 -38 L 12 -16 L 19 -38 L 24 -22',
+        when: 'off',
+      },
+      // ON state (extended piston at x=9, compressed return spring)
+      { t: 'rect', x: -40, y: -38, w: 49, h: 22, fill: '#dcfce7', when: 'on' },
+      { t: 'rect', x: 9, y: -38, w: 6, h: 22, fill: '#22c55e', when: 'on' },
+      { t: 'rect', x: 15, y: -30, w: 40, h: 6, fill: '#e2e8f0', when: 'on' },
+      { t: 'rect', x: 55, y: -31, w: 5, h: 8, fill: '#ffffff', when: 'on' },
+      { t: 'path', d: 'M 15 -38 L 18 -16 L 21 -38 L 24 -16', when: 'on' },
+      // Pneumatic line & two series unidirectional flow regulators (50%)
+      { t: 'line', x1: -34, y1: -16, x2: -34, y2: -10 },
+      ...flowRegulatorSymbol(-31, -2),
+      { t: 'line', x1: -34, y1: 6, x2: -34, y2: 12 },
+      ...flowRegulatorSymbol(-31, 20),
+      { t: 'path', d: 'M -34 28 L -34 33 L -16 33 L -16 37' },
+      // 3/2 Bistable Directional Solenoid Valve 1V1
+      ...valve32BistableSymbol(-20, 44),
+    ],
+  },
+  {
+    id: 'pneumatic_cyl_double',
+    name: 'Comando Cilindro a Doppio Effetto',
+    description:
+      'Attuatore pneumatico lineare a doppio effetto (2A), completo di sensori magnetici di finecorsa (-B3 retratto, -B4 esteso), regolatori di flusso unidirezionali (50%) sulle due camere ed elettrovalvola direzionale 5/2 bistabile (1V2, bobine -M3, -M4).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '2A',
+    terminals: [],
+    bounds: { x: -55, y: -56, w: 120, h: 122 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V2' },
+      { key: 'solenoidA', label: 'Bobina Uscita Stelo (+)', type: 'text', default: '-M3' },
+      { key: 'solenoidB', label: 'Bobina Rientro Stelo (-)', type: 'text', default: '-M4' },
+      { key: 'sensorA', label: 'Sensore Stelo Retratto', type: 'text', default: '-B3' },
+      { key: 'sensorB', label: 'Sensore Stelo Esteso', type: 'text', default: '-B4' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'cyl_double',
+      defaultValveTag: '1V2',
+      defaultSolenoidA: '-M3',
+      defaultSolenoidB: '-M4',
+      defaultSensorRetracted: '-B3',
+      defaultSensorExtended: '-B4',
+    },
+    symbol: [
+      // Magnetic sensors -B3 (left) and -B4 (right)
+      ...pneumaticSensorSymbol(-26, -42, '$sensorA', 'off'),
+      ...pneumaticSensorSymbol(12, -42, '$sensorB', 'on'),
+      // Cylinder barrel
+      { t: 'rect', x: -40, y: -38, w: 64, h: 22, fill: '#f8fafc' },
+      // Rear & front pneumatic port triangles
+      { t: 'path', d: 'M -34 -16 L -36 -20 L -32 -20 Z', fill: '#ffffff' },
+      { t: 'path', d: 'M 18 -16 L 16 -20 L 20 -20 Z', fill: '#ffffff' },
+      // OFF state (retracted piston)
+      { t: 'rect', x: -29, y: -38, w: 6, h: 22, fill: '#cbd5e1', when: 'off' },
+      { t: 'rect', x: -23, y: -30, w: 56, h: 6, fill: '#e2e8f0', when: 'off' },
+      { t: 'rect', x: 33, y: -31, w: 5, h: 8, fill: '#ffffff', when: 'off' },
+      // ON state (extended piston)
+      { t: 'rect', x: -40, y: -38, w: 49, h: 22, fill: '#dcfce7', when: 'on' },
+      { t: 'rect', x: 9, y: -38, w: 6, h: 22, fill: '#22c55e', when: 'on' },
+      { t: 'rect', x: 15, y: -30, w: 40, h: 6, fill: '#e2e8f0', when: 'on' },
+      { t: 'rect', x: 55, y: -31, w: 5, h: 8, fill: '#ffffff', when: 'on' },
+      // Left & right flow regulators (50%) and piping to 5/2 valve
+      { t: 'line', x1: -34, y1: -16, x2: -34, y2: -4 },
+      ...flowRegulatorSymbol(-31, 4),
+      { t: 'path', d: 'M -34 12 L -34 26 L -3 26 L -3 35' },
+      { t: 'line', x1: 18, y1: -16, x2: 18, y2: -4 },
+      ...flowRegulatorSymbol(21, 4),
+      { t: 'path', d: 'M 18 12 L 18 26 L 5 26 L 5 35' },
+      // 5/2 Bistable Directional Solenoid Valve 1V2
+      ...valve52BistableSymbol(-8, 42),
+    ],
+  },
+  {
+    id: 'pneumatic_cyl_rodless_slotted',
+    name: 'Comando Cilindro Senza Stelo a Canna Scanalata',
+    description:
+      'Cilindro pneumatico senza stelo ad accoppiamento meccanico a canna scanalata (3A) con carrello esterno superiore, sensori magnetici (-B5, -B6), regolatori di flusso unidirezionali (50%) ed elettrovalvola 5/2 bistabile (1V3, bobine -M5, -M6).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '3A',
+    terminals: [],
+    bounds: { x: -55, y: -58, w: 115, h: 124 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V3' },
+      { key: 'solenoidA', label: 'Bobina Corsa Destra (+)', type: 'text', default: '-M5' },
+      { key: 'solenoidB', label: 'Bobina Corsa Sinistra (-)', type: 'text', default: '-M6' },
+      { key: 'sensorA', label: 'Sensore Posizione Sinistra', type: 'text', default: '-B5' },
+      { key: 'sensorB', label: 'Sensore Posizione Destra', type: 'text', default: '-B6' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'rodless_slotted',
+      defaultValveTag: '1V3',
+      defaultSolenoidA: '-M5',
+      defaultSolenoidB: '-M6',
+      defaultSensorRetracted: '-B5',
+      defaultSensorExtended: '-B6',
+    },
+    symbol: [
+      // Magnetic sensors -B5 (left) and -B6 (right) above external carriage
+      ...pneumaticSensorSymbol(-26, -46, '$sensorA', 'off'),
+      ...pneumaticSensorSymbol(14, -46, '$sensorB', 'on'),
+      // Rodless cylinder barrel
+      { t: 'rect', x: -40, y: -38, w: 68, h: 22, fill: '#f8fafc' },
+      { t: 'path', d: 'M -34 -16 L -36 -20 L -32 -20 Z', fill: '#ffffff' },
+      { t: 'path', d: 'M 22 -16 L 20 -20 L 24 -20 Z', fill: '#ffffff' },
+      // OFF state: internal piston + top mechanical carriage on left
+      { t: 'rect', x: -31, y: -38, w: 10, h: 22, fill: '#cbd5e1', when: 'off' },
+      { t: 'rect', x: -34, y: -41, w: 16, h: 3, fill: '#94a3b8', when: 'off' },
+      // ON state: internal piston + top mechanical carriage on right
+      { t: 'rect', x: -40, y: -38, w: 49, h: 22, fill: '#dcfce7', when: 'on' },
+      { t: 'rect', x: 9, y: -38, w: 10, h: 22, fill: '#22c55e', when: 'on' },
+      { t: 'rect', x: 6, y: -41, w: 16, h: 3, fill: '#22c55e', when: 'on' },
+      // Flow regulators (50%) & piping
+      { t: 'line', x1: -34, y1: -16, x2: -34, y2: -4 },
+      ...flowRegulatorSymbol(-31, 4),
+      { t: 'path', d: 'M -34 12 L -34 26 L -3 26 L -3 35' },
+      { t: 'line', x1: 22, y1: -16, x2: 22, y2: -4 },
+      ...flowRegulatorSymbol(25, 4),
+      { t: 'path', d: 'M 22 12 L 22 26 L 5 26 L 5 35' },
+      // 5/2 Bistable Directional Solenoid Valve 1V3
+      ...valve52BistableSymbol(-8, 42),
+    ],
+  },
+  {
+    id: 'pneumatic_cyl_rodless_magnetic',
+    name: 'Comando Cilindro Senza Stelo a Trascinamento Magnetico',
+    description:
+      'Cilindro pneumatico senza stelo a trascinamento magnetico (4A) con pattini magnetici d\'accoppiamento superiore/inferiore, sensori (-B7, -B8), regolatori di flusso (50%) ed elettrovalvola 5/2 bistabile (1V4, bobine -M7, -M8).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '4A',
+    terminals: [],
+    bounds: { x: -55, y: -58, w: 115, h: 124 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V4' },
+      { key: 'solenoidA', label: 'Bobina Corsa Destra (+)', type: 'text', default: '-M7' },
+      { key: 'solenoidB', label: 'Bobina Corsa Sinistra (-)', type: 'text', default: '-M8' },
+      { key: 'sensorA', label: 'Sensore Posizione Sinistra', type: 'text', default: '-B7' },
+      { key: 'sensorB', label: 'Sensore Posizione Destra', type: 'text', default: '-B8' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'rodless_magnetic',
+      defaultValveTag: '1V4',
+      defaultSolenoidA: '-M7',
+      defaultSolenoidB: '-M8',
+      defaultSensorRetracted: '-B7',
+      defaultSensorExtended: '-B8',
+    },
+    symbol: [
+      // Magnetic sensors -B7 (left) and -B8 (right)
+      ...pneumaticSensorSymbol(-26, -46, '$sensorA', 'off'),
+      ...pneumaticSensorSymbol(14, -46, '$sensorB', 'on'),
+      // Rodless cylinder barrel
+      { t: 'rect', x: -40, y: -38, w: 68, h: 22, fill: '#f8fafc' },
+      { t: 'path', d: 'M -34 -16 L -36 -20 L -32 -20 Z', fill: '#ffffff' },
+      { t: 'path', d: 'M 22 -16 L 20 -20 L 24 -20 Z', fill: '#ffffff' },
+      // OFF state: magnetic piston & top/bottom magnetic coupling shoes on left
+      { t: 'rect', x: -31, y: -40, w: 10, h: 26, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -29, y: -36, w: 6, h: 3, fill: '#0f172a', when: 'off' },
+      { t: 'rect', x: -29, y: -21, w: 6, h: 3, fill: '#0f172a', when: 'off' },
+      // ON state: magnetic piston & top/bottom magnetic coupling shoes on right
+      { t: 'rect', x: -40, y: -38, w: 49, h: 22, fill: '#dcfce7', when: 'on' },
+      { t: 'rect', x: 9, y: -40, w: 10, h: 26, fill: '#dcfce7', when: 'on' },
+      { t: 'rect', x: 11, y: -36, w: 6, h: 3, fill: '#16a34a', when: 'on' },
+      { t: 'rect', x: 11, y: -21, w: 6, h: 3, fill: '#16a34a', when: 'on' },
+      // Flow regulators (50%) & piping
+      { t: 'line', x1: -34, y1: -16, x2: -34, y2: -4 },
+      ...flowRegulatorSymbol(-31, 4),
+      { t: 'path', d: 'M -34 12 L -34 26 L -3 26 L -3 35' },
+      { t: 'line', x1: 22, y1: -16, x2: 22, y2: -4 },
+      ...flowRegulatorSymbol(25, 4),
+      { t: 'path', d: 'M 22 12 L 22 26 L 5 26 L 5 35' },
+      // 5/2 Bistable Directional Solenoid Valve 1V4
+      ...valve52BistableSymbol(-8, 42),
+    ],
+  },
+  {
+    id: 'pneumatic_rotary_vane',
+    name: 'Comando di un Attuatore Rotativo a Paletta a Doppio Effetto',
+    description:
+      'Attuatore pneumatico rotativo ad angolo limitato a paletta a doppio effetto (5A), completo di sensori di finecorsa angolari (-B9, -B10), regolatori di flusso unidirezionali (50%) ed elettrovalvola 5/2 bistabile (1V5, bobine -M9, -M10).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '5A',
+    terminals: [],
+    bounds: { x: -55, y: -56, w: 115, h: 122 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V5' },
+      { key: 'solenoidA', label: 'Bobina Rotazione Oraria (+)', type: 'text', default: '-M9' },
+      { key: 'solenoidB', label: 'Bobina Rotazione Antioraria (-)', type: 'text', default: '-M10' },
+      { key: 'sensorA', label: 'Sensore Finecorsa Sinistro', type: 'text', default: '-B9' },
+      { key: 'sensorB', label: 'Sensore Finecorsa Destro', type: 'text', default: '-B10' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'rotary_vane',
+      defaultValveTag: '1V5',
+      defaultSolenoidA: '-M9',
+      defaultSolenoidB: '-M10',
+      defaultSensorRetracted: '-B9',
+      defaultSensorExtended: '-B10',
+    },
+    symbol: [
+      // Semicircular rotary vane housing (center at -6, -20, radius 20)
+      { t: 'path', d: 'M -26 -20 A 20 20 0 0 1 14 -20 Z', fill: '#f8fafc', when: 'off' },
+      { t: 'path', d: 'M -26 -20 A 20 20 0 0 1 14 -20 Z', fill: '#dcfce7', when: 'on' },
+      // Top output shaft (double vertical lines)
+      { t: 'line', x1: -8, y1: -40, x2: -8, y2: -46 },
+      { t: 'line', x1: -4, y1: -40, x2: -4, y2: -46 },
+      // Internal vane indicator (angled left when off, angled right when on)
+      { t: 'line', x1: -6, y1: -20, x2: -20, y2: -34, w: 2, when: 'off' },
+      { t: 'line', x1: -6, y1: -20, x2: 8, y2: -34, stroke: '#16a34a', w: 2, when: 'on' },
+      // Pneumatic inlet triangles at bottom of semicircle
+      { t: 'path', d: 'M -22 -20 L -24 -24 L -20 -24 Z', fill: '#ffffff' },
+      { t: 'path', d: 'M 10 -20 L 8 -24 L 12 -24 Z', fill: '#ffffff' },
+      // Angular sensors -B9 (left) and -B10 (right)
+      ...pneumaticSensorSymbol(-36, -24, '$sensorA', 'off'),
+      ...pneumaticSensorSymbol(24, -24, '$sensorB', 'on'),
+      // Piping to left & right flow regulators (50%)
+      { t: 'path', d: 'M -22 -20 L -22 -14 L -34 -14 L -34 -4' },
+      ...flowRegulatorSymbol(-31, 4),
+      { t: 'path', d: 'M -34 12 L -34 26 L -3 26 L -3 35' },
+      { t: 'path', d: 'M 10 -20 L 10 -14 L 22 -14 L 22 -4' },
+      ...flowRegulatorSymbol(25, 4),
+      { t: 'path', d: 'M 22 12 L 22 26 L 5 26 L 5 35' },
+      // 5/2 Bistable Directional Solenoid Valve 1V5
+      ...valve52BistableSymbol(-8, 42),
+    ],
+  },
+  {
+    id: 'pneumatic_gripper_single',
+    name: 'Comando di una Pinza Pneumatica a Semplice Effetto',
+    description:
+      'Pinza pneumatica di presa a semplice effetto con ritorno a molla (6A), completa di sensori magnetici di stato (-B11 aperta, -B12 chiusa), regolatori di flusso unidirezionali (50%) in serie ed elettrovalvola 3/2 bistabile (1V6, bobine -M11, -M12).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '6A',
+    terminals: [],
+    bounds: { x: -55, y: -56, w: 120, h: 122 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V6' },
+      { key: 'solenoidA', label: 'Bobina Chiusura Pinza (+)', type: 'text', default: '-M11' },
+      { key: 'solenoidB', label: 'Bobina Apertura Pinza (-)', type: 'text', default: '-M12' },
+      { key: 'sensorA', label: 'Sensore Pinza Aperta', type: 'text', default: '-B11' },
+      { key: 'sensorB', label: 'Sensore Pinza Chiusa', type: 'text', default: '-B12' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'gripper_single',
+      defaultValveTag: '1V6',
+      defaultSolenoidA: '-M11',
+      defaultSolenoidB: '-M12',
+      defaultSensorRetracted: '-B11',
+      defaultSensorExtended: '-B12',
+    },
+    symbol: [
+      // Magnetic sensors -B11 and -B12 above gripper body
+      ...pneumaticSensorSymbol(-28, -42, '$sensorA', 'off'),
+      ...pneumaticSensorSymbol(-12, -42, '$sensorB', 'on'),
+      // Gripper cylinder body (x: -40..4, y: -38..-16)
+      { t: 'rect', x: -40, y: -38, w: 44, h: 22, fill: '#f8fafc', when: 'off' },
+      { t: 'rect', x: -40, y: -38, w: 44, h: 22, fill: '#dcfce7', when: 'on' },
+      // Piston & return spring inside gripper body
+      { t: 'line', x1: -26, y1: -38, x2: -26, y2: -16, when: 'off' },
+      { t: 'line', x1: -14, y1: -38, x2: -14, y2: -16, stroke: '#16a34a', w: 2, when: 'on' },
+      { t: 'path', d: 'M -26 -38 L -19 -16 L -12 -38 L -5 -16 L 2 -38', when: 'off' },
+      { t: 'path', d: 'M -14 -38 L -10 -16 L -6 -38 L -2 -16 L 2 -38', when: 'on' },
+      // Rear inlet triangle & front exhaust triangle
+      { t: 'path', d: 'M -34 -16 L -36 -20 L -32 -20 Z', fill: '#ffffff' },
+      { t: 'line', x1: -4, y1: -16, x2: -4, y2: -13 },
+      { t: 'path', d: 'M -4 -9 L -6.5 -13 L -1.5 -13 Z', fill: '#ffffff' },
+      // Parallel/angular jaws on right (open when off, clamped when on)
+      { t: 'path', d: 'M 4 -37 L 26 -37 L 26 -31 L 12 -31 L 4 -34 Z', fill: '#f8fafc', when: 'off' },
+      { t: 'path', d: 'M 4 -17 L 26 -17 L 26 -23 L 12 -23 L 4 -20 Z', fill: '#f8fafc', when: 'off' },
+      { t: 'path', d: 'M 4 -33 L 26 -33 L 26 -28 L 12 -28 L 4 -30 Z', fill: '#dcfce7', when: 'on' },
+      { t: 'path', d: 'M 4 -21 L 26 -21 L 26 -26 L 12 -26 L 4 -24 Z', fill: '#dcfce7', when: 'on' },
+      // Two series flow regulators (50%) & 3/2 bistable valve 1V6
+      { t: 'line', x1: -34, y1: -16, x2: -34, y2: -10 },
+      ...flowRegulatorSymbol(-31, -2),
+      { t: 'line', x1: -34, y1: 6, x2: -34, y2: 12 },
+      ...flowRegulatorSymbol(-31, 20),
+      { t: 'path', d: 'M -34 28 L -34 33 L -16 33 L -16 37' },
+      ...valve32BistableSymbol(-20, 44),
+    ],
+  },
+  {
+    id: 'pneumatic_gripper_double',
+    name: 'Comando di una Pinza Pneumatica a Doppio Effetto',
+    description:
+      'Pinza pneumatica di presa a doppio effetto (7A) con apertura e chiusura comandate pneumaticamente, sensori magnetici (-B13, -B14), regolatori di flusso unidirezionali (50%) ed elettrovalvola 5/2 bistabile (1V7, bobine -M13, -M14).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '7A',
+    terminals: [],
+    bounds: { x: -55, y: -56, w: 120, h: 122 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V7' },
+      { key: 'solenoidA', label: 'Bobina Chiusura Pinza (+)', type: 'text', default: '-M13' },
+      { key: 'solenoidB', label: 'Bobina Apertura Pinza (-)', type: 'text', default: '-M14' },
+      { key: 'sensorA', label: 'Sensore Pinza Aperta', type: 'text', default: '-B13' },
+      { key: 'sensorB', label: 'Sensore Pinza Chiusa', type: 'text', default: '-B14' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'gripper_double',
+      defaultValveTag: '1V7',
+      defaultSolenoidA: '-M13',
+      defaultSolenoidB: '-M14',
+      defaultSensorRetracted: '-B13',
+      defaultSensorExtended: '-B14',
+    },
+    symbol: [
+      // Magnetic sensors -B13 and -B14 above gripper body
+      ...pneumaticSensorSymbol(-28, -42, '$sensorA', 'off'),
+      ...pneumaticSensorSymbol(-12, -42, '$sensorB', 'on'),
+      // Double-acting gripper cylinder body
+      { t: 'rect', x: -40, y: -38, w: 44, h: 22, fill: '#f8fafc', when: 'off' },
+      { t: 'rect', x: -40, y: -38, w: 44, h: 22, fill: '#dcfce7', when: 'on' },
+      { t: 'line', x1: -26, y1: -38, x2: -26, y2: -16, when: 'off' },
+      { t: 'line', x1: -12, y1: -38, x2: -12, y2: -16, stroke: '#16a34a', w: 2, when: 'on' },
+      // Two pneumatic inlet triangles
+      { t: 'path', d: 'M -34 -16 L -36 -20 L -32 -20 Z', fill: '#ffffff' },
+      { t: 'path', d: 'M -4 -16 L -6 -20 L -2 -20 Z', fill: '#ffffff' },
+      // Jaws on right (open when off, clamped when on)
+      { t: 'path', d: 'M 4 -37 L 26 -37 L 26 -31 L 12 -31 L 4 -34 Z', fill: '#f8fafc', when: 'off' },
+      { t: 'path', d: 'M 4 -17 L 26 -17 L 26 -23 L 12 -23 L 4 -20 Z', fill: '#f8fafc', when: 'off' },
+      { t: 'path', d: 'M 4 -33 L 26 -33 L 26 -28 L 12 -28 L 4 -30 Z', fill: '#dcfce7', when: 'on' },
+      { t: 'path', d: 'M 4 -21 L 26 -21 L 26 -26 L 12 -26 L 4 -24 Z', fill: '#dcfce7', when: 'on' },
+      // Left & right flow regulators (50%) & 5/2 bistable valve 1V7
+      { t: 'line', x1: -34, y1: -16, x2: -34, y2: -4 },
+      ...flowRegulatorSymbol(-31, 4),
+      { t: 'path', d: 'M -34 12 L -34 26 L -3 26 L -3 35' },
+      { t: 'path', d: 'M -4 -16 L -4 -10 L 18 -10 L 18 -4' },
+      ...flowRegulatorSymbol(21, 4),
+      { t: 'path', d: 'M 18 12 L 18 26 L 5 26 L 5 35' },
+      ...valve52BistableSymbol(-8, 42),
+    ],
+  },
+  {
+    id: 'pneumatic_suction_cup',
+    name: 'Comando di una Ventosa',
+    description:
+      'Sistema di presa a vuoto con ventosa pneumatica (8A), generatore di vuoto a eiettore Venturi, vacuostato di controllo aspirazione (-B15, V) ed elettrovalvola direzionale 3/2 bistabile (1V8, bobine -M15, -M16).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '8A',
+    terminals: [],
+    bounds: { x: -55, y: -52, w: 115, h: 118 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V8' },
+      { key: 'solenoidA', label: 'Bobina Aspirazione Vuoto (+)', type: 'text', default: '-M15' },
+      { key: 'solenoidB', label: 'Bobina Rilascio Vuoto (-)', type: 'text', default: '-M16' },
+      { key: 'sensorB', label: 'Vacuostato di Aspirazione (V)', type: 'text', default: '-B15' },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'suction_cup',
+      defaultValveTag: '1V8',
+      defaultSolenoidA: '-M15',
+      defaultSolenoidB: '-M16',
+      defaultSensorExtended: '-B15',
+    },
+    symbol: [
+      // Venturi vacuum ejector at top (x: 4..20, y: -44..-32)
+      { t: 'rect', x: 4, y: -44, w: 16, h: 12, fill: '#f8fafc', when: 'off' },
+      { t: 'rect', x: 4, y: -44, w: 16, h: 12, fill: '#dcfce7', when: 'on' },
+      { t: 'path', d: 'M 6 -42 Q 12 -39 18 -42' },
+      { t: 'path', d: 'M 6 -34 Q 12 -37 18 -34' },
+      // Line from 3/2 valve port 2 up and right into Venturi nozzle, then out to exhaust triangle
+      { t: 'path', d: 'M -16 37 L -16 -38 L 26 -38' },
+      { t: 'path', d: 'M 30 -38 L 26 -40.5 L 26 -35.5 Z', fill: '#ffffff' },
+      // Vertical vacuum line from Venturi throat down to suction cup
+      { t: 'line', x1: 12, y1: -36, x2: 12, y2: -4 },
+      // Vacuum switch -B15 ([V]) branched on left of vacuum line
+      { t: 'line', x1: 12, y1: -20, x2: 4, y2: -20 },
+      { t: 'rect', x: -8, y: -25, w: 12, h: 10, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -8, y: -25, w: 12, h: 10, fill: '#dcfce7', when: 'on' },
+      { t: 'text', x: -2, y: -17.5, text: 'V', size: 6.5, anchor: 'middle' },
+      { t: 'text', x: -2, y: -27, text: '$sensorB', size: 6.5, anchor: 'middle' },
+      // Suction cup (8A) at bottom of vacuum branch (x: -2..26, y: -4..10)
+      { t: 'rect', x: 5, y: -4, w: 14, h: 4, fill: '#f8fafc' },
+      { t: 'path', d: 'M 2 0 L 22 0 L 28 10 L -4 10 Z', fill: '#f8fafc', when: 'off' },
+      { t: 'path', d: 'M 2 0 L 22 0 L 28 10 L -4 10 Z', fill: '#dcfce7', when: 'on' },
+      // 3/2 Bistable Directional Solenoid Valve 1V8
+      ...valve32BistableSymbol(-20, 44),
+    ],
+  },
+  {
+    id: 'pneumatic_motor_unidir',
+    name: 'Comando di un Motore Pneumatico con Rotazione Unidirezionale',
+    description:
+      'Motore pneumatico rotativo unidirezionale (9A), completo di regolatore di flusso unidirezionale per la regolazione della velocità (50%) ed elettrovalvola direzionale 3/2 bistabile (1V9, bobine -M17, -M18).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '9A',
+    terminals: [],
+    bounds: { x: -55, y: -52, w: 115, h: 118 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V9' },
+      { key: 'solenoidA', label: 'Bobina Marcia Motore (+)', type: 'text', default: '-M17' },
+      { key: 'solenoidB', label: 'Bobina Arresto Motore (-)', type: 'text', default: '-M18' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'motor_unidir',
+      defaultValveTag: '1V9',
+      defaultSolenoidA: '-M17',
+      defaultSolenoidB: '-M18',
+    },
+    symbol: [
+      // Pneumatic motor circle (center 2, -24, r=14)
+      { t: 'circle', cx: 2, cy: -24, r: 14, fill: '#f8fafc', when: 'off' },
+      { t: 'circle', cx: 2, cy: -24, r: 14, fill: '#dcfce7', when: 'on' },
+      // Inward pneumatic flow triangle on left of motor circle
+      { t: 'path', d: 'M -8 -24 L -12 -27 L -12 -21 Z', fill: '#ffffff' },
+      // Top output shaft (double vertical lines)
+      { t: 'line', x1: 0, y1: -38, x2: 0, y2: -44 },
+      { t: 'line', x1: 4, y1: -38, x2: 4, y2: -44 },
+      // Right exhaust line and triangle
+      { t: 'line', x1: 16, y1: -24, x2: 24, y2: -24 },
+      { t: 'path', d: 'M 28 -24 L 24 -26.5 L 24 -21.5 Z', fill: '#ffffff' },
+      // Animated rotor when running
+      { t: 'rotor', cx: 2, cy: -24, r: 10, when: 'on' },
+      // Supply line from left of motor down through flow regulator (50%) to 3/2 valve 1V9
+      { t: 'path', d: 'M -12 -24 L -22 -24 L -22 -8' },
+      ...flowRegulatorSymbol(-19, 0),
+      { t: 'path', d: 'M -22 8 L -22 33 L -16 33 L -16 37' },
+      ...valve32BistableSymbol(-20, 44),
+    ],
+  },
+  {
+    id: 'pneumatic_motor_bidir',
+    name: 'Comando di un Motore Pneumatico con Rotazione Bidirezionale',
+    description:
+      'Motore pneumatico rotativo reversibile con rotazione bidirezionale (10A), completo di due regolatori di flusso unidirezionali (50%) ed elettrovalvola direzionale 5/3 a centro chiuso centrata a molle (1V10, bobine -M19, -M20).',
+    category: 'Attuatori Pneumatici',
+    tagPrefix: '10A',
+    terminals: [],
+    bounds: { x: -55, y: -52, w: 115, h: 118 },
+    props: [
+      { key: 'valveTag', label: 'Sigla Elettrovalvola', type: 'text', default: '1V10' },
+      { key: 'solenoidA', label: 'Bobina Rotazione Oraria (+)', type: 'text', default: '-M19' },
+      { key: 'solenoidB', label: 'Bobina Rotazione Antioraria (-)', type: 'text', default: '-M20' },
+      { key: 'flowRate', label: 'Regolatore di Flusso (%)', type: 'number', default: 50 },
+    ],
+    behavior: {
+      type: 'pneumatic',
+      kind: 'motor_bidir',
+      defaultValveTag: '1V10',
+      defaultSolenoidA: '-M19',
+      defaultSolenoidB: '-M20',
+    },
+    symbol: [
+      // Pneumatic motor circle (center -4, -24, r=14)
+      { t: 'circle', cx: -4, cy: -24, r: 14, fill: '#f8fafc', when: 'off' },
+      { t: 'circle', cx: -4, cy: -24, r: 14, fill: '#dcfce7', when: 'on' },
+      // Two opposing inward pneumatic flow triangles (left & right)
+      { t: 'path', d: 'M -14 -24 L -18 -27 L -18 -21 Z', fill: '#ffffff' },
+      { t: 'path', d: 'M 6 -24 L 10 -27 L 10 -21 Z', fill: '#ffffff' },
+      // Top output shaft (double vertical lines)
+      { t: 'line', x1: -6, y1: -38, x2: -6, y2: -44 },
+      { t: 'line', x1: -2, y1: -38, x2: -2, y2: -44 },
+      // Animated rotor when running
+      { t: 'rotor', cx: -4, cy: -24, r: 10, when: 'on' },
+      // Left & right branches with flow regulators (50%) to 5/3 closed-center valve 1V10
+      { t: 'path', d: 'M -18 -24 L -30 -24 L -30 -4' },
+      ...flowRegulatorSymbol(-27, 4),
+      { t: 'path', d: 'M -30 12 L -30 26 L -8 26 L -8 35' },
+      { t: 'path', d: 'M 10 -24 L 22 -24 L 22 -4' },
+      ...flowRegulatorSymbol(25, 4),
+      { t: 'path', d: 'M 22 12 L 22 26 L 0 26 L 0 35' },
+      // 5/3 Closed-Center Spring-Centered Solenoid Valve 1V10
+      ...valve53ClosedCenterSymbol(-4, 42),
+    ],
+  },
 ];
+

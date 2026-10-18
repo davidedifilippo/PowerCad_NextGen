@@ -236,7 +236,15 @@ export const ComponentPalette: React.FC<Props> = ({
                   marginBottom: 6,
                 }}
               >
-                <svg width="60" height="60" viewBox="-35 -35 70 70">
+                <svg
+                  width="60"
+                  height="60"
+                  viewBox={
+                    comp.bounds
+                      ? `${comp.bounds.x - 4} ${comp.bounds.y - 4} ${comp.bounds.w + 8} ${comp.bounds.h + 8}`
+                      : '-35 -35 70 70'
+                  }
+                >
                   {comp.symbol.map((p, idx) => {
                     if (p.when === 'on') return null; // Default off state in preview
                     if (p.t === 'line') {
@@ -296,6 +304,12 @@ export const ComponentPalette: React.FC<Props> = ({
                       );
                     }
                     if (p.t === 'text') {
+                      const txt = p.text.includes('$')
+                        ? p.text.replace(/\$([a-zA-Z0-9_]+)/g, (_, key) => {
+                            const dp = comp.props?.find((pr) => pr.key === key);
+                            return dp !== undefined ? String(dp.default) : '';
+                          })
+                        : p.text;
                       return (
                         <text
                           key={idx}
@@ -306,7 +320,7 @@ export const ComponentPalette: React.FC<Props> = ({
                           textAnchor={p.anchor || 'middle'}
                           fontWeight="bold"
                         >
-                          {p.text}
+                          {txt}
                         </text>
                       );
                     }

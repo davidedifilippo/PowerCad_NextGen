@@ -449,6 +449,47 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
       }
     }
 
+    // Second pass in iteration: evaluate electro-pneumatic actuators (driven by -M solenoid coils and driving -B sensors)
+    for (const elem of doc.elements) {
+      const def = registry.get(elem.def);
+      if (!def || def.behavior.type !== 'pneumatic') continue;
+      const beh = def.behavior;
+
+      const solA = String(elem.props?.solenoidA ?? beh.defaultSolenoidA ?? '').trim();
+      const solB = String(elem.props?.solenoidB ?? beh.defaultSolenoidB ?? '').trim();
+      const sensA = String(elem.props?.sensorA ?? beh.defaultSensorRetracted ?? '').trim();
+      const sensB = String(elem.props?.sensorB ?? beh.defaultSensorExtended ?? '').trim();
+      const valveMode = String(elem.props?.valveMode ?? 'bistable');
+
+      const isSolAEnergized = Boolean(solA && (newActiveOutputs[solA] || activeOutputs[solA]));
+      const isSolBEnergized = Boolean(solB && (newActiveOutputs[solB] || activeOutputs[solB]));
+
+      let isActuated = Boolean(state.elementStates[elem.id]);
+      if (valveMode === 'monostable') {
+        if (isSolAEnergized) {
+          isActuated = true;
+        } else if (state.elementStates[elem.id] === undefined) {
+          isActuated = false;
+        }
+      } else {
+        if (isSolAEnergized && !isSolBEnergized) {
+          isActuated = true;
+          state.elementStates[elem.id] = true;
+        } else if (isSolBEnergized && !isSolAEnergized) {
+          isActuated = false;
+          state.elementStates[elem.id] = false;
+        }
+      }
+
+      if (isActuated) {
+        newActiveOutputs[elem.id] = true;
+        if (elem.tag) newActiveOutputs[elem.tag] = true;
+        if (sensB) newActiveOutputs[sensB] = true;
+      } else {
+        if (sensA) newActiveOutputs[sensA] = true;
+      }
+    }
+
     activeOutputs = newActiveOutputs;
   }
 

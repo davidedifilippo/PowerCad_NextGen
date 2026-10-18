@@ -72,6 +72,26 @@ export type Behavior =
       inputs?: string[];
       outputs?: string[];
     }
+  /** Electro-pneumatic actuator assembly driven by solenoid valve coil tags (-M) and driving limit/vacuum sensor tags (-B). */
+  | {
+      type: 'pneumatic';
+      kind:
+        | 'cyl_single'
+        | 'cyl_double'
+        | 'rodless_slotted'
+        | 'rodless_magnetic'
+        | 'rotary_vane'
+        | 'gripper_single'
+        | 'gripper_double'
+        | 'suction_cup'
+        | 'motor_unidir'
+        | 'motor_bidir';
+      defaultValveTag: string;
+      defaultSolenoidA: string;
+      defaultSolenoidB?: string;
+      defaultSensorRetracted?: string;
+      defaultSensorExtended?: string;
+    }
   | { type: 'none' };
 
 export interface ComponentDef {
