@@ -18,7 +18,9 @@ import {
   ShieldAlert,
   Type,
   Edit3,
+  FolderInput,
 } from 'lucide-react';
+import { parseCadeSimu } from '../utils/cadImporter';
 
 interface Props {
   doc: Doc;
@@ -58,6 +60,7 @@ export const Toolbar: React.FC<Props> = ({
   onZoomFit,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cadFileInputRef = useRef<HTMLInputElement>(null);
 
   // Sheet format change handler
   const handleFormatChange = (newFormat: SheetFormat) => {
@@ -83,10 +86,56 @@ export const Toolbar: React.FC<Props> = ({
     a.click();
   };
 
-  // Open JSON file
-  const handleOpenJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Open CADe_SIMU (.cad) file
+  const handleOpenCad = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        if (!text || (!text.startsWith('CADe_SIMU') && !text.includes('$$$'))) {
+          alert('Il file selezionato non sembra essere un file .cad valido di CADe_SIMU.');
+          return;
+        }
+        const importedDoc = parseCadeSimu(text);
+        if (importedDoc.elements.length === 0 && importedDoc.wires.length === 0) {
+          alert('Nessun componente o conduttore trovato nel file CADe_SIMU.');
+          return;
+        }
+        onDocChange(importedDoc);
+      } catch (err) {
+        console.error('Errore importazione CADe_SIMU:', err);
+        alert("Errore durante l'importazione del file CADe_SIMU (.cad).");
+      }
+    };
+    // CADe_SIMU files are encoded in windows-1252 / latin1
+    reader.readAsText(file, 'windows-1252');
+    e.target.value = '';
+  };
+
+  // Open file (JSON or CAD)
+  const handleOpenFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.name.toLowerCase().endsWith('.cad')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const text = event.target?.result as string;
+          const importedDoc = parseCadeSimu(text);
+          onDocChange(importedDoc);
+        } catch (err) {
+          console.error('Errore importazione CADe_SIMU:', err);
+          alert("Errore durante l'importazione del file CADe_SIMU (.cad).");
+        }
+      };
+      reader.readAsText(file, 'windows-1252');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -123,8 +172,15 @@ export const Toolbar: React.FC<Props> = ({
         type="file"
         ref={fileInputRef}
         style={{ display: 'none' }}
-        accept=".json"
-        onChange={handleOpenJson}
+        accept=".json,.cad"
+        onChange={handleOpenFile}
+      />
+      <input
+        type="file"
+        ref={cadFileInputRef}
+        style={{ display: 'none' }}
+        accept=".cad"
+        onChange={handleOpenCad}
       />
 
       {/* Brand & Document info */}
@@ -175,11 +231,23 @@ export const Toolbar: React.FC<Props> = ({
             <FilePlus size={16} /> Nuovo
           </button>
           <button
-            title="Apri file JSON"
+            title="Apri file JSON o .CAD"
             style={btnStyle}
             onClick={() => fileInputRef.current?.click()}
           >
             <FolderOpen size={16} /> Apri
+          </button>
+          <button
+            title="Importa schema nativo da CADe_SIMU (.cad)"
+            style={{
+              ...btnStyle,
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              fontWeight: 500,
+            }}
+            onClick={() => cadFileInputRef.current?.click()}
+          >
+            <FolderInput size={16} /> Importa .CAD
           </button>
           <button title="Salva file JSON" style={btnStyle} onClick={handleSaveJson}>
             <Save size={16} /> Salva
