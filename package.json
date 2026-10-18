@@ -2,6 +2,12 @@
   "name": "electroforge",
   "private": true,
   "version": "0.1.0",
+  "author": "Ing. Di Filippo",
+  "contributors": [
+    "Ing. Di Filippo (Project Creator & Lead Engineer)",
+    "Antigravity (Agentic AI Development Environment)",
+    "Gemini (AI Development Model)"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

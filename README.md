@@ -24,8 +24,10 @@ Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno,
    - **Contattori & Interruttori:** Sezionatori rotativi, contattori di potenza tripolari e quadripolari, invertitori di marcia.
    - **Comandi:** Pulsanti NO/NC, pulsanti a fungo d'emergenza con sgancio a rotazione, selettori a chiave e selettori rotativi a 2/3 posizioni stabili.
    - **Contatti Ausiliari & Temporizzati:** Contatti NO, NC, di scambio, temporizzati ritardati all'eccitazione (TON), alla diseccitazione (TOF) e contatti di relè termico (95-96 NC, 97-98 NO).
-   - **Bobine & Segnali:** Bobine standard per contattori (-KM), bobine bistabili a due impulsi (Set/Reset), teleruttori, elettrovalvole (-EV), temporizzatori TON, TOF, ciclici/intermittenti, generatori d'impulsi, interruttori orari, contatori numerici d'impulsi, lampade spia a luce fissa e intermittente (con selezione colore), suonerie a campana, ronzatori/vibratori, sirene e clacson.
-   - **Motori:** Motori asincroni trifase con animazione del rotore in rotazione, motori monofase e motori DC.
+   - **Azionamenti & Detectors:** Pulsanti (NO, NC, NO+NC, in deviazione, a fungo, a tirante), selettori rotativi (1–4 posizioni), interruttori manuali a camme, finecorsa meccanici, contatti reed magnetici, pressostati, sensori di prossimità induttivi/capacitivi, fotocellule a barriera/riflessione e termostati.
+   - **Bobine & Segnali:** Bobine standard per contattori (-KM), bobine bistabili a due impulsi (Set/Reset), teleruttori, elettrovalvole (-M / -EV), temporizzatori TON, TOF, ciclici/intermittenti, generatori d'impulsi, interruttori orari, contatori numerici d'impulsi, lampade spia a luce fissa e intermittente (con selezione colore), suonerie a campana, ronzatori/vibratori, sirene e clacson.
+   - **Motori & Potenza:** Motori asincroni trifase (gabbia di scoiattolo, 6 morsetti Y/Δ, Dahlander, 2 velocità, rotore avvolto), motori monofase, motori DC, freni elettrici, attuatori lineari, resistori/autotrasformatori di avviamento, Soft Starter, Inverter (VFD) e azionamenti per motori DC e Passo-Passo.
+   - **Logica & Attuatori Pneumatici (ISO 1219):** Porte logiche (AND, OR, NOT, XOR, NAND, NOR), Flip-Flop SR/T, temporizzatori/contatori logici, decoder/display 7 segmenti e preselettori BCD; cilindri pneumatici a semplice/doppio effetto, cilindri senza stelo (a canna scanalata e magnetici), attuatori rotativi a paletta, pinze pneumatiche, ventose con eiettore Venturi e motori pneumatici unidirezionali/bidirezionali.
 
 3. **Motore di Simulazione Elettrica in Tempo Reale**:
    - Risoluzione dei potenziali di rete (Fase, Neutro, Terra, Trifase L1-L2-L3, DC).
@@ -104,6 +106,15 @@ Per attivare la pubblicazione gratuita su GitHub:
 
 ---
 
+## 👥 Autore & Contributors
+
+- **Ing. Di Filippo** — Ideazione, progettazione ingegneristica e direzione dello sviluppo
+- **Antigravity** — Ambiente di sviluppo agentico (*Agentic AI Development Environment*)
+- **Gemini** — Modello AI di sviluppo (*AI Development Model*)
+
+---
+
 ## 📄 Licenza
 
-Rilasciato sotto licenza open-source MIT.
+Rilasciato sotto licenza open-source [MIT](./LICENSE).
+
