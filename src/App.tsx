@@ -12,6 +12,7 @@ import { Renderer } from './editor/Renderer';
 import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
 import { registry } from './library/registry';
 import { TextModal, TextConfig } from './ui/TextModal';
+import { CartiglioModal } from './ui/CartiglioModal';
 
 export interface ClipboardContent {
   elements: Element[];
@@ -36,6 +37,7 @@ export const App: React.FC = () => {
   const [activeDefToPlace, setActiveDefToPlace] = useState<ComponentDef | null>(null);
   const [activeWireTool, setActiveWireTool] = useState<WireKind | null>(null);
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
+  const [showCartiglioModal, setShowCartiglioModal] = useState<boolean>(false);
 
   const handleConfirmText = (config: TextConfig) => {
     const textDef = registry.get('text_label');
@@ -261,6 +263,7 @@ export const App: React.FC = () => {
           onRedo={handleRedo}
           onPrint={handlePrint}
           onOpenTextModal={() => setShowTextModal(true)}
+          onOpenCartiglioModal={() => setShowCartiglioModal(true)}
           zoom={zoom}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
@@ -424,6 +427,7 @@ export const App: React.FC = () => {
             onZoomChange={setZoom}
             pan={pan}
             onPanChange={setPan}
+            onEditTitleBlock={() => setShowCartiglioModal(true)}
           />
 
           {/* Right Properties & Settings Panel */}
@@ -468,6 +472,14 @@ export const App: React.FC = () => {
         isOpen={showTextModal}
         onClose={() => setShowTextModal(false)}
         onConfirm={handleConfirmText}
+      />
+
+      {/* 4. Title Block / Cartiglio Editing Modal */}
+      <CartiglioModal
+        isOpen={showCartiglioModal}
+        onClose={() => setShowCartiglioModal(false)}
+        sheet={doc.sheet}
+        onSave={(newSheet) => handleDocChange({ ...doc, sheet: newSheet })}
       />
     </>
   );

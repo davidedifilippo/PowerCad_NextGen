@@ -167,6 +167,7 @@ export interface Sheet {
   date: string;
   revision: string;
   sheetNo: string;
+  standard?: string;
 }
 
 export interface Doc {

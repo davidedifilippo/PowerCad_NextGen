@@ -38,6 +38,7 @@ interface Props {
   onZoomChange: (z: number) => void;
   pan: Pt;
   onPanChange: (p: Pt) => void;
+  onEditTitleBlock?: () => void;
 }
 
 export const SchematicCanvas: React.FC<Props> = ({
@@ -61,6 +62,7 @@ export const SchematicCanvas: React.FC<Props> = ({
   onZoomChange,
   pan,
   onPanChange,
+  onEditTitleBlock,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -1501,6 +1503,7 @@ export const SchematicCanvas: React.FC<Props> = ({
             draftColor={activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : draftWireType?.color || WIRE_COLOR_MAP['aux']}
             ghostElement={ghostElement}
             hoveredTerminal={hoveredTerminal}
+            onEditTitleBlock={onEditTitleBlock}
           />
         </g>
       </svg>

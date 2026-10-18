@@ -45,6 +45,7 @@ interface Props {
     y: number;
     label?: string;
   } | null;
+  onEditTitleBlock?: () => void;
 }
 
 export const Renderer: React.FC<Props> = ({
@@ -67,6 +68,7 @@ export const Renderer: React.FC<Props> = ({
   draftColor,
   ghostElement,
   hoveredTerminal,
+  onEditTitleBlock,
 }) => {
   const { sheet } = doc;
   const { w: sheetW, h: sheetH } = getSheetDimensions(sheet.format, sheet.orientation);
@@ -79,7 +81,13 @@ export const Renderer: React.FC<Props> = ({
   return (
     <g className="schematic-root">
       {/* 1. Sheet Border, Grid & Professional Title Block (Cartiglio) */}
-      <SheetFrame sheet={sheet} w={sheetW} h={sheetH} />
+      <SheetFrame
+        sheet={sheet}
+        w={sheetW}
+        h={sheetH}
+        onEditTitleBlock={onEditTitleBlock}
+        disabled={simState.running}
+      />
 
       {/* 2. Wires (conductors) */}
       <g className="wires-layer">
@@ -336,7 +344,14 @@ export const Renderer: React.FC<Props> = ({
 };
 
 /** Render Title Block / Cartiglio according to standard ISO 7200 / CEI IEC */
-const SheetFrame: React.FC<{ sheet: Sheet; w: number; h: number }> = ({ sheet, w, h }) => {
+const SheetFrame: React.FC<{
+  sheet: Sheet;
+  w: number;
+  h: number;
+  onEditTitleBlock?: () => void;
+  disabled?: boolean;
+}> = ({ sheet, w, h, onEditTitleBlock, disabled }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
   const margin = 20;
   const innerW = w - margin * 2;
   const innerH = h - margin * 2;
@@ -385,16 +400,63 @@ const SheetFrame: React.FC<{ sheet: Sheet; w: number; h: number }> = ({ sheet, w
       {/* Standard Reference Grid markers along borders (A, B, C... 1, 2, 3...) */}
       <GridBorderMarkers margin={margin} innerW={innerW} innerH={innerH} />
 
-      {/* Title block / Cartiglio */}
-      <g className="title-block" transform={`translate(${tbX}, ${tbY})`}>
-        {/* Clip path to ensure text never overflows the title box */}
+      {/* Title block / Cartiglio (Interactive: click to edit!) */}
+      <g
+        className="title-block"
+        transform={`translate(${tbX}, ${tbY})`}
+        style={{ cursor: disabled ? 'default' : 'pointer' }}
+        onClick={(e) => {
+          if (disabled || !onEditTitleBlock) return;
+          e.stopPropagation();
+          onEditTitleBlock();
+        }}
+        onMouseDown={(e) => {
+          if (!disabled) {
+            e.stopPropagation();
+          }
+        }}
+        onMouseEnter={() => !disabled && setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <title>Clicca per modificare i dati del cartiglio</title>
+        {/* Clip paths to ensure text never overflows cell limits */}
         <defs>
           <clipPath id="titleClip">
             <rect x={6} y={24} width={tbW - 12} height={28} />
           </clipPath>
+          <clipPath id="clipProject">
+            <rect x={6} y={0} width={258} height={24} />
+          </clipPath>
+          <clipPath id="clipFormat">
+            <rect x={274} y={0} width={82} height={24} />
+          </clipPath>
+          <clipPath id="clipSheetNo">
+            <rect x={364} y={0} width={50} height={24} />
+          </clipPath>
+          <clipPath id="clipAuthor">
+            <rect x={6} y={52} width={110} height={30} />
+          </clipPath>
+          <clipPath id="clipDate">
+            <rect x={124} y={52} width={82} height={30} />
+          </clipPath>
+          <clipPath id="clipRevision">
+            <rect x={214} y={52} width={77} height={30} />
+          </clipPath>
+          <clipPath id="clipStandard">
+            <rect x={299} y={52} width={115} height={30} />
+          </clipPath>
         </defs>
 
-        <rect x={0} y={0} width={tbW} height={tbH} fill="#f8fafc" stroke="#475569" strokeWidth={1.2} />
+        <rect
+          x={0}
+          y={0}
+          width={tbW}
+          height={tbH}
+          fill={isHovered ? '#f1f5f9' : '#f8fafc'}
+          stroke={isHovered ? '#0284c7' : '#475569'}
+          strokeWidth={isHovered ? 1.8 : 1.2}
+          style={{ transition: 'fill 0.15s, stroke 0.15s' }}
+        />
 
         {/* Horizontal dividing lines */}
         <line x1={0} y1={24} x2={tbW} y2={24} stroke="#475569" strokeWidth={1} />
@@ -411,19 +473,25 @@ const SheetFrame: React.FC<{ sheet: Sheet; w: number; h: number }> = ({ sheet, w
 
         {/* --- ROW 1: Project, Format, Sheet number --- */}
         <text x={8} y={10} fontSize={7.5} fill="#64748b" fontWeight="600">IMPIANTO / PROGETTO:</text>
-        <text x={8} y={20} fontSize={10} fontWeight="bold" fill="#0f172a">
-          {sheet.project || 'PROGETTO ELETTRICO'}
-        </text>
+        <g clipPath="url(#clipProject)">
+          <text x={8} y={20} fontSize={10} fontWeight="bold" fill="#0f172a">
+            {sheet.project || 'PROGETTO ELETTRICO'}
+          </text>
+        </g>
 
         <text x={276} y={10} fontSize={7.5} fill="#64748b" fontWeight="600">FORMATO:</text>
-        <text x={276} y={20} fontSize={9.5} fontWeight="bold" fill="#0f172a">
-          {sheet.format} ({sheet.orientation === 'landscape' ? 'Orizz.' : 'Vert.'})
-        </text>
+        <g clipPath="url(#clipFormat)">
+          <text x={276} y={20} fontSize={9.5} fontWeight="bold" fill="#0f172a">
+            {sheet.format} ({sheet.orientation === 'landscape' ? 'Orizz.' : 'Vert.'})
+          </text>
+        </g>
 
         <text x={366} y={10} fontSize={7.5} fill="#64748b" fontWeight="600">FOGLIO:</text>
-        <text x={366} y={20} fontSize={10} fontWeight="bold" fill="#0f172a">
-          {sheet.sheetNo}
-        </text>
+        <g clipPath="url(#clipSheetNo)">
+          <text x={366} y={20} fontSize={10} fontWeight="bold" fill="#0f172a">
+            {sheet.sheetNo}
+          </text>
+        </g>
 
         {/* --- ROW 2: DEDICATED FULL-WIDTH TITLE ROW --- */}
         <text x={8} y={33} fontSize={7.5} fill="#64748b" fontWeight="600">TITOLO DELLO SCHEMA:</text>
@@ -435,16 +503,36 @@ const SheetFrame: React.FC<{ sheet: Sheet; w: number; h: number }> = ({ sheet, w
 
         {/* --- ROW 3: Author, Date, Revision, Standard --- */}
         <text x={8} y={62} fontSize={7.5} fill="#64748b" fontWeight="600">DISEGNATORE:</text>
-        <text x={8} y={75} fontSize={9} fontWeight="bold" fill="#0f172a">{sheet.author}</text>
+        <g clipPath="url(#clipAuthor)">
+          <text x={8} y={75} fontSize={9} fontWeight="bold" fill="#0f172a">{sheet.author}</text>
+        </g>
 
         <text x={126} y={62} fontSize={7.5} fill="#64748b" fontWeight="600">DATA:</text>
-        <text x={126} y={75} fontSize={9} fontWeight="bold" fill="#0f172a">{sheet.date}</text>
+        <g clipPath="url(#clipDate)">
+          <text x={126} y={75} fontSize={9} fontWeight="bold" fill="#0f172a">{sheet.date}</text>
+        </g>
 
         <text x={216} y={62} fontSize={7.5} fill="#64748b" fontWeight="600">REVISIONE:</text>
-        <text x={216} y={75} fontSize={9} fontWeight="bold" fill="#0f172a">{sheet.revision}</text>
+        <g clipPath="url(#clipRevision)">
+          <text x={216} y={75} fontSize={9} fontWeight="bold" fill="#0f172a">{sheet.revision}</text>
+        </g>
 
         <text x={301} y={62} fontSize={7.5} fill="#64748b" fontWeight="600">STANDARD:</text>
-        <text x={301} y={75} fontSize={8.5} fontWeight="bold" fill="#0f172a">CEI / IEC 60617</text>
+        <g clipPath="url(#clipStandard)">
+          <text x={301} y={75} fontSize={8.5} fontWeight="bold" fill="#0f172a">
+            {sheet.standard || 'CEI / IEC 60617'}
+          </text>
+        </g>
+
+        {/* Hover Cue Badge */}
+        {isHovered && !disabled && (
+          <g transform={`translate(${tbW - 74}, -9)`}>
+            <rect x={0} y={0} width={74} height={16} rx={3} fill="#0284c7" />
+            <text x={37} y={11} fontSize={8.5} fontWeight="bold" fill="#ffffff" textAnchor="middle">
+              ✎ MODIFICA
+            </text>
+          </g>
+        )}
       </g>
     </g>
   );

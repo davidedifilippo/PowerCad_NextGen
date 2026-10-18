@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   ShieldAlert,
   Type,
+  Edit3,
 } from 'lucide-react';
 
 interface Props {
@@ -31,6 +32,7 @@ interface Props {
   onRedo: () => void;
   onPrint: () => void;
   onOpenTextModal?: () => void;
+  onOpenCartiglioModal?: () => void;
   zoom: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -49,6 +51,7 @@ export const Toolbar: React.FC<Props> = ({
   onRedo,
   onPrint,
   onOpenTextModal,
+  onOpenCartiglioModal,
   zoom,
   onZoomIn,
   onZoomOut,
@@ -213,6 +216,23 @@ export const Toolbar: React.FC<Props> = ({
           <option value="landscape">Orizzontale</option>
           <option value="portrait">Verticale</option>
         </select>
+
+        <button
+          title="Compila / Modifica Cartiglio Tecnico (CEI / ISO 7200)"
+          onClick={onOpenCartiglioModal}
+          style={{
+            ...btnStyle,
+            backgroundColor: '#1e293b',
+            color: '#38bdf8',
+            border: '1px solid #0284c7',
+            padding: '3px 9px',
+            fontSize: 12,
+            gap: 4,
+          }}
+        >
+          <Edit3 size={13} />
+          Cartiglio
+        </button>
       </div>
 
       {/* History & Zoom */}
