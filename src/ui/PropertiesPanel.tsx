@@ -1,7 +1,8 @@
 import React from 'react';
-import { Doc } from '../model/types';
+import { Doc, WireKind } from '../model/types';
 import { registry } from '../library/registry';
-import { Trash2, RotateCw, Settings, Info, Layers, Copy } from 'lucide-react';
+import { Trash2, RotateCw, Settings, Info, Layers, Copy, Check, Activity } from 'lucide-react';
+import { WIRE_COLOR_MAP } from './WireToolbar';
 
 interface Props {
   selectedId: string | null;
@@ -11,6 +12,23 @@ interface Props {
   onDeleteSelected: () => void;
   onCopySelected?: () => void;
 }
+
+export const WIRE_TYPE_OPTIONS: {
+  kind: WireKind;
+  label: string;
+  shortLabel: string;
+  color: string;
+  isPe?: boolean;
+}[] = [
+  { kind: 'phase', label: 'Fase L1 (Marrone)', shortLabel: 'L1 Marrone', color: '#9a3412' },
+  { kind: 'phase_l2', label: 'Fase L2 (Nero)', shortLabel: 'L2 Nero', color: '#0f172a' },
+  { kind: 'phase_l3', label: 'Fase L3 (Grigio)', shortLabel: 'L3 Grigio', color: '#64748b' },
+  { kind: 'neutral', label: 'Neutro N (Blu chiaro)', shortLabel: 'Neutro N', color: '#2563eb' },
+  { kind: 'pe', label: 'Terra PE (Giallo/Verde)', shortLabel: 'Terra PE', color: '#16a34a', isPe: true },
+  { kind: 'pos', label: 'Positivo + (Rosso 24V)', shortLabel: '+ 24V', color: '#ef4444' },
+  { kind: 'neg', label: 'Negativo - (Nero 0V)', shortLabel: '- 0V', color: '#0f172a' },
+  { kind: 'aux', label: 'Comando / Ausiliario', shortLabel: 'Comando', color: '#475569' },
+];
 
 export const PropertiesPanel: React.FC<Props> = ({
   selectedId,
@@ -23,6 +41,15 @@ export const PropertiesPanel: React.FC<Props> = ({
   if (selectedIds && selectedIds.size > 1) {
     const elemCount = doc.elements.filter((el) => selectedIds.has(el.id)).length;
     const wireCount = doc.wires.filter((w) => selectedIds.has(w.id)).length;
+
+    const handleBatchWireKindChange = (newKind: WireKind, newColor?: string) => {
+      const updatedWires = doc.wires.map((w) =>
+        selectedIds.has(w.id)
+          ? { ...w, kind: newKind, color: newColor || WIRE_COLOR_MAP[newKind] }
+          : w
+      );
+      onDocChange({ ...doc, wires: updatedWires });
+    };
 
     return (
       <div style={panelContainerStyle}>
@@ -48,6 +75,51 @@ export const PropertiesPanel: React.FC<Props> = ({
               • {wireCount} {wireCount === 1 ? 'conduttore / filo' : 'conduttori / fili'}
             </div>
           </div>
+
+          {wireCount > 0 && (
+            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 12 }}>
+              <label style={labelStyle}>Applica Colore a {wireCount} {wireCount === 1 ? 'Cavo' : 'Cavi'} (CEI EN 60446)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginTop: 6 }}>
+                {WIRE_TYPE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.kind}
+                    onClick={() => handleBatchWireKindChange(opt.kind, opt.color)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      padding: '6px 8px',
+                      borderRadius: 6,
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: '#1e293b',
+                    }}
+                    title={opt.label}
+                  >
+                    <div
+                      style={{
+                        width: 13,
+                        height: 9,
+                        borderRadius: 2,
+                        backgroundColor: opt.color,
+                        backgroundImage:
+                          opt.kind === 'pe'
+                            ? 'repeating-linear-gradient(45deg, #16a34a, #16a34a 3px, #eab308 3px, #eab308 6px)'
+                            : undefined,
+                        border: '1px solid rgba(0,0,0,0.2)',
+                      }}
+                    />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {opt.shortLabel}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div
             style={{
@@ -129,18 +201,86 @@ export const PropertiesPanel: React.FC<Props> = ({
   // Check if selected is an element
   const elem = doc.elements.find((el) => el.id === selectedId);
   if (!elem) {
-    // Might be a wire
+    // Selected is a wire
     const wire = doc.wires.find((w) => w.id === selectedId);
+    if (!wire) return null;
+
+    const handleWireKindChange = (newKind: WireKind, newColor?: string) => {
+      const updated = doc.wires.map((w) =>
+        w.id === wire.id ? { ...w, kind: newKind, color: newColor || WIRE_COLOR_MAP[newKind] } : w
+      );
+      onDocChange({ ...doc, wires: updated });
+    };
+
     return (
       <div style={panelContainerStyle}>
         <div style={panelHeaderStyle}>
-          <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>Conduttore / Filo</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Activity size={15} color="#2563eb" />
+            <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>Conduttore / Filo</span>
+          </div>
           <button onClick={onDeleteSelected} style={deleteBtnStyle} title="Elimina filo (Canc)">
             <Trash2 size={14} /> Elimina
           </button>
         </div>
-        <div style={{ padding: 16, fontSize: 12, color: '#64748b' }}>
-          Segmenti: {wire?.pts.length ? wire.pts.length - 1 : 0}
+
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Tipologia e Colore (Norma CEI EN 60446)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+              {WIRE_TYPE_OPTIONS.map((opt) => {
+                const isCurrent = (wire.kind || 'aux') === opt.kind;
+                return (
+                  <button
+                    key={opt.kind}
+                    onClick={() => handleWireKindChange(opt.kind, opt.color)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '7px 10px',
+                      borderRadius: 6,
+                      border: isCurrent ? `2px solid ${opt.color}` : '1px solid #cbd5e1',
+                      backgroundColor: isCurrent ? '#f8fafc' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div
+                        style={{
+                          width: 20,
+                          height: 12,
+                          borderRadius: 3,
+                          backgroundColor: opt.color,
+                          backgroundImage:
+                            opt.kind === 'pe'
+                              ? 'repeating-linear-gradient(45deg, #16a34a, #16a34a 4px, #eab308 4px, #eab308 8px)'
+                              : undefined,
+                          border: '1px solid rgba(0,0,0,0.2)',
+                        }}
+                      />
+                      <span style={{ fontSize: 12, fontWeight: isCurrent ? 700 : 500, color: '#1e293b' }}>
+                        {opt.label}
+                      </span>
+                    </div>
+                    {isCurrent && <Check size={14} color={opt.color} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+            <label style={labelStyle}>Dettagli Tracciamento</label>
+            <div style={{ fontSize: 12, color: '#64748b', lineHeight: '20px' }}>
+              • Segmenti: <b>{wire.pts.length ? wire.pts.length - 1 : 0}</b>
+              <br />
+              • Vertici totali: <b>{wire.pts.length}</b>
+              <br />
+              • Identificatore: <code style={{ fontSize: 11 }}>{wire.id}</code>
+            </div>
+          </div>
         </div>
       </div>
     );

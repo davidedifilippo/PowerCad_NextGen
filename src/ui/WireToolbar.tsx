@@ -10,6 +10,8 @@ interface Props {
 
 export const WIRE_COLOR_MAP: Record<WireKind, string> = {
   phase: '#9a3412',
+  phase_l2: '#0f172a',
+  phase_l3: '#64748b',
   neutral: '#2563eb',
   pe: '#16a34a',
   pos: '#ef4444',
@@ -32,8 +34,8 @@ export const WireToolbar: React.FC<Props> = ({
   }[] = [
     {
       kind: 'phase',
-      label: 'Fase (L)',
-      tooltip: 'Cavo Fase L1/L2/L3 (Marrone) - Clicca o premi Esc per uscire',
+      label: 'Fase L1',
+      tooltip: 'Cavo Fase L1 (Marrone - CEI EN 60446) - Clicca o premi Esc per uscire',
       renderIcon: () => (
         <svg width="28" height="18" viewBox="0 0 28 18">
           <line x1="2" y1="9" x2="26" y2="9" stroke="#9a3412" strokeWidth="2.5" strokeLinecap="round" />
@@ -41,9 +43,29 @@ export const WireToolbar: React.FC<Props> = ({
       ),
     },
     {
+      kind: 'phase_l2',
+      label: 'Fase L2',
+      tooltip: 'Cavo Fase L2 (Nero - CEI EN 60446) - Clicca o premi Esc per uscire',
+      renderIcon: () => (
+        <svg width="28" height="18" viewBox="0 0 28 18">
+          <line x1="2" y1="9" x2="26" y2="9" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      kind: 'phase_l3',
+      label: 'Fase L3',
+      tooltip: 'Cavo Fase L3 (Grigio - CEI EN 60446) - Clicca o premi Esc per uscire',
+      renderIcon: () => (
+        <svg width="28" height="18" viewBox="0 0 28 18">
+          <line x1="2" y1="9" x2="26" y2="9" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
       kind: 'neutral',
       label: 'Neutro (N)',
-      tooltip: 'Cavo Neutro N (Blu) - Clicca o premi Esc per uscire',
+      tooltip: 'Cavo Neutro N (Blu chiaro - CEI EN 60446) - Clicca o premi Esc per uscire',
       renderIcon: () => (
         <svg width="28" height="18" viewBox="0 0 28 18">
           <line x1="2" y1="9" x2="26" y2="9" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
@@ -53,7 +75,7 @@ export const WireToolbar: React.FC<Props> = ({
     {
       kind: 'pe',
       label: 'Terra (PE)',
-      tooltip: 'Cavo Protezione Terra PE (Giallo/Verde) - Clicca o premi Esc per uscire',
+      tooltip: 'Cavo Protezione Terra PE (Giallo/Verde tratteggiato) - Clicca o premi Esc per uscire',
       renderIcon: () => (
         <svg width="28" height="18" viewBox="0 0 28 18">
           <line x1="2" y1="9" x2="26" y2="9" stroke="#16a34a" strokeWidth="2.5" strokeDasharray="5 3" strokeLinecap="round" />
@@ -94,24 +116,24 @@ export const WireToolbar: React.FC<Props> = ({
     {
       kind: '3p_vert',
       label: '3F Vert (|||)',
-      tooltip: 'Fascio 3 Cavi Trifase Verticali (Passo 20px) - Clicca o premi Esc per uscire',
+      tooltip: 'Fascio 3 Cavi Trifase Verticali (L1 Marrone, L2 Nero, L3 Grigio - Passo 20px)',
       renderIcon: () => (
         <svg width="28" height="18" viewBox="0 0 28 18">
           <line x1="7" y1="2" x2="7" y2="16" stroke="#9a3412" strokeWidth="1.8" />
-          <line x1="14" y1="2" x2="14" y2="16" stroke="#9a3412" strokeWidth="1.8" />
-          <line x1="21" y1="2" x2="21" y2="16" stroke="#9a3412" strokeWidth="1.8" />
+          <line x1="14" y1="2" x2="14" y2="16" stroke="#0f172a" strokeWidth="1.8" />
+          <line x1="21" y1="2" x2="21" y2="16" stroke="#64748b" strokeWidth="1.8" />
         </svg>
       ),
     },
     {
       kind: '3p_horiz',
       label: '3F Orizz (≡)',
-      tooltip: 'Fascio 3 Cavi Trifase Orizzontali (Passo 20px) - Clicca o premi Esc per uscire',
+      tooltip: 'Fascio 3 Cavi Trifase Orizzontali (L1 Marrone, L2 Nero, L3 Grigio - Passo 20px)',
       renderIcon: () => (
         <svg width="28" height="18" viewBox="0 0 28 18">
           <line x1="2" y1="4" x2="26" y2="4" stroke="#9a3412" strokeWidth="1.8" />
-          <line x1="2" y1="9" x2="26" y2="9" stroke="#9a3412" strokeWidth="1.8" />
-          <line x1="2" y1="14" x2="26" y2="14" stroke="#9a3412" strokeWidth="1.8" />
+          <line x1="2" y1="9" x2="26" y2="9" stroke="#0f172a" strokeWidth="1.8" />
+          <line x1="2" y1="14" x2="26" y2="14" stroke="#64748b" strokeWidth="1.8" />
         </svg>
       ),
     },

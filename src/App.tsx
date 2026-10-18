@@ -4,7 +4,7 @@ import { SAMPLE_DIRECT_START } from './samples/directStart';
 import { createInitialSimState, stepSimulation, SimState } from './engine/simulation';
 import { getSheetDimensions, snap, snapPt } from './utils/geometry';
 import { Toolbar } from './ui/Toolbar';
-import { WireToolbar } from './ui/WireToolbar';
+import { WireToolbar, WIRE_COLOR_MAP } from './ui/WireToolbar';
 import { ComponentPalette } from './ui/ComponentPalette';
 import { SchematicCanvas } from './editor/SchematicCanvas';
 import { PropertiesPanel } from './ui/PropertiesPanel';
@@ -250,6 +250,18 @@ export const App: React.FC = () => {
             setActiveWireTool(tool);
             if (tool) {
               setActiveDefToPlace(null);
+              // If wires are currently selected, convert them to this wire kind
+              if (selectedIds.size > 0 && tool !== '3p_vert' && tool !== '3p_horiz') {
+                const hasWires = doc.wires.some((w) => selectedIds.has(w.id));
+                if (hasWires) {
+                  const updatedWires = doc.wires.map((w) =>
+                    selectedIds.has(w.id)
+                      ? { ...w, kind: tool, color: WIRE_COLOR_MAP[tool] }
+                      : w
+                  );
+                  handleDocChange({ ...doc, wires: updatedWires });
+                }
+              }
               setSelectedIds(new Set());
             }
           }}

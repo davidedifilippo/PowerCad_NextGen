@@ -127,6 +127,8 @@ export interface Element {
 
 export type WireKind =
   | 'phase'
+  | 'phase_l2'
+  | 'phase_l3'
   | 'neutral'
   | 'pe'
   | 'pos'

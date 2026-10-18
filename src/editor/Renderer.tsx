@@ -89,6 +89,10 @@ export const Renderer: React.FC<Props> = ({
             wire.color ||
             (wire.kind === 'phase'
               ? '#9a3412'
+              : wire.kind === 'phase_l2'
+              ? '#0f172a'
+              : wire.kind === 'phase_l3'
+              ? '#64748b'
               : wire.kind === 'neutral'
               ? '#2563eb'
               : wire.kind === 'pe'
@@ -97,8 +101,8 @@ export const Renderer: React.FC<Props> = ({
               ? '#ef4444'
               : wire.kind === 'neg'
               ? '#0f172a'
-              : '#1e293b');
-          const isPe = wire.kind === 'pe';
+              : '#334155');
+          const isPe = wire.kind === 'pe' || wire.color === '#16a34a';
           const stroke = isEnergized
             ? '#ef4444' // Bright red for live wire
             : isSelected

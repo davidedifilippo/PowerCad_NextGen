@@ -146,6 +146,7 @@ export const SchematicCanvas: React.FC<Props> = ({
   // Wire routing state
   const [wireDraft, setWireDraft] = useState<Pt[]>([]);
   const [wireStartAxis, setWireStartAxis] = useState<'vertical' | 'horizontal' | null>(null);
+  const [draftWireType, setDraftWireType] = useState<{ kind: WireKind; color: string } | null>(null);
   const [mouseWorld, setMouseWorld] = useState<Pt | null>(null);
 
   // Convert screen coordinates to world coordinates
@@ -227,6 +228,82 @@ export const SchematicCanvas: React.FC<Props> = ({
     return best;
   };
 
+  // Infer wire kind & color based on terminal source potentials, terminal labels, or connecting wires
+  const inferWireTypeAtPoint = (
+    point: Pt,
+    specificElem?: Element,
+    specificTermId?: string
+  ): { kind: WireKind; color: string } | null => {
+    // 1. If explicit element and termId are provided
+    if (specificElem && specificTermId) {
+      const def = registry.get(specificElem.def);
+      if (def) {
+        // A. Source component potentials
+        if (def.behavior.type === 'source' && def.behavior.potentials) {
+          const pot = def.behavior.potentials[specificTermId];
+          if (pot === 'L1') return { kind: 'phase', color: WIRE_COLOR_MAP['phase'] };
+          if (pot === 'L2') return { kind: 'phase_l2', color: WIRE_COLOR_MAP['phase_l2'] };
+          if (pot === 'L3') return { kind: 'phase_l3', color: WIRE_COLOR_MAP['phase_l3'] };
+          if (pot === 'L') return { kind: 'phase', color: WIRE_COLOR_MAP['phase'] };
+          if (pot === 'N') return { kind: 'neutral', color: WIRE_COLOR_MAP['neutral'] };
+          if (pot === 'PE') return { kind: 'pe', color: WIRE_COLOR_MAP['pe'] };
+          if (pot === '+24V' || pot === '+') return { kind: 'pos', color: WIRE_COLOR_MAP['pos'] };
+          if (pot === '0V' || pot === '-') return { kind: 'neg', color: WIRE_COLOR_MAP['neg'] };
+        }
+
+        // B. Terminal label / id matching
+        const term = def.terminals.find((t) => t.id === specificTermId);
+        const label = (term?.label || specificTermId).toUpperCase().trim();
+
+        if (label === 'PE' || label.startsWith('PE')) return { kind: 'pe', color: WIRE_COLOR_MAP['pe'] };
+        if (label === 'N' || label === 'NEUTRO') return { kind: 'neutral', color: WIRE_COLOR_MAP['neutral'] };
+        if (label === 'L1' || label === 'U' || label === 'U1' || label === 'U2') return { kind: 'phase', color: WIRE_COLOR_MAP['phase'] };
+        if (label === 'L2' || label === 'V' || label === 'V1' || label === 'V2') return { kind: 'phase_l2', color: WIRE_COLOR_MAP['phase_l2'] };
+        if (label === 'L3' || label === 'W' || label === 'W1' || label === 'W2') return { kind: 'phase_l3', color: WIRE_COLOR_MAP['phase_l3'] };
+        if (label === 'L' || label === 'FASE') return { kind: 'phase', color: WIRE_COLOR_MAP['phase'] };
+        if (label === '+' || label === '+24V' || label === 'PLUS') return { kind: 'pos', color: WIRE_COLOR_MAP['pos'] };
+        if (label === '-' || label === '0V' || label === 'MINUS') return { kind: 'neg', color: WIRE_COLOR_MAP['neg'] };
+
+        // C. Multi-pole numbered terminal conventions (e.g. 1-2=L1, 3-4=L2, 5-6=L3, 7-8=N for 3P+N; or 1-2=L, 3-4=N for 1P+N)
+        const is3P_N = def.id.includes('3p_n') || def.terminals.some((t) => t.id === '7' || t.label === '7' || t.label === 'N');
+        const is3P = !is3P_N && (def.id.includes('3p') || def.id.includes('three') || def.terminals.length >= 6);
+        const is1P_N = def.id.includes('1p_n');
+
+        if (is3P_N) {
+          if (['1', '2'].includes(specificTermId)) return { kind: 'phase', color: WIRE_COLOR_MAP['phase'] };
+          if (['3', '4'].includes(specificTermId)) return { kind: 'phase_l2', color: WIRE_COLOR_MAP['phase_l2'] };
+          if (['5', '6'].includes(specificTermId)) return { kind: 'phase_l3', color: WIRE_COLOR_MAP['phase_l3'] };
+          if (['7', '8'].includes(specificTermId)) return { kind: 'neutral', color: WIRE_COLOR_MAP['neutral'] };
+        } else if (is3P) {
+          if (['1', '2'].includes(specificTermId)) return { kind: 'phase', color: WIRE_COLOR_MAP['phase'] };
+          if (['3', '4'].includes(specificTermId)) return { kind: 'phase_l2', color: WIRE_COLOR_MAP['phase_l2'] };
+          if (['5', '6'].includes(specificTermId)) return { kind: 'phase_l3', color: WIRE_COLOR_MAP['phase_l3'] };
+        } else if (is1P_N) {
+          if (['1', '2'].includes(specificTermId)) return { kind: 'phase', color: WIRE_COLOR_MAP['phase'] };
+          if (['3', '4'].includes(specificTermId)) return { kind: 'neutral', color: WIRE_COLOR_MAP['neutral'] };
+        }
+      }
+    }
+
+    // 2. Check nearest terminal if specificElem was not supplied
+    const near = findNearestTerminal(point, 12);
+    if (near?.elem && near.termId) {
+      return inferWireTypeAtPoint(point, near.elem, near.termId);
+    }
+
+    // 3. Check if point is on an existing wire or near wire tip -> inherit wire's kind and color
+    for (const w of doc.wires) {
+      if (w.pts.length < 2) continue;
+      for (let i = 0; i < w.pts.length - 1; i++) {
+        if (isPointOnSegment(point, w.pts[i], w.pts[i + 1], 6)) {
+          return { kind: w.kind || 'aux', color: w.color || WIRE_COLOR_MAP[w.kind || 'aux'] };
+        }
+      }
+    }
+
+    return null;
+  };
+
   // Compute smart orthogonal corner point based on initial pull direction from start
   const computeOrthogonalCorner = (start: Pt, targetPt: Pt): Pt => {
     const axis =
@@ -247,6 +324,7 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (dist(start, targetPt) < 2) {
       setWireDraft([]);
       setWireStartAxis(null);
+      setDraftWireType(null);
       return;
     }
     const corner = computeOrthogonalCorner(start, targetPt);
@@ -255,14 +333,18 @@ export const SchematicCanvas: React.FC<Props> = ({
 
     if (activeWireTool === '3p_vert') {
       const offsets = [-20, 0, 20];
+      const kinds: WireKind[] = ['phase', 'phase_l2', 'phase_l3'];
+      const colors = [WIRE_COLOR_MAP['phase'], WIRE_COLOR_MAP['phase_l2'], WIRE_COLOR_MAP['phase_l3']];
       const newWires: Wire[] = [];
       offsets.forEach((dx, i) => {
+        const wireKind = kinds[i];
+        const wireColor = colors[i];
         if (hasCorner) {
           newWires.push(
             {
               id: `wire_${ts}_${i}_a`,
-              kind: 'phase',
-              color: WIRE_COLOR_MAP['phase'],
+              kind: wireKind,
+              color: wireColor,
               pts: [
                 { x: start.x + dx, y: start.y },
                 { x: corner.x + dx, y: corner.y },
@@ -270,8 +352,8 @@ export const SchematicCanvas: React.FC<Props> = ({
             },
             {
               id: `wire_${ts}_${i}_b`,
-              kind: 'phase',
-              color: WIRE_COLOR_MAP['phase'],
+              kind: wireKind,
+              color: wireColor,
               pts: [
                 { x: corner.x + dx, y: corner.y },
                 { x: targetPt.x + dx, y: targetPt.y },
@@ -281,8 +363,8 @@ export const SchematicCanvas: React.FC<Props> = ({
         } else {
           newWires.push({
             id: `wire_${ts}_${i}`,
-            kind: 'phase',
-            color: WIRE_COLOR_MAP['phase'],
+            kind: wireKind,
+            color: wireColor,
             pts: [
               { x: start.x + dx, y: start.y },
               { x: targetPt.x + dx, y: targetPt.y },
@@ -293,14 +375,18 @@ export const SchematicCanvas: React.FC<Props> = ({
       onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     } else if (activeWireTool === '3p_horiz') {
       const offsets = [-20, 0, 20];
+      const kinds: WireKind[] = ['phase', 'phase_l2', 'phase_l3'];
+      const colors = [WIRE_COLOR_MAP['phase'], WIRE_COLOR_MAP['phase_l2'], WIRE_COLOR_MAP['phase_l3']];
       const newWires: Wire[] = [];
       offsets.forEach((dy, i) => {
+        const wireKind = kinds[i];
+        const wireColor = colors[i];
         if (hasCorner) {
           newWires.push(
             {
               id: `wire_${ts}_${i}_a`,
-              kind: 'phase',
-              color: WIRE_COLOR_MAP['phase'],
+              kind: wireKind,
+              color: wireColor,
               pts: [
                 { x: start.x, y: start.y + dy },
                 { x: corner.x, y: corner.y + dy },
@@ -308,8 +394,8 @@ export const SchematicCanvas: React.FC<Props> = ({
             },
             {
               id: `wire_${ts}_${i}_b`,
-              kind: 'phase',
-              color: WIRE_COLOR_MAP['phase'],
+              kind: wireKind,
+              color: wireColor,
               pts: [
                 { x: corner.x, y: corner.y + dy },
                 { x: targetPt.x, y: targetPt.y + dy },
@@ -319,8 +405,8 @@ export const SchematicCanvas: React.FC<Props> = ({
         } else {
           newWires.push({
             id: `wire_${ts}_${i}`,
-            kind: 'phase',
-            color: WIRE_COLOR_MAP['phase'],
+            kind: wireKind,
+            color: wireColor,
             pts: [
               { x: start.x, y: start.y + dy },
               { x: targetPt.x, y: targetPt.y + dy },
@@ -330,8 +416,8 @@ export const SchematicCanvas: React.FC<Props> = ({
       });
       onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     } else {
-      const kind = activeWireTool || 'aux';
-      const color = activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : undefined;
+      const kind = activeWireTool || draftWireType?.kind || 'aux';
+      const color = activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : (draftWireType?.color || WIRE_COLOR_MAP[kind]);
       const newWires: Wire[] = hasCorner
         ? [
             {
@@ -359,6 +445,7 @@ export const SchematicCanvas: React.FC<Props> = ({
     }
     setWireDraft([]);
     setWireStartAxis(null);
+    setDraftWireType(null);
   };
 
   // Magnetic hovered terminal (when not placing a component or panning)
@@ -512,6 +599,7 @@ export const SchematicCanvas: React.FC<Props> = ({
         }
         setWireDraft([]);
         setWireStartAxis(null);
+        setDraftWireType(null);
         setSelectionBox(null);
         onPlacedDef();
         onSelectWireTool?.(null);
@@ -623,6 +711,8 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (nearTerm && e.button === 0) {
       setWireDraft([nearTerm.worldPos]);
       setWireStartAxis(null);
+      const inferred = inferWireTypeAtPoint(nearTerm.worldPos, nearTerm.elem, nearTerm.termId);
+      setDraftWireType(inferred);
       return;
     }
 
@@ -630,6 +720,7 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (activeWireTool && e.button === 0) {
       setWireDraft([snapped]);
       setWireStartAxis(null);
+      setDraftWireType(null);
       return;
     }
 
@@ -918,6 +1009,8 @@ export const SchematicCanvas: React.FC<Props> = ({
       if (wireDraft.length === 0) {
         setWireDraft([nearTerm.worldPos]);
         setWireStartAxis(null);
+        const inferred = inferWireTypeAtPoint(nearTerm.worldPos, nearTerm.elem, nearTerm.termId);
+        setDraftWireType(inferred);
       } else {
         completeWire(nearTerm.worldPos);
       }
@@ -995,6 +1088,8 @@ export const SchematicCanvas: React.FC<Props> = ({
         if (nearTerm) {
           setWireDraft([nearTerm.worldPos]);
           setWireStartAxis(null);
+          const inferred = inferWireTypeAtPoint(nearTerm.worldPos, nearTerm.elem, nearTerm.termId);
+          setDraftWireType(inferred);
           return;
         }
       }
@@ -1002,6 +1097,7 @@ export const SchematicCanvas: React.FC<Props> = ({
       if (activeWireTool) {
         setWireDraft([snapPt(world)]);
         setWireStartAxis(null);
+        setDraftWireType(null);
         return;
       }
 
@@ -1229,6 +1325,8 @@ export const SchematicCanvas: React.FC<Props> = ({
     if (wireDraft.length === 0) {
       setWireDraft([snapped]);
       setWireStartAxis(null);
+      const inferred = inferWireTypeAtPoint(snapped, _elem, _termId);
+      setDraftWireType(inferred);
     } else {
       completeWire(snapped);
     }
@@ -1390,7 +1488,7 @@ export const SchematicCanvas: React.FC<Props> = ({
             onTerminalMouseDown={handleTerminalMouseDown}
             onTerminalMouseUp={handleTerminalMouseUp}
             wireDraft={displayDraft}
-            draftColor={activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : undefined}
+            draftColor={activeWireTool ? WIRE_COLOR_MAP[activeWireTool] : draftWireType?.color || WIRE_COLOR_MAP['aux']}
             ghostElement={ghostElement}
             hoveredTerminal={hoveredTerminal}
           />
