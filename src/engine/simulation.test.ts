@@ -139,24 +139,24 @@ describe('Simulation Engine', () => {
       elements: [
         // Source L+N+PE at (100, 100): L at (80, 110), N at (100, 110), PE at (120, 110)
         { id: 'src', def: 'pwr_l_n_pe', x: 100, y: 100, rot: 0 as const, tag: '-X1', props: {} },
-        // Interruttore Differenziale 1P+N at (90, 160): 1 at (80, 140), 3 at (100, 140), 2 at (80, 180), 4 at (100, 180)
+        // Interruttore Differenziale 1P+N at (90, 160): 1 at (80, 130), 3 at (100, 130), 2 at (80, 190), 4 at (100, 190)
         { id: 'rcd1', def: 'rcd_differential_1p_n', x: 90, y: 160, rot: 0 as const, tag: '-F1', props: {} },
-        // Pilot Lamp at (90, 240): X1 at (90, 220), X2 at (90, 260)
-        { id: 'lamp1', def: 'pilot_lamp', x: 90, y: 240, rot: 0 as const, tag: '-H1', props: {} },
-        // Pushbutton NO at (40, 200) simulating ground fault when pressed: 13 at (40, 180), 14 at (40, 220)
-        { id: 'btn_fault', def: 'btn_no', x: 40, y: 200, rot: 0 as const, tag: '-S1', props: {} },
+        // Pilot Lamp at (90, 250): X1 at (90, 230), X2 at (90, 270)
+        { id: 'lamp1', def: 'pilot_lamp', x: 90, y: 250, rot: 0 as const, tag: '-H1', props: {} },
+        // Pushbutton NO at (40, 210) simulating ground fault when pressed: 13 at (40, 190), 14 at (40, 230)
+        { id: 'btn_fault', def: 'btn_no', x: 40, y: 210, rot: 0 as const, tag: '-S1', props: {} },
       ],
       wires: [
         // Power from Source to RCD inputs (1 and 3)
-        { id: 'w_l_in', pts: [{ x: 80, y: 110 }, { x: 80, y: 140 }] },
-        { id: 'w_n_in', pts: [{ x: 100, y: 110 }, { x: 100, y: 140 }] },
+        { id: 'w_l_in', pts: [{ x: 80, y: 110 }, { x: 80, y: 130 }] },
+        { id: 'w_n_in', pts: [{ x: 100, y: 110 }, { x: 100, y: 130 }] },
         // RCD outputs to Lamp load
-        { id: 'w_l_out', pts: [{ x: 80, y: 180 }, { x: 90, y: 180 }, { x: 90, y: 220 }] },
-        { id: 'w_n_out', pts: [{ x: 100, y: 180 }, { x: 100, y: 260 }, { x: 90, y: 260 }] },
-        // Fault branch: wire from terminal 2 of RCD (80, 180) to terminal 13 of button (40, 180)
-        { id: 'w_fault_tap', pts: [{ x: 80, y: 180 }, { x: 40, y: 180 }] },
-        // Fault branch: wire from terminal 14 of button (40, 220) to PE source terminal (120, 110)
-        { id: 'w_fault_pe', pts: [{ x: 40, y: 220 }, { x: 40, y: 300 }, { x: 120, y: 300 }, { x: 120, y: 110 }], kind: 'pe' },
+        { id: 'w_l_out', pts: [{ x: 80, y: 190 }, { x: 90, y: 190 }, { x: 90, y: 230 }] },
+        { id: 'w_n_out', pts: [{ x: 100, y: 190 }, { x: 100, y: 270 }, { x: 90, y: 270 }] },
+        // Fault branch: wire from terminal 2 of RCD (80, 190) to terminal 13 of button (40, 190)
+        { id: 'w_fault_tap', pts: [{ x: 80, y: 190 }, { x: 40, y: 190 }] },
+        // Fault branch: wire from terminal 14 of button (40, 230) to PE source terminal (120, 110)
+        { id: 'w_fault_pe', pts: [{ x: 40, y: 230 }, { x: 40, y: 300 }, { x: 120, y: 300 }, { x: 120, y: 110 }], kind: 'pe' },
       ],
     };
 
@@ -237,24 +237,24 @@ describe('Simulation Engine', () => {
       elements: [
         // Power source L+N+PE at (100, 100): L at (80, 110), N at (100, 110), PE at (120, 110)
         { id: 'src', def: 'pwr_l_n_pe', x: 100, y: 100, rot: 0 as const, tag: '-X1', props: {} },
-        // Interruttore Differenziale -F1 at (90, 160): 1 at (80, 140), 3 at (100, 140), 2 at (80, 180), 4 at (100, 180)
+        // Interruttore Differenziale -F1 at (90, 160): 1 at (80, 130), 3 at (100, 130), 2 at (80, 190), 4 at (100, 190)
         { id: 'rcd1', def: 'rcd_differential_1p_n', x: 90, y: 160, rot: 0 as const, tag: '-F1', props: {} },
-        // Resistor load -R1 at (90, 240): 1 at (90, 220), 2 at (90, 260)
+        // Resistor load -R1 at (90, 240): 1 at (90, 220), 2 at (90, 270)
         { id: 'resistor1', def: 'resistor_1p', x: 90, y: 240, rot: 0 as const, tag: '-R1', props: {} },
-        // Pushbutton -S1 at (40, 200) connected to Phase and PE: 13 at (40, 180), 14 at (40, 220)
-        { id: 'btn_fault', def: 'btn_no', x: 40, y: 200, rot: 0 as const, tag: '-S1', props: {} },
+        // Pushbutton -S1 at (40, 210) connected to Phase and PE: 13 at (40, 190), 14 at (40, 230)
+        { id: 'btn_fault', def: 'btn_no', x: 40, y: 210, rot: 0 as const, tag: '-S1', props: {} },
       ],
       wires: [
         // Source to RCD
-        { id: 'w_l_in', pts: [{ x: 80, y: 110 }, { x: 80, y: 140 }] },
-        { id: 'w_n_in', pts: [{ x: 100, y: 110 }, { x: 100, y: 140 }] },
+        { id: 'w_l_in', pts: [{ x: 80, y: 110 }, { x: 80, y: 130 }] },
+        { id: 'w_n_in', pts: [{ x: 100, y: 110 }, { x: 100, y: 130 }] },
         // RCD outputs to Resistor load
-        { id: 'w_l_out', pts: [{ x: 80, y: 180 }, { x: 90, y: 180 }, { x: 90, y: 220 }] },
-        { id: 'w_n_out', pts: [{ x: 100, y: 180 }, { x: 100, y: 260 }, { x: 90, y: 260 }] },
-        // Fault branch: terminal 2 of RCD (80, 180) to terminal 13 of button (40, 180)
-        { id: 'w_fault_tap', pts: [{ x: 80, y: 180 }, { x: 40, y: 180 }] },
-        // Fault branch: terminal 14 of button (40, 220) to PE wire / source terminal (120, 110)
-        { id: 'w_fault_pe', pts: [{ x: 40, y: 220 }, { x: 40, y: 300 }, { x: 120, y: 300 }, { x: 120, y: 110 }] },
+        { id: 'w_l_out', pts: [{ x: 80, y: 190 }, { x: 90, y: 190 }, { x: 90, y: 220 }] },
+        { id: 'w_n_out', pts: [{ x: 100, y: 190 }, { x: 100, y: 270 }, { x: 90, y: 270 }] },
+        // Fault branch: terminal 2 of RCD (80, 190) to terminal 13 of button (40, 190)
+        { id: 'w_fault_tap', pts: [{ x: 80, y: 190 }, { x: 40, y: 190 }] },
+        // Fault branch: terminal 14 of button (40, 230) to PE wire / source terminal (120, 110)
+        { id: 'w_fault_pe', pts: [{ x: 40, y: 230 }, { x: 40, y: 300 }, { x: 120, y: 300 }, { x: 120, y: 110 }] },
       ],
     };
 

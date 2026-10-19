@@ -1248,10 +1248,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-F',
     terminals: [
-      { id: '1', x: -10, y: -20, label: '1' },
-      { id: '3', x: 10, y: -20, label: '3' },
-      { id: '2', x: -10, y: 20, label: '2' },
-      { id: '4', x: 10, y: 20, label: '4' },
+      { id: '1', x: -10, y: -30, label: '1' },
+      { id: '3', x: 10, y: -30, label: '3' },
+      { id: '2', x: -10, y: 30, label: '2' },
+      { id: '4', x: 10, y: 30, label: '4' },
     ],
     behavior: {
       type: 'contact',
@@ -1267,21 +1267,21 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Contact stubs
-      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
-      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -14 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -14 },
       // Switch blades
-      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, transform: 'rotate(-22 -10 0)', when: 'off' },
-      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, transform: 'rotate(-22 10 0)', when: 'off' },
-      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, when: 'on' },
-      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, when: 'on' },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -14, transform: 'rotate(-22 -10 0)', when: 'off' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -14, transform: 'rotate(-22 10 0)', when: 'off' },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -14, when: 'on' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -14, when: 'on' },
       // Bottom lines through toroid
-      { t: 'line', x1: -10, y1: 0, x2: -10, y2: 20 },
-      { t: 'line', x1: 10, y1: 0, x2: 10, y2: 20 },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: 30 },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: 30 },
       // Toroid oval
-      { t: 'rect', x: -16, y: 5, w: 32, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
+      { t: 'rect', x: -16, y: 10, w: 32, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
       // Link to trip relay
-      { t: 'line', x1: -16, y1: 9, x2: -24, y2: 9 },
-      { t: 'line', x1: -24, y1: 9, x2: -24, y2: -6 },
+      { t: 'line', x1: -16, y1: 14, x2: -24, y2: 14 },
+      { t: 'line', x1: -24, y1: 14, x2: -24, y2: -6 },
       // Trip relay box
       { t: 'rect', x: -30, y: -12, w: 12, h: 12, fill: '#ffffff' },
       { t: 'line', x1: -30, y1: -12, x2: -18, y2: 0 },
@@ -1296,12 +1296,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-F',
     terminals: [
-      { id: '1', x: -20, y: -20, label: '1' },
-      { id: '3', x: 0, y: -20, label: '3' },
-      { id: '5', x: 20, y: -20, label: '5' },
-      { id: '2', x: -20, y: 20, label: '2' },
-      { id: '4', x: 0, y: 20, label: '4' },
-      { id: '6', x: 20, y: 20, label: '6' },
+      { id: '1', x: -20, y: -30, label: '1' },
+      { id: '3', x: 0, y: -30, label: '3' },
+      { id: '5', x: 20, y: -30, label: '5' },
+      { id: '2', x: -20, y: 30, label: '2' },
+      { id: '4', x: 0, y: 30, label: '4' },
+      { id: '6', x: 20, y: 30, label: '6' },
     ],
     behavior: {
       type: 'contact',
@@ -1318,25 +1318,25 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Contact stubs
-      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -12 },
-      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
-      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -12 },
+      { t: 'line', x1: -20, y1: -30, x2: -20, y2: -14 },
+      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -14 },
+      { t: 'line', x1: 20, y1: -30, x2: 20, y2: -14 },
       // Switch blades
-      { t: 'line', x1: -20, y1: 0, x2: -20, y2: -12, transform: 'rotate(-22 -20 0)', when: 'off' },
-      { t: 'line', x1: 0, y1: 0, x2: 0, y2: -12, transform: 'rotate(-22 0 0)', when: 'off' },
-      { t: 'line', x1: 20, y1: 0, x2: 20, y2: -12, transform: 'rotate(-22 20 0)', when: 'off' },
-      { t: 'line', x1: -20, y1: 0, x2: -20, y2: -12, when: 'on' },
-      { t: 'line', x1: 0, y1: 0, x2: 0, y2: -12, when: 'on' },
-      { t: 'line', x1: 20, y1: 0, x2: 20, y2: -12, when: 'on' },
+      { t: 'line', x1: -20, y1: 0, x2: -20, y2: -14, transform: 'rotate(-22 -20 0)', when: 'off' },
+      { t: 'line', x1: 0, y1: 0, x2: 0, y2: -14, transform: 'rotate(-22 0 0)', when: 'off' },
+      { t: 'line', x1: 20, y1: 0, x2: 20, y2: -14, transform: 'rotate(-22 20 0)', when: 'off' },
+      { t: 'line', x1: -20, y1: 0, x2: -20, y2: -14, when: 'on' },
+      { t: 'line', x1: 0, y1: 0, x2: 0, y2: -14, when: 'on' },
+      { t: 'line', x1: 20, y1: 0, x2: 20, y2: -14, when: 'on' },
       // Bottom lines through toroid
-      { t: 'line', x1: -20, y1: 0, x2: -20, y2: 20 },
-      { t: 'line', x1: 0, y1: 0, x2: 0, y2: 20 },
-      { t: 'line', x1: 20, y1: 0, x2: 20, y2: 20 },
+      { t: 'line', x1: -20, y1: 0, x2: -20, y2: 30 },
+      { t: 'line', x1: 0, y1: 0, x2: 0, y2: 30 },
+      { t: 'line', x1: 20, y1: 0, x2: 20, y2: 30 },
       // Wide toroid oval
-      { t: 'rect', x: -26, y: 5, w: 52, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
+      { t: 'rect', x: -26, y: 10, w: 52, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
       // Link to trip relay
-      { t: 'line', x1: -26, y1: 9, x2: -34, y2: 9 },
-      { t: 'line', x1: -34, y1: 9, x2: -34, y2: -6 },
+      { t: 'line', x1: -26, y1: 14, x2: -34, y2: 14 },
+      { t: 'line', x1: -34, y1: 14, x2: -34, y2: -6 },
       // Trip relay box
       { t: 'rect', x: -40, y: -12, w: 12, h: 12, fill: '#ffffff' },
       { t: 'line', x1: -40, y1: -12, x2: -28, y2: 0 },
@@ -1351,14 +1351,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Protezioni',
     tagPrefix: '-F',
     terminals: [
-      { id: '1', x: -30, y: -20, label: '1' },
-      { id: '3', x: -10, y: -20, label: '3' },
-      { id: '5', x: 10, y: -20, label: '5' },
-      { id: '7', x: 30, y: -20, label: '7' },
-      { id: '2', x: -30, y: 20, label: '2' },
-      { id: '4', x: -10, y: 20, label: '4' },
-      { id: '6', x: 10, y: 20, label: '6' },
-      { id: '8', x: 30, y: 20, label: '8' },
+      { id: '1', x: -30, y: -30, label: '1' },
+      { id: '3', x: -10, y: -30, label: '3' },
+      { id: '5', x: 10, y: -30, label: '5' },
+      { id: '7', x: 30, y: -30, label: '7' },
+      { id: '2', x: -30, y: 30, label: '2' },
+      { id: '4', x: -10, y: 30, label: '4' },
+      { id: '6', x: 10, y: 30, label: '6' },
+      { id: '8', x: 30, y: 30, label: '8' },
     ],
     behavior: {
       type: 'contact',
@@ -1376,29 +1376,29 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     },
     symbol: [
       // Contact stubs
-      { t: 'line', x1: -30, y1: -20, x2: -30, y2: -12 },
-      { t: 'line', x1: -10, y1: -20, x2: -10, y2: -12 },
-      { t: 'line', x1: 10, y1: -20, x2: 10, y2: -12 },
-      { t: 'line', x1: 30, y1: -20, x2: 30, y2: -12 },
+      { t: 'line', x1: -30, y1: -30, x2: -30, y2: -14 },
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -14 },
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -14 },
+      { t: 'line', x1: 30, y1: -30, x2: 30, y2: -14 },
       // Switch blades
-      { t: 'line', x1: -30, y1: 0, x2: -30, y2: -12, transform: 'rotate(-22 -30 0)', when: 'off' },
-      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, transform: 'rotate(-22 -10 0)', when: 'off' },
-      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, transform: 'rotate(-22 10 0)', when: 'off' },
-      { t: 'line', x1: 30, y1: 0, x2: 30, y2: -12, transform: 'rotate(-22 30 0)', when: 'off' },
-      { t: 'line', x1: -30, y1: 0, x2: -30, y2: -12, when: 'on' },
-      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -12, when: 'on' },
-      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -12, when: 'on' },
-      { t: 'line', x1: 30, y1: 0, x2: 30, y2: -12, when: 'on' },
+      { t: 'line', x1: -30, y1: 0, x2: -30, y2: -14, transform: 'rotate(-22 -30 0)', when: 'off' },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -14, transform: 'rotate(-22 -10 0)', when: 'off' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -14, transform: 'rotate(-22 10 0)', when: 'off' },
+      { t: 'line', x1: 30, y1: 0, x2: 30, y2: -14, transform: 'rotate(-22 30 0)', when: 'off' },
+      { t: 'line', x1: -30, y1: 0, x2: -30, y2: -14, when: 'on' },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: -14, when: 'on' },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: -14, when: 'on' },
+      { t: 'line', x1: 30, y1: 0, x2: 30, y2: -14, when: 'on' },
       // Bottom lines through toroid
-      { t: 'line', x1: -30, y1: 0, x2: -30, y2: 20 },
-      { t: 'line', x1: -10, y1: 0, x2: -10, y2: 20 },
-      { t: 'line', x1: 10, y1: 0, x2: 10, y2: 20 },
-      { t: 'line', x1: 30, y1: 0, x2: 30, y2: 20 },
+      { t: 'line', x1: -30, y1: 0, x2: -30, y2: 30 },
+      { t: 'line', x1: -10, y1: 0, x2: -10, y2: 30 },
+      { t: 'line', x1: 10, y1: 0, x2: 10, y2: 30 },
+      { t: 'line', x1: 30, y1: 0, x2: 30, y2: 30 },
       // Wide toroid oval
-      { t: 'rect', x: -36, y: 5, w: 72, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
+      { t: 'rect', x: -36, y: 10, w: 72, h: 8, r: 4, fill: '#ffffff', stroke: '#0f172a' },
       // Link to trip relay
-      { t: 'line', x1: -36, y1: 9, x2: -44, y2: 9 },
-      { t: 'line', x1: -44, y1: 9, x2: -44, y2: -6 },
+      { t: 'line', x1: -36, y1: 14, x2: -44, y2: 14 },
+      { t: 'line', x1: -44, y1: 14, x2: -44, y2: -6 },
       // Trip relay box
       { t: 'rect', x: -50, y: -12, w: 12, h: 12, fill: '#ffffff' },
       { t: 'line', x1: -50, y1: -12, x2: -38, y2: 0 },
@@ -1407,6 +1407,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: -38, y1: -6, x2: -32, y2: -6, dash: true },
     ],
   },
+
 
   // ==================== RELE TERMICO BIMETALLICO (IEC 60617) ====================
   {
@@ -4851,14 +4852,14 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     tagPrefix: '-R',
     terminals: [
       { id: '1', x: 0, y: -20, label: '1' },
-      { id: '2', x: 0, y: 20, label: '2' },
+      { id: '2', x: 0, y: 30, label: '2' },
     ],
     behavior: { type: 'load', kind: 'resistor', a: '1', b: '2' },
     symbol: [
-      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
-      { t: 'rect', x: -4, y: -12, w: 8, h: 24, fill: '#ffffff', when: 'off' },
-      { t: 'rect', x: -4, y: -12, w: 8, h: 24, fill: '#fef08a', stroke: '#eab308', when: 'on' },
-      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'rect', x: -4, y: -7, w: 8, h: 24, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -4, y: -7, w: 8, h: 24, fill: '#fef08a', stroke: '#eab308', when: 'on' },
+      { t: 'line', x1: 0, y1: 17, x2: 0, y2: 30 },
     ],
   },
   {
@@ -4871,9 +4872,9 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { id: '1', x: -20, y: -20, label: '1' },
       { id: '3', x: 0, y: -20, label: '3' },
       { id: '5', x: 20, y: -20, label: '5' },
-      { id: '2', x: -20, y: 20, label: '2' },
-      { id: '4', x: 0, y: 20, label: '4' },
-      { id: '6', x: 20, y: 20, label: '6' },
+      { id: '2', x: -20, y: 30, label: '2' },
+      { id: '4', x: 0, y: 30, label: '4' },
+      { id: '6', x: 20, y: 30, label: '6' },
     ],
     behavior: {
       type: 'conductor',
@@ -4884,15 +4885,23 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       ],
     },
     symbol: [
-      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -12 },
-      { t: 'rect', x: -24, y: -12, w: 8, h: 24, fill: '#ffffff' },
-      { t: 'line', x1: -20, y1: 12, x2: -20, y2: 20 },
-      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
-      { t: 'rect', x: -4, y: -12, w: 8, h: 24, fill: '#ffffff' },
-      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
-      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -12 },
-      { t: 'rect', x: 16, y: -12, w: 8, h: 24, fill: '#ffffff' },
-      { t: 'line', x1: 20, y1: 12, x2: 20, y2: 20 },
+      // Pole 1: (-20)
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -7 },
+      { t: 'rect', x: -24, y: -7, w: 8, h: 24, fill: '#ffffff' },
+      { t: 'line', x1: -20, y1: 17, x2: -20, y2: 30 },
+
+      // Pole 2: (0)
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'rect', x: -4, y: -7, w: 8, h: 24, fill: '#ffffff' },
+      { t: 'line', x1: 0, y1: 17, x2: 0, y2: 30 },
+
+      // Pole 3: (20)
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -7 },
+      { t: 'rect', x: 16, y: -7, w: 8, h: 24, fill: '#ffffff' },
+      { t: 'line', x1: 20, y1: 17, x2: 20, y2: 30 },
+
+      // Mechanical link line across the three resistors
+      { t: 'line', x1: -28, y1: 5, x2: 28, y2: 5, dash: true },
     ],
   },
   {

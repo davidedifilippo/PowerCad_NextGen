@@ -12,41 +12,60 @@ export interface CadeCompMapping {
 }
 
 export const CADESIMU_TYPE_MAP: Record<number, CadeCompMapping> = {
+  // Resistori e Carichi (Resistors & Loads)
+  1050: { def: 'resistor_1p', yOffset: 20 },
+  1051: { def: 'resistor_3p', yOffset: 20, xOffset: 20 },
+
   // Alimentazione (Power sources)
   3000: { def: 'pwr_l', yOffset: -10 },
   3001: { def: 'pwr_n', yOffset: -10 },
   3002: { def: 'pwr_pe', yOffset: 10 },
+  3003: { def: 'pwr_l_n', yOffset: -10, xOffset: 10 },
   3004: { def: 'pwr_3p', yOffset: -10, xOffset: 20 },
-  3005: { def: 'pwr_3p_pe', yOffset: -10, xOffset: 20 },
-  3006: { def: 'pwr_3p_n', yOffset: -10, xOffset: 20 },
-  3007: { def: 'pwr_3p_n_pe', yOffset: -10, xOffset: 20 },
-  3010: { def: 'pwr_l_n', yOffset: -10 },
-  3011: { def: 'pwr_l_n_pe', yOffset: -10 },
+  3005: { def: 'pwr_3p_pe', yOffset: -10, xOffset: 30 },
+  3006: { def: 'pwr_3p_n', yOffset: -10, xOffset: 30 },
+  3007: { def: 'pwr_3p_n_pe', yOffset: -10, xOffset: 40 },
+  3010: { def: 'pwr_l_n', yOffset: -10, xOffset: 10 },
+  3011: { def: 'pwr_l_n_pe', yOffset: -10, xOffset: 20 },
+
+  // Fusibili (Fuses 5000-5008)
+  5000: { def: 'fuse_1p', yOffset: 20 },
+  5001: { def: 'fuse_1p_n', yOffset: 20, xOffset: 10 },
+  5002: { def: 'fuse_disconnector_2p', yOffset: 20, xOffset: 10 },
+  5003: { def: 'fuse_3p', yOffset: 20, xOffset: 20 },
+  5004: { def: 'fuse_3p_n', yOffset: 20, xOffset: 30 },
+  5005: { def: 'fuse_1p', yOffset: 20 },
+  5006: { def: 'fuse_1p_n', yOffset: 20, xOffset: 10 },
+  5007: { def: 'fuse_1p_n', yOffset: 20, xOffset: 10 },
+  5008: { def: 'fuse_3p', yOffset: 20, xOffset: 20 },
 
   // Protezioni e Sezionatori (Protections & Disconnectors)
   6000: { def: 'fuse_1p', yOffset: 20 },
-  6001: { def: 'fuse_1p_n', yOffset: 20 },
-  6002: { def: 'fuse_3p', yOffset: 20 },
-  6003: { def: 'fuse_3p_n', yOffset: 20 },
-  6004: { def: 'rcd_differential_1p_n', yOffset: 20 },
-  6005: { def: 'rcd_differential_3p', yOffset: 20 },
-  6006: { def: 'rcd_differential_3p_n', yOffset: 20 },
-  6007: { def: 'thermal_relay_power', yOffset: 20 },
-  6008: { def: 'mcb_magnetothermal_1p', yOffset: 20 },
-  6009: { def: 'mcb_magnetothermal_2p', yOffset: 20 },
-  6010: { def: 'mcb_magnetothermal_3p', yOffset: 20 },
-  6011: { def: 'mcb_magnetothermal_3p_n', yOffset: 20 },
-  6012: { def: 'disconnector_3p', yOffset: 20 },
+  6001: { def: 'fuse_1p_n', yOffset: 20, xOffset: 10 },
+  6002: { def: 'fuse_3p', yOffset: 20, xOffset: 20 },
+  6003: { def: 'fuse_3p_n', yOffset: 20, xOffset: 30 },
+  6004: { def: 'rcd_differential_1p_n', yOffset: 30, xOffset: 10 },
+  6005: { def: 'rcd_differential_1p_n', yOffset: 30, xOffset: 10 },
+  6006: { def: 'rcd_differential_3p_n', yOffset: 30, xOffset: 30 },
+  6007: { def: 'thermal_relay_power', yOffset: 20, xOffset: 20 },
+  6008: { def: 'mcb_magnetothermal_1p', yOffset: 30 },
+  6009: { def: 'mcb_magnetothermal_2p', yOffset: 30, xOffset: 10 },
+  6010: { def: 'mcb_magnetothermal_3p', yOffset: 30, xOffset: 20 },
+  6011: { def: 'mcb_magnetothermal_3p_n', yOffset: 30, xOffset: 30 },
+  6012: { def: 'disconnector_3p', yOffset: 20, xOffset: 20 },
 
-  // Contattori di potenza (Contactors)
+  // Interruttori Sezionatori e Contattori (Switches & Contactors)
   2000: { def: 'contactor_power_1p', yOffset: 20 },
-  2001: { def: 'contactor_power_3p', yOffset: 20 },
-  2002: { def: 'contactor_power_4p', yOffset: 20 },
+  2001: { def: 'contactor_power_3p', yOffset: 20, xOffset: 20 },
+  2002: { def: 'contactor_power_4p', yOffset: 20, xOffset: 30 },
+  2003: { def: 'switch_disconnector_2p', yOffset: 20, xOffset: 10 },
+  2004: { def: 'switch_disconnector_3p', yOffset: 20, xOffset: 20 },
+  2005: { def: 'switch_disconnector_3p_n', yOffset: 20, xOffset: 30 },
 
   // Motori (Motors)
-  1000: { def: 'motor_3p_async', yOffset: 30 },
-  1001: { def: 'motor_3p_dahlander', yOffset: 30 },
-  1002: { def: 'motor_3p_yd', yOffset: 30 },
+  1000: { def: 'motor_3p_async', yOffset: 30, xOffset: 20 },
+  1001: { def: 'motor_3p_dahlander', yOffset: 30, xOffset: 20 },
+  1002: { def: 'motor_3p_yd', yOffset: 30, xOffset: 20 },
   1004: { def: 'motor_1p', yOffset: 30 },
   1005: { def: 'motor_dc_pm', yOffset: 30 },
 
@@ -91,6 +110,93 @@ export const CADESIMU_TYPE_MAP: Record<number, CadeCompMapping> = {
   9011: { def: 'signal_bell', yOffset: 20 },
   9012: { def: 'signal_siren', yOffset: 20 },
 };
+
+/**
+ * Dynamically resolves a CADe_SIMU component mapping based on component type code
+ * and actual terminal field count (poles).
+ */
+export function resolveCadeComponent(type: number, fields: string[]): CadeCompMapping | null {
+  const tag = fields[0]?.trim() || '';
+  const termCount = fields.slice(1).filter((f) => f && f.trim().length > 0).length;
+
+  // Resistori monofase e trifase (1050, 1051)
+  if (type === 1050) return { def: 'resistor_1p', yOffset: 20 };
+  if (type === 1051) return { def: 'resistor_3p', yOffset: 20, xOffset: 20 };
+
+  // Fusibili (5000..5008 e 6000..6003)
+  if ((type >= 5000 && type <= 5008) || (type >= 6000 && type <= 6003)) {
+    if (termCount <= 2) return { def: 'fuse_1p', yOffset: 20 };
+    if (termCount <= 4) return { def: 'fuse_1p_n', yOffset: 20, xOffset: 10 };
+    if (termCount <= 6) return { def: 'fuse_3p', yOffset: 20, xOffset: 20 };
+    return { def: 'fuse_3p_n', yOffset: 20, xOffset: 30 };
+  }
+
+  // Interruttori Sezionatori rotativi / manuali (2003..2005)
+  if (type >= 2003 && type <= 2005) {
+    if (termCount <= 4) return { def: 'switch_disconnector_2p', yOffset: 20, xOffset: 10 };
+    if (termCount <= 6) return { def: 'switch_disconnector_3p', yOffset: 20, xOffset: 20 };
+    return { def: 'switch_disconnector_3p_n', yOffset: 20, xOffset: 30 };
+  }
+
+  // Interruttori Differenziali (RCD 6004..6006)
+  if (type >= 6004 && type <= 6006) {
+    if (termCount <= 4) return { def: 'rcd_differential_1p_n', yOffset: 30, xOffset: 10 };
+    if (termCount <= 6) return { def: 'rcd_differential_3p', yOffset: 30, xOffset: 20 };
+    return { def: 'rcd_differential_3p_n', yOffset: 30, xOffset: 30 };
+  }
+
+  // Relè termico di potenza (Thermal overload relay 6007)
+  if (type === 6007) {
+    return { def: 'thermal_relay_power', yOffset: 20, xOffset: 20 };
+  }
+
+  // Interruttori Magnetotermici (MCB 6008..6011)
+  if (type >= 6008 && type <= 6011) {
+    if (termCount <= 2) return { def: 'mcb_magnetothermal_1p', yOffset: 30 };
+    if (termCount <= 4) return { def: 'mcb_magnetothermal_2p', yOffset: 30, xOffset: 10 };
+    if (termCount <= 6) return { def: 'mcb_magnetothermal_3p', yOffset: 30, xOffset: 20 };
+    return { def: 'mcb_magnetothermal_3p_n', yOffset: 30, xOffset: 30 };
+  }
+
+  // Sezionatore 6012
+  if (type === 6012) {
+    if (termCount <= 6) return { def: 'disconnector_3p', yOffset: 20, xOffset: 20 };
+    return { def: 'switch_disconnector_3p_n', yOffset: 20, xOffset: 30 };
+  }
+
+  // Contattori di potenza (Contactors 2000..2002)
+  if (type === 2000) return { def: 'contactor_power_1p', yOffset: 20 };
+  if (type === 2001) return { def: 'contactor_power_3p', yOffset: 20, xOffset: 20 };
+  if (type === 2002) return { def: 'contactor_power_4p', yOffset: 20, xOffset: 30 };
+
+  // Motori (Motors 1000..1005)
+  if (type === 1000) return { def: 'motor_3p_async', yOffset: 30, xOffset: 20 };
+  if (type === 1001) return { def: 'motor_3p_dahlander', yOffset: 30, xOffset: 20 };
+  if (type === 1002) return { def: 'motor_3p_yd', yOffset: 30, xOffset: 20 };
+  if (type === 1004) return { def: 'motor_1p', yOffset: 30 };
+  if (type === 1005) return { def: 'motor_dc_pm', yOffset: 30 };
+
+  // Sorgenti di alimentazione (Power sources 3000..3011)
+  if (type === 3000) {
+    const isDc = tag.includes('24V') || tag.includes('+');
+    return { def: isDc ? 'pwr_dc_plus' : 'pwr_l', yOffset: -10 };
+  }
+  if (type === 3001) {
+    const isDc = tag.includes('0V') || tag.includes('-');
+    return { def: isDc ? 'pwr_dc_minus' : 'pwr_n', yOffset: -10 };
+  }
+  if (type === 3002) return { def: 'pwr_pe', yOffset: 10 };
+  if (type === 3003) return { def: 'pwr_l_n', yOffset: -10, xOffset: 10 };
+  if (type === 3004) return { def: 'pwr_3p', yOffset: -10, xOffset: 20 };
+  if (type === 3005) return { def: 'pwr_3p_pe', yOffset: -10, xOffset: 30 };
+  if (type === 3006) return { def: 'pwr_3p_n', yOffset: -10, xOffset: 30 };
+  if (type === 3007) return { def: 'pwr_3p_n_pe', yOffset: -10, xOffset: 40 };
+  if (type === 3010) return { def: 'pwr_l_n', yOffset: -10, xOffset: 10 };
+  if (type === 3011) return { def: 'pwr_l_n_pe', yOffset: -10, xOffset: 20 };
+
+  // Static fallback map (aux contacts, buttons, coils, lamps, signals)
+  return CADESIMU_TYPE_MAP[type] || null;
+}
 
 /**
  * Mapping of CADe_SIMU wire color codes to Electroforge WireKind
@@ -196,19 +302,40 @@ export function parseCadeSimu(cadText: string): Doc {
     // Ignore records with invalid numeric parameters
     if (params.length < 10) continue;
 
-    // Type 1: Wire segment
-    if (type === 1) {
+    // Type 1 & Types 4000..4099: Wire segments
+    if (type === 1 || (type >= 4000 && type <= 4099)) {
       if (params.length < 12) continue;
       const x1 = cadToCanvasCoord(params[8]);
       const y1 = cadToCanvasCoord(params[9]);
       const x2 = cadToCanvasCoord(params[10]);
       const y2 = cadToCanvasCoord(params[11]);
 
-      // Skip 0-length points
+      // Skip 0-length points (e.g. 4001 connection solder dots)
       if (x1 === x2 && y1 === y2) continue;
 
       const colorCode = params[params.length - 2];
-      const kind: WireKind = CADESIMU_WIRE_KIND_MAP[colorCode] || 'phase';
+      let kind: WireKind;
+
+      if (type === 4009) {
+        kind = 'neutral';
+      } else if (type === 4010) {
+        kind = 'pe';
+      } else if (type === 4019) {
+        kind = 'neg';
+      } else if (type === 4002) {
+        kind = 'phase_l2';
+      } else if (type === 4003) {
+        kind = 'phase_l3';
+      } else if (type === 4000) {
+        kind = 'phase';
+      } else if (type === 4018) {
+        if (colorCode === 2) kind = 'neutral';
+        else if (colorCode === 3) kind = 'pe';
+        else if (colorCode === 5) kind = 'neg';
+        else kind = 'phase';
+      } else {
+        kind = CADESIMU_WIRE_KIND_MAP[colorCode] || 'phase';
+      }
 
       wires.push({
         id: `w_cad_${id}_${wireCounter++}`,
@@ -245,18 +372,11 @@ export function parseCadeSimu(cadText: string): Doc {
       continue;
     }
 
-    // Standard electrical components
-    const mapping = CADESIMU_TYPE_MAP[type];
+    // Standard electrical components (resolved dynamically according to poles & type)
+    const mapping = resolveCadeComponent(type, fields);
     if (mapping) {
-      let def = mapping.def;
+      const def = mapping.def;
       const tag = fields[0]?.trim() || '';
-
-      // Special case: 3000 / 3001 with 24V or DC symbols
-      if (type === 3000 && (tag.includes('24V') || tag.includes('+'))) {
-        def = 'pwr_dc_plus';
-      } else if (type === 3001 && (tag.includes('0V') || tag.includes('-'))) {
-        def = 'pwr_dc_minus';
-      }
 
       const x = cadToCanvasCoord(params[8]) + (mapping.xOffset || 0);
       const y = cadToCanvasCoord(params[9]) + (mapping.yOffset || 0);

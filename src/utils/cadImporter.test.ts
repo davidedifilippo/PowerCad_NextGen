@@ -92,4 +92,94 @@ describe('CADe_SIMU .cad Importer', () => {
     expect(Object.keys(state.nodePotentials).length).toBeGreaterThan(0);
     expect(state.running).toBe(true);
   });
+
+  it('correctly imports circuit from "dispersione verso terra.cad" (resistors, switches, fuses, RCD, and 40xx wires)', async () => {
+    const dispersioneSampleData = await import('./testDispersioneCad.json');
+    const cadText = dispersioneSampleData.default.cadText;
+    const doc = parseCadeSimu(cadText);
+
+    // 1. Wires must be parsed (previously were 0 because types were 4000, 4009, 4010, 4018)
+    expect(doc.wires.length).toBeGreaterThanOrEqual(60);
+    const kinds = new Set(doc.wires.map((w) => w.kind));
+    expect(kinds.has('phase')).toBe(true);
+    expect(kinds.has('neutral')).toBe(true);
+    expect(kinds.has('pe')).toBe(true);
+
+    // 2. Circuit 1 (Images 3 & 4): Single-phase circuit with Resistor -R and RCD -F
+    const resistor1p = doc.elements.find((e) => e.def === 'resistor_1p' && e.tag === '-R');
+    expect(resistor1p).toBeDefined();
+    expect(resistor1p?.x).toBe(110);
+    expect(resistor1p?.y).toBe(310);
+
+    // RCD -F must be 2-pole (1P+N), not 3P
+    const rcd1p = doc.elements.find((e) => e.def === 'rcd_differential_1p_n' && e.tag === '-F');
+    expect(rcd1p).toBeDefined();
+    expect(rcd1p?.x).toBe(120);
+    expect(rcd1p?.y).toBe(180);
+
+    // 3. Circuit 2 (Images 1 & 2): 3-phase motor power circuit
+    // Fuses -F (type 5003)
+    const fuse3p = doc.elements.find((e) => e.def === 'fuse_3p' && e.tag === '-F');
+    expect(fuse3p).toBeDefined();
+    expect(fuse3p?.x).toBe(620);
+    expect(fuse3p?.y).toBe(160);
+
+    // Switch -S (type 2004)
+    const switch3p = doc.elements.find((e) => e.def === 'switch_disconnector_3p' && e.tag === '-S');
+    expect(switch3p).toBeDefined();
+    expect(switch3p?.x).toBe(620);
+    expect(switch3p?.y).toBe(230);
+
+    // Thermal relay -F (type 6007)
+    const thermalRelay = doc.elements.find((e) => e.def === 'thermal_relay_power' && e.tag === '-F');
+    expect(thermalRelay).toBeDefined();
+    expect(thermalRelay?.x).toBe(620);
+    expect(thermalRelay?.y).toBe(300);
+
+    // Motor -M (type 1000)
+    const motor = doc.elements.find((e) => e.def === 'motor_3p_async' && e.tag === '-M');
+    expect(motor).toBeDefined();
+    expect(motor?.x).toBe(620);
+    expect(motor?.y).toBe(430);
+
+    // Auxiliary contact -S3
+    const btnS3 = doc.elements.find((e) => e.tag === '-S3');
+    expect(btnS3).toBeDefined();
+
+    // 4. Verify terminal connectivity to wires in Circuit 1:
+    // RCD input 1 at (110, 150) should connect to a wire endpoint
+    const rcdInputWire = doc.wires.find((w) =>
+      w.pts.some((p) => p.x === 110 && p.y === 150)
+    );
+    expect(rcdInputWire).toBeDefined();
+
+    // RCD output 2 at (110, 210) should connect to a wire endpoint
+    const rcdOutputWire = doc.wires.find((w) =>
+      w.pts.some((p) => p.x === 110 && p.y === 210)
+    );
+    expect(rcdOutputWire).toBeDefined();
+
+    // Resistor terminal 1 at (110, 290) and terminal 2 at (110, 340) must connect to wire endpoints
+    const rInWire = doc.wires.find((w) =>
+      w.pts.some((p) => p.x === 110 && p.y === 290)
+    );
+    expect(rInWire).toBeDefined();
+    const rOutWire = doc.wires.find((w) =>
+      w.pts.some((p) => p.x === 110 && p.y === 340)
+    );
+    expect(rOutWire).toBeDefined();
+
+    // 5. Verify terminal connectivity in Circuit 2:
+    // Fuses top at (600, 140) and bottom at (600, 180)
+    expect(doc.wires.some((w) => w.pts.some((p) => p.x === 600 && p.y === 140))).toBe(true);
+    expect(doc.wires.some((w) => w.pts.some((p) => p.x === 600 && p.y === 180))).toBe(true);
+
+    // Switch top at (600, 210) and bottom at (600, 250)
+    expect(doc.wires.some((w) => w.pts.some((p) => p.x === 600 && p.y === 210))).toBe(true);
+    expect(doc.wires.some((w) => w.pts.some((p) => p.x === 600 && p.y === 250))).toBe(true);
+
+    // Motor U1 terminal at (600, 400) and PE terminal at (660, 400)
+    expect(doc.wires.some((w) => w.pts.some((p) => p.x === 600 && p.y === 400))).toBe(true);
+    expect(doc.wires.some((w) => w.pts.some((p) => p.x === 660 && p.y === 400))).toBe(true);
+  });
 });
