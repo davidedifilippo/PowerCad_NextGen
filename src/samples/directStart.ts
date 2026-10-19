@@ -29,14 +29,14 @@ export const SAMPLE_DIRECT_START: Doc = {
       tag: 'LINEA',
       props: {},
     },
-    // 2. Sezionatore Magnetotermico Generale -QM1
+    // 2. Interruttore Magnetotermico Generale -Q1
     {
       id: 'qm1',
-      def: 'disconnector_3p',
+      def: 'mcb_magnetothermal_3p',
       x: 120,
       y: 200,
       rot: 0,
-      tag: '-QM1',
+      tag: '-Q1',
       props: {},
     },
     // 3. Contattore di potenza -KM1
