@@ -96,15 +96,9 @@ npm run build
 ## 🌐 Pubblicazione su GitHub Pages
 
 Il progetto è configurato con percorsi relativi (`base: './'`) e include una GitHub Action automatica in `.github/workflows/deploy.yml`.
+Il software è accessibile alla pagina:
 
-Per attivare la pubblicazione gratuita su GitHub:
-1. Vai sul tuo repository su GitHub.
-2. Clicca su **Settings** > **Pages** (nella barra laterale sinistra).
-3. Sotto **Build and deployment** > **Source**, seleziona **GitHub Actions**.
-4. A ogni `git push` sul branch `main`, GitHub compilerà e metterà online l'applicazione all'indirizzo:
-   `https://<tuo-utente>.github.io/<nome-repository>/`
-
----
+https://davidedifilippo.github.io/PowerCad_NextGen/
 
 ## 👥 Autore & Contributors
 
