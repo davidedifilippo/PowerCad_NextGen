@@ -27,7 +27,7 @@ describe('CADe_SIMU .cad Importer', () => {
   it('parses real native CADe_SIMU circuit file test_sample.cad into a valid Doc', () => {
     const doc = parseCadeSimu(content);
 
-    expect(doc.app).toBe('electroforge');
+    expect(doc.app).toBe('powercad-nextgen');
     expect(doc.version).toBe(1);
     expect(doc.sheet.title).toContain('Controllo_motori_esama_tpsee_2024.cad');
     expect(doc.sheet.date).toBe('21-Jun-2024');

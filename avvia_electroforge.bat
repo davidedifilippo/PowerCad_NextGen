@@ -1,8 +1,8 @@
 @echo off
-title ElectroForge - Avvio Rapido
+title PowerCad_NextGen - Avvio Rapido
 cd /d "%~dp0"
 echo ========================================================
-echo   ElectroForge - Simulatore & CAD Elettrico Industriale
+echo   PowerCad_NextGen - Simulatore & CAD Elettrico Industriale
 echo ========================================================
 echo.
 echo Avvio del server applicativo...

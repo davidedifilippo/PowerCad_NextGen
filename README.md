@@ -1,4 +1,4 @@
-# ElectroForge ⚡
+# PowerCad_NextGen ⚡
 
 Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno, fluido e leggero. Sviluppato interamente da zero con **React 18**, **TypeScript**, **SVG vettoriale** e **Vite**.
 
@@ -7,7 +7,7 @@ Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno,
 ## ⚖️ Dichiarazione di Indipendenza & Standard Normativi (Disclaimer)
 
 > [!NOTE]
-> **ElectroForge** è un progetto open-source indipendente, sviluppato per scopi formativi, professionali e didattici.
+> **PowerCad_NextGen** è un progetto open-source indipendente, sviluppato per scopi formativi, professionali e didattici.
 > - **Simbologia Normata:** Tutti i simboli elettrici, la numerazione dei morsetti (es. 1-2, 13-14, 21-22, A1-A2, X1-X2) e le logiche grafiche adottate sono rigorosamente conformi agli standard internazionali aperti **IEC 60617** (recepiti in Italia come **CEI EN 60617**) e **ISO 7200**.
 > - **Indipendenza:** Il progetto trae ispirazione dall'usabilità dei classici simulatori didattici di automazione industriale per Windows degli anni 2000 (quali *CADe_SIMU* del Prof. Juan Luis Villanueva Montoto). Tuttavia, **non è in alcun modo affiliato, sponsorizzato né collegato a CADe_SIMU o ai suoi autori**. Il codice sorgente, l'architettura reattiva, il motore di risoluzione nodale e l'interfaccia utente sono stati progettati e scritti interamente ex-novo per il Web moderno.
 
@@ -64,7 +64,7 @@ Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno,
 1. Clona il repository:
    ```bash
    git clone <URL_REPOSITORY>
-   cd ElectroForge
+   cd PowerCad_NextGen
    ```
 2. Installa le dipendenze ed avvia il server di sviluppo:
    ```bash
@@ -74,7 +74,7 @@ Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno,
 3. Apri il browser all'indirizzo `http://localhost:5173/`.
 
 ### Su Windows
-- **Metodo rapido:** Doppio click sul file `avvia_electroforge.bat`.
+- **Metodo rapido:** Doppio click sul file `avvia_powercad.bat`.
 - **Oppure da terminale PowerShell / Prompt:**
   ```bash
   npm install

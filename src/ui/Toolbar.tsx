@@ -203,7 +203,7 @@ export const Toolbar: React.FC<Props> = ({
           </div>
           <div>
             <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '0.5px' }}>
-              Electro<span style={{ color: '#38bdf8' }}>Forge</span>
+              PowerCad<span style={{ color: '#38bdf8' }}>_NextGen</span>
             </span>
           </div>
         </div>
@@ -219,7 +219,7 @@ export const Toolbar: React.FC<Props> = ({
             onClick={() => {
               if (confirm('Vuoi creare un nuovo schema vuoto?')) {
                 onDocChange({
-                  app: 'electroforge',
+                  app: 'powercad-nextgen',
                   version: 1,
                   sheet: { ...doc.sheet, title: 'Nuovo Schema' },
                   elements: [],

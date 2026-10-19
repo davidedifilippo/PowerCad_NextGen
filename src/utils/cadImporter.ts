@@ -1,7 +1,7 @@
 import { Doc, Element, Wire, WireKind, Sheet } from '../model/types';
 
 /**
- * Mapping of CADe_SIMU component type codes to Electroforge standard library component IDs.
+ * Mapping of CADe_SIMU component type codes to PowerCad_NextGen standard library component IDs.
  * Also defines coordinate offsets (in canvas pixels) to correctly align component terminals
  * with CADe_SIMU wire connection points (which are defined relative to top terminal).
  */
@@ -199,7 +199,7 @@ export function resolveCadeComponent(type: number, fields: string[]): CadeCompMa
 }
 
 /**
- * Mapping of CADe_SIMU wire color codes to Electroforge WireKind
+ * Mapping of CADe_SIMU wire color codes to PowerCad_NextGen WireKind
  */
 export const CADESIMU_WIRE_KIND_MAP: Record<number, WireKind> = {
   1: 'phase',    // Marrone / Fase L1
@@ -247,14 +247,14 @@ export function extractCartiglio(cadText: string): CadCartiglioData | null {
 }
 
 /**
- * Converts a CADe_SIMU grid coordinate (step 3) to Electroforge canvas coordinate (step 10).
+ * Converts a CADe_SIMU grid coordinate (step 3) to PowerCad_NextGen canvas coordinate (step 10).
  */
 export function cadToCanvasCoord(cadVal: number): number {
   return Math.round((cadVal / 3) * 10);
 }
 
 /**
- * Parses native CADe_SIMU (.cad) text file contents into an Electroforge Doc object.
+ * Parses native CADe_SIMU (.cad) text file contents into a PowerCad_NextGen Doc object.
  */
 export function parseCadeSimu(cadText: string): Doc {
   if (!cadText || typeof cadText !== 'string') {
@@ -404,7 +404,7 @@ export function parseCadeSimu(cadText: string): Doc {
   }
 
   return {
-    app: 'electroforge',
+    app: 'powercad-nextgen',
     version: 1,
     sheet,
     elements,

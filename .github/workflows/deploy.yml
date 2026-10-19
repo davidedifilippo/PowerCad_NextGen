@@ -1,4 +1,4 @@
-name: Deploy ElectroForge to GitHub Pages
+name: Deploy PowerCad_NextGen to GitHub Pages
 
 on:
   push:

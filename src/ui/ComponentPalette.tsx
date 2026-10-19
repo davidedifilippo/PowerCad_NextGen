@@ -40,7 +40,7 @@ export const ComponentPalette: React.FC<Props> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'electroforge-components-library.json';
+    a.download = 'powercad-nextgen-components-library.json';
     a.click();
   };
 

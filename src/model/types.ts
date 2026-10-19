@@ -171,7 +171,7 @@ export interface Sheet {
 }
 
 export interface Doc {
-  app: 'electroforge' | 'cadesimu-next';
+  app: 'powercad-nextgen' | 'electroforge' | 'cadesimu-next';
   version: 1;
   sheet: Sheet;
   elements: Element[];
