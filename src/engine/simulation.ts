@@ -79,6 +79,14 @@ function buildConductivityGraph(
 ): DisjointSet {
   const dsu = new DisjointSet();
 
+  // Collect all candidate branching points: component terminals + wire vertices
+  const allPoints: Pt[] = [...allNetworkPoints];
+  for (const wire of doc.wires) {
+    for (const p of wire.pts) {
+      allPoints.push(p);
+    }
+  }
+
   // Wires and T-junction branching
   for (const wire of doc.wires) {
     for (let i = 0; i < wire.pts.length - 1; i++) {
@@ -86,7 +94,7 @@ function buildConductivityGraph(
       const p2 = wire.pts[i + 1];
       dsu.union(ptKey(p1), ptKey(p2));
 
-      for (const pt of allNetworkPoints) {
+      for (const pt of allPoints) {
         if (isPointOnSegment(pt, p1, p2)) {
           dsu.union(ptKey(p1), ptKey(pt));
         }
@@ -105,6 +113,7 @@ function buildConductivityGraph(
     const beh = def.behavior;
 
     if (beh.type === 'conductor') {
+      if (elementStates[elem.id] === false) continue;
       for (const [t1, t2] of beh.pairs) {
         const k1 = terms.get(t1);
         const k2 = terms.get(t2);
@@ -190,6 +199,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
   const phaseTermKeys: string[] = [];
   const peTermKeys: string[] = [];
   const neutralTermKeys: string[] = [];
+  const potentialNetKeys = new Map<string, string[]>();
 
   for (const elem of doc.elements) {
     const def = registry.get(elem.def);
@@ -208,22 +218,15 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         } else if (pot === 'N') {
           neutralTermKeys.push(k);
         }
-      }
-    } else {
-      for (const term of def.terminals) {
-        if (term.id === 'PE' || term.label === 'PE') {
-          const k = terms.get(term.id);
-          if (k) peTermKeys.push(k);
-        }
-      }
-    }
-  }
 
-  // Add all vertices on PE wires
-  for (const wire of doc.wires) {
-    if (wire.kind === 'pe') {
-      for (const p of wire.pts) {
-        peTermKeys.push(ptKey(p));
+        let pGroup = pot;
+        if (pot === '+24V' || pot === '+') pGroup = 'DC+';
+        else if (pot === '0V' || pot === '-') pGroup = 'DC-';
+
+        if (!potentialNetKeys.has(pGroup)) {
+          potentialNetKeys.set(pGroup, []);
+        }
+        potentialNetKeys.get(pGroup)!.push(k);
       }
     }
   }
@@ -334,58 +337,95 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     }
   }
 
-  // Check short-circuit between Phase and Neutral
+  // Check short-circuits (Phase-Neutral, Phase-Phase, DC+/-)
   if (!fault && !isGroundFault) {
-    const neutralRoots = new Set(neutralTermKeys.map((k) => checkGraph.find(k)));
-    const hasShortCircuit = [...phaseRoots].some((r) => neutralRoots.has(r));
-    if (hasShortCircuit) {
-      const closedBreakers = doc.elements.filter((elem) => {
+    const incompatiblePairs: { p1: string; p2: string; desc: string }[] = [
+      // Phase-Neutral
+      { p1: 'L', p2: 'N', desc: 'Corto circuito Fase-Neutro' },
+      { p1: 'L1', p2: 'N', desc: 'Corto circuito Fase L1-Neutro' },
+      { p1: 'L2', p2: 'N', desc: 'Corto circuito Fase L2-Neutro' },
+      { p1: 'L3', p2: 'N', desc: 'Corto circuito Fase L3-Neutro' },
+      // Phase-Phase
+      { p1: 'L1', p2: 'L2', desc: 'Corto circuito Fase L1-L2' },
+      { p1: 'L2', p2: 'L3', desc: 'Corto circuito Fase L2-L3' },
+      { p1: 'L1', p2: 'L3', desc: 'Corto circuito Fase L1-L3' },
+      // DC
+      { p1: 'DC+', p2: 'DC-', desc: 'Corto circuito DC (+/-)' },
+    ];
+
+    let detectedShortDesc: string | null = null;
+    let shortPairKeys: [string[], string[]] | null = null;
+
+    for (const pair of incompatiblePairs) {
+      const keysA = potentialNetKeys.get(pair.p1);
+      const keysB = potentialNetKeys.get(pair.p2);
+      if (!keysA || !keysB) continue;
+
+      const rootsA = keysA.map((k) => checkGraph.find(k));
+      const rootsB = new Set(keysB.map((k) => checkGraph.find(k)));
+
+      if (rootsA.some((r) => rootsB.has(r))) {
+        detectedShortDesc = pair.desc;
+        shortPairKeys = [keysA, keysB];
+        break;
+      }
+    }
+
+    if (detectedShortDesc && shortPairKeys) {
+      const [keysA, keysB] = shortPairKeys;
+
+      const closedProtections = doc.elements.filter((elem) => {
         const def = registry.get(elem.def);
         if (!def) return false;
-        const isBreaker =
+        const isProtection =
+          elem.def.startsWith('fuse_') ||
           elem.def.startsWith('mcb_') ||
           elem.def.startsWith('disconnector_') ||
           elem.def.startsWith('rcd_') ||
           (def.behavior as any).isRCD === true;
-        if (!isBreaker) return false;
-        return Boolean(elementStates[elem.id] ?? (def.behavior as any).defaultOn ?? false);
+        if (!isProtection) return false;
+        const isClosed = elem.def.startsWith('fuse_')
+          ? elementStates[elem.id] !== false
+          : Boolean(elementStates[elem.id] ?? (def.behavior as any).defaultOn ?? false);
+        return isClosed;
       });
 
-      let protectingBreaker: Element | null = null;
-      for (const brk of closedBreakers) {
+      let protectingDevice: Element | null = null;
+      for (const dev of closedProtections) {
         const testGraph = buildConductivityGraph(
           doc,
           allNetworkPoints,
           elemTermKeys,
           activeOutputs,
           elementStates,
-          new Set([brk.id])
+          new Set([dev.id])
         );
-        const testPhaseRoots = new Set(phaseTermKeys.map((k) => testGraph.find(k)));
-        const testNeutralRoots = new Set(neutralTermKeys.map((k) => testGraph.find(k)));
-        if (![...testPhaseRoots].some((r) => testNeutralRoots.has(r))) {
-          protectingBreaker = brk;
+        const testRootsA = keysA.map((k) => testGraph.find(k));
+        const testRootsB = new Set(keysB.map((k) => testGraph.find(k)));
+        if (!testRootsA.some((r) => testRootsB.has(r))) {
+          protectingDevice = dev;
           break;
         }
       }
 
-      if (protectingBreaker) {
-        elementStates[protectingBreaker.id] = false;
+      if (protectingDevice) {
+        elementStates[protectingDevice.id] = false;
+        const isFuse = protectingDevice.def.startsWith('fuse_');
         const isRcd =
-          protectingBreaker.def.startsWith('rcd_') ||
-          (registry.get(protectingBreaker.def)?.behavior as any)?.isRCD === true;
-        const deviceName = isRcd ? 'Interruttore differenziale' : 'Interruttore magnetotermico';
+          protectingDevice.def.startsWith('rcd_') ||
+          (registry.get(protectingDevice.def)?.behavior as any)?.isRCD === true;
+        const deviceName = isFuse ? 'Fusibile' : isRcd ? 'Interruttore differenziale' : 'Interruttore';
         faultAlert = {
           type: 'short_circuit',
-          message: `${deviceName} ${protectingBreaker.tag || (isRcd ? '-F' : '-QM')} scattato per corto circuito!`,
-          elemId: protectingBreaker.id,
-          tag: protectingBreaker.tag,
+          message: `${deviceName} ${protectingDevice.tag || '-F'} scattato per ${detectedShortDesc.toLowerCase()}!`,
+          elemId: protectingDevice.id,
+          tag: protectingDevice.tag,
           timestamp: Date.now(),
         };
       } else {
         fault = {
           type: 'short_circuit',
-          message: 'Corto circuito rilevato (Fase-Neutro)! Nessuna protezione presente: simulazione interrotta per sicurezza.',
+          message: `${detectedShortDesc} rilevato! Nessuna protezione presente: simulazione interrotta per sicurezza.`,
           timestamp: Date.now(),
         };
         running = false;

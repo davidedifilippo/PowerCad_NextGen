@@ -1644,10 +1644,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { id: '3', x: -10, y: -30, label: '3' },
       { id: '5', x: 10, y: -30, label: '5' },
       { id: '7', x: 30, y: -30, label: '7' },
-      { id: '2', x: -30, y: 30, label: '2' },
-      { id: '4', x: -10, y: 30, label: '4' },
-      { id: '6', x: 10, y: 30, label: '6' },
-      { id: '8', x: 30, y: 30, label: '8' },
+      { id: '2', x: -30, y: 40, label: '2' },
+      { id: '4', x: -10, y: 40, label: '4' },
+      { id: '6', x: 10, y: 40, label: '6' },
+      { id: '8', x: 30, y: 40, label: '8' },
     ],
     behavior: {
       type: 'contact',
@@ -1668,7 +1668,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: -30, y1: -4, x2: -30, y2: 0 },
       { t: 'rect', x: -36, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: -30, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: -30, y1: 14, x2: -30, y2: 30 },
+      { t: 'line', x1: -30, y1: 14, x2: -30, y2: 40 },
       // Pole 2: (-10)
       { t: 'line', x1: -10, y1: -30, x2: -10, y2: -16 },
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: -16, transform: 'rotate(-22 -10 -4)', when: 'off' },
@@ -1676,7 +1676,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: -10, y1: -4, x2: -10, y2: 0 },
       { t: 'rect', x: -16, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: -10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 30 },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 40 },
       // Pole 3: (10)
       { t: 'line', x1: 10, y1: -30, x2: 10, y2: -16 },
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: -16, transform: 'rotate(-22 10 -4)', when: 'off' },
@@ -1684,12 +1684,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 10, y1: -4, x2: 10, y2: 0 },
       { t: 'rect', x: 4, y: 0, w: 12, h: 14, fill: '#ffffff' },
       { t: 'text', x: 10, y: 10, text: 'I >', size: 7.5, anchor: 'middle' },
-      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 30 },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 40 },
       // Pole 4: Neutral blade (30)
       { t: 'line', x1: 30, y1: -30, x2: 30, y2: -16 },
       { t: 'line', x1: 30, y1: -4, x2: 30, y2: -16, transform: 'rotate(-22 30 -4)', when: 'off' },
       { t: 'line', x1: 30, y1: -4, x2: 30, y2: -16, when: 'on' },
-      { t: 'line', x1: 30, y1: -4, x2: 30, y2: 30 },
+      { t: 'line', x1: 30, y1: -4, x2: 30, y2: 40 },
       // Manual control box on left
       { t: 'rect', x: -50, y: -16, w: 10, h: 10, fill: '#ffffff' },
       { t: 'line', x1: -50, y1: -16, x2: -40, y2: -6 },
@@ -4876,14 +4876,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { id: '4', x: 0, y: 30, label: '4' },
       { id: '6', x: 20, y: 30, label: '6' },
     ],
-    behavior: {
-      type: 'conductor',
-      pairs: [
-        ['1', '2'],
-        ['3', '4'],
-        ['5', '6'],
-      ],
-    },
+    behavior: { type: 'none' },
     symbol: [
       // Pole 1: (-20)
       { t: 'line', x1: -20, y1: -20, x2: -20, y2: -7 },

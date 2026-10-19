@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import sampleData from './testCadSample.json';
+import dispersioneData from './testDispersioneCad.json';
 import { parseCadeSimu, extractCartiglio, cadToCanvasCoord } from './cadImporter';
 import { createInitialSimState, stepSimulation } from '../engine/simulation';
 
@@ -181,5 +182,118 @@ describe('CADe_SIMU .cad Importer', () => {
     // Motor U1 terminal at (600, 400) and PE terminal at (660, 400)
     expect(doc.wires.some((w) => w.pts.some((p) => p.x === 600 && p.y === 400))).toBe(true);
     expect(doc.wires.some((w) => w.pts.some((p) => p.x === 660 && p.y === 400))).toBe(true);
+  });
+
+  describe('CADe_SIMU Real World Import and Simulation Verifications', () => {
+    it('verifies Circuit 1: NO false ground fault when button -S is open; trips RCD when -S is closed', () => {
+      const doc = parseCadeSimu(dispersioneData.cadText);
+      const rcd = doc.elements.find((e) => e.def.startsWith('rcd_') && e.tag === '-F')!;
+      const btnS = doc.elements.find((e) => e.def === 'btn_no' && e.tag === '-S')!;
+      expect(rcd).toBeDefined();
+      expect(btnS).toBeDefined();
+
+      // Step 1: Start simulation with RCD closed and button -S open
+      const state1 = {
+        ...createInitialSimState(),
+        running: true,
+        elementStates: { [rcd.id]: true, [btnS.id]: false },
+      };
+      const step1 = stepSimulation(doc, state1, 0.05);
+
+      // Must NOT trip RCD!
+      expect(step1.elementStates[rcd.id]).toBe(true);
+      expect(step1.faultAlert).toBeNull();
+      expect(step1.fault).toBeNull();
+
+      // Step 2: Press fault button -S (creates ground fault to PE)
+      const state2 = {
+        ...step1,
+        elementStates: { ...step1.elementStates, [btnS.id]: true },
+      };
+      const step2 = stepSimulation(doc, state2, 0.05);
+
+      // RCD MUST trip!
+      expect(step2.elementStates[rcd.id]).toBe(false);
+      expect(step2.faultAlert).not.toBeNull();
+      expect(step2.faultAlert?.type).toBe('rcd_tripped');
+    });
+
+    it('verifies Circuit 2: -Q terminals align at y=190 and y=260, closing -Q does NOT cause short circuit, and pressing -S2 triggers ground fault', () => {
+      const doc = parseCadeSimu(dispersioneData.cadText);
+      const switchQ = doc.elements.find((e) => e.tag === '-Q')!;
+      expect(switchQ).toBeDefined();
+      expect(switchQ.def).toBe('mcb_magnetothermal_3p_n');
+
+      // Verify wire connections at top (y=190) and bottom (y=260)
+      const topWireConnected = doc.wires.some((w) => w.pts.some((p) => p.x === 360 && p.y === 190));
+      const bottomWireConnected = doc.wires.some((w) => w.pts.some((p) => p.x === 360 && p.y === 260));
+      expect(topWireConnected).toBe(true);
+      expect(bottomWireConnected).toBe(true);
+
+      // Step 1: Close -Q with -S2 open
+      const btnS2 = doc.elements.find((e) => e.tag === '-S2')!;
+      const state1 = {
+        ...createInitialSimState(),
+        running: true,
+        elementStates: { [switchQ.id]: true, [btnS2.id]: false },
+      };
+      const step1 = stepSimulation(doc, state1, 0.05);
+
+      // Must remain closed, NO short circuit!
+      expect(step1.elementStates[switchQ.id]).toBe(true);
+      expect(step1.faultAlert).toBeNull();
+      expect(step1.fault).toBeNull();
+
+      // Step 2: Press -S2 (ground fault)
+      const state2 = {
+        ...step1,
+        elementStates: { ...step1.elementStates, [btnS2.id]: true },
+      };
+      const step2 = stepSimulation(doc, state2, 0.05);
+      // Unprotected ground fault halts simulation or trips protection
+      expect(step2.fault !== null || step2.faultAlert !== null).toBe(true);
+    });
+
+    it('verifies Circuit 3: wire T-junctions connect, motor runs when -S closed, and -S3 triggers L1-L2 short circuit tripping protection', () => {
+      const doc = parseCadeSimu(dispersioneData.cadText);
+      // In circuit 3: Fuses -F (x=600), Switch -S (x=600), Thermal relay -F (x=600), Motor -M (x=600), Button -S3 (x=550)
+      const fuse = doc.elements.find((e) => e.def === 'fuse_3p' && e.x === 620)!;
+      const sw = doc.elements.find((e) => e.def === 'switch_disconnector_3p' && e.x === 620)!;
+      const motor = doc.elements.find((e) => e.def === 'motor_3p_async' && e.x === 620)!;
+      const btnS3 = doc.elements.find((e) => e.tag === '-S3')!;
+
+      expect(fuse).toBeDefined();
+      expect(sw).toBeDefined();
+      expect(motor).toBeDefined();
+      expect(btnS3).toBeDefined();
+
+      // Step 1: Close switch -S (fuses are closed by default)
+      const state1 = {
+        ...createInitialSimState(),
+        running: true,
+        elementStates: { [sw.id]: true, [btnS3.id]: false },
+      };
+      const step1 = stepSimulation(doc, state1, 0.05);
+
+      // Motor runs!
+      expect(step1.activeOutputs[motor.id]).toBe(true);
+      expect(step1.faultAlert).toBeNull();
+      expect(step1.fault).toBeNull();
+
+      // Step 2: Press -S3 (shorts L1 and L2)
+      const state2 = {
+        ...step1,
+        elementStates: { ...step1.elementStates, [btnS3.id]: true },
+      };
+      const step2 = stepSimulation(doc, state2, 0.05);
+
+      // Upstream protection trips! (fuse trips)
+      expect(step2.elementStates[fuse.id]).toBe(false);
+      expect(step2.faultAlert).not.toBeNull();
+      expect(step2.faultAlert?.type).toBe('short_circuit');
+      expect(step2.faultAlert?.message.toLowerCase()).toContain('l1-l2');
+      // Motor turns OFF
+      expect(step2.activeOutputs[motor.id]).toBeFalsy();
+    });
   });
 });

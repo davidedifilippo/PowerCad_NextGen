@@ -158,10 +158,10 @@ export function resolveCadeComponent(type: number, fields: string[]): CadeCompMa
     return { def: 'mcb_magnetothermal_3p_n', yOffset: 30, xOffset: 30 };
   }
 
-  // Sezionatore 6012
+  // Sezionatore / Interruttore 6012
   if (type === 6012) {
-    if (termCount <= 6) return { def: 'disconnector_3p', yOffset: 20, xOffset: 20 };
-    return { def: 'switch_disconnector_3p_n', yOffset: 20, xOffset: 30 };
+    if (termCount <= 6) return { def: 'disconnector_3p', yOffset: 30, xOffset: 20 };
+    return { def: 'mcb_magnetothermal_3p_n', yOffset: 30, xOffset: 30 };
   }
 
   // Contattori di potenza (Contactors 2000..2002)
