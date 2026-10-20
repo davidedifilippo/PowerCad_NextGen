@@ -1828,7 +1828,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     id: 'thermal_relay_power',
     name: 'Relè Termico (Potenza 3P)',
     category: 'Protezioni',
-    tagPrefix: '-FR',
+    tagPrefix: '-F',
     terminals: [
       { id: '1', x: -20, y: -20, label: '1' },
       { id: '3', x: 0, y: -20, label: '3' },
@@ -1846,17 +1846,29 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       ],
     },
     symbol: [
-      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -8 },
-      { t: 'rect', x: -25, y: -8, w: 10, h: 16 },
-      { t: 'line', x1: -20, y1: 8, x2: -20, y2: 20 },
+      // Enclosing mechanism box (CEI EN 60617 / CADe_SIMU)
+      { t: 'rect', x: -28, y: -10, w: 56, h: 20, fill: '#f8fafc', stroke: '#0f172a' },
 
-      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
-      { t: 'rect', x: -5, y: -8, w: 10, h: 16 },
-      { t: 'line', x1: 0, y1: 8, x2: 0, y2: 20 },
+      // Pole 1-2: thermal bimetal stepped release
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -5 },
+      { t: 'line', x1: -20, y1: -5, x2: -13, y2: -5 },
+      { t: 'line', x1: -13, y1: -5, x2: -13, y2: 5 },
+      { t: 'line', x1: -13, y1: 5, x2: -20, y2: 5 },
+      { t: 'line', x1: -20, y1: 5, x2: -20, y2: 20 },
 
-      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -8 },
-      { t: 'rect', x: 15, y: -8, w: 10, h: 16 },
-      { t: 'line', x1: 20, y1: 8, x2: 20, y2: 20 },
+      // Pole 3-4: thermal bimetal stepped release
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -5 },
+      { t: 'line', x1: 0, y1: -5, x2: 7, y2: -5 },
+      { t: 'line', x1: 7, y1: -5, x2: 7, y2: 5 },
+      { t: 'line', x1: 7, y1: 5, x2: 0, y2: 5 },
+      { t: 'line', x1: 0, y1: 5, x2: 0, y2: 20 },
+
+      // Pole 5-6: thermal bimetal stepped release
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -5 },
+      { t: 'line', x1: 20, y1: -5, x2: 27, y2: -5 },
+      { t: 'line', x1: 27, y1: -5, x2: 27, y2: 5 },
+      { t: 'line', x1: 27, y1: 5, x2: 20, y2: 5 },
+      { t: 'line', x1: 20, y1: 5, x2: 20, y2: 20 },
     ],
   },
 
