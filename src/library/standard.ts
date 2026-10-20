@@ -4556,24 +4556,26 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     category: 'Motori',
     tagPrefix: '-M',
     terminals: [
-      { id: 'A1', x: 0, y: -30, label: 'A1' },
-      { id: 'A2', x: 0, y: 30, label: 'A2' },
-      { id: 'PE', x: -30, y: 0, label: 'PE' },
+      { id: 'A1', x: -30, y: 0, label: 'A1' },
+      { id: 'A2', x: 30, y: 0, label: 'A2' },
+      { id: 'PE', x: 0, y: 30, label: 'PE' },
     ],
     behavior: { type: 'load', kind: 'motordc', a: 'A1', b: 'A2' },
     symbol: [
-      { t: 'circle', cx: 0, cy: 0, r: 16, fill: '#f8fafc' },
-      // Permanent magnet bracket at top
-      { t: 'path', d: 'M -8 -23 L -8 -26 L 8 -26 L 8 -23', w: 2 },
-      // Brushes A1 (top) and A2 (bottom)
-      { t: 'rect', x: -2.5, y: -19, w: 5, h: 3, fill: '#0f172a' },
-      { t: 'rect', x: -2.5, y: 16, w: 5, h: 3, fill: '#0f172a' },
-      { t: 'line', x1: 0, y1: -30, x2: 0, y2: -19 },
-      { t: 'line', x1: 0, y1: 19, x2: 0, y2: 30 },
-      { t: 'line', x1: -30, y1: 0, x2: -16, y2: 0, stroke: '#10b981' },
-      { t: 'text', x: 0, y: -2, text: 'M', size: 11, anchor: 'middle' },
-      { t: 'text', x: 0, y: 8, text: '=', size: 10, anchor: 'middle' },
-      { t: 'rotor', cx: 0, cy: 0, r: 13, when: 'on' },
+      { t: 'circle', cx: 0, cy: 0, r: 18, fill: '#f8fafc' },
+      // Permanent magnet bar at top (detached from motor body with air gap)
+      { t: 'path', d: 'M -12 -20 L -12 -25 L 12 -25 L 12 -20', w: 3 },
+      // Brushes A1 (left) and A2 (right)
+      { t: 'rect', x: -20, y: -4, w: 4, h: 8, fill: '#0f172a' },
+      { t: 'rect', x: 16, y: -4, w: 4, h: 8, fill: '#0f172a' },
+      // Terminal lead lines
+      { t: 'line', x1: -30, y1: 0, x2: -20, y2: 0 },
+      { t: 'line', x1: 20, y1: 0, x2: 30, y2: 0 },
+      { t: 'line', x1: 0, y1: 18, x2: 0, y2: 30, stroke: '#10b981' },
+      // Inner motor texts (upright)
+      { t: 'text', x: 0, y: -2, text: 'M', size: 12, anchor: 'middle', bold: true },
+      { t: 'text', x: 0, y: 8, text: '=', size: 11, anchor: 'middle', bold: true },
+      { t: 'rotor', cx: 0, cy: 0, r: 14, when: 'on' },
     ],
   },
   {

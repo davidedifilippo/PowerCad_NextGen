@@ -816,8 +816,12 @@ const ElementItem: React.FC<{
             {/* Terminal Number (CADe_SIMU standard: on the right side of the terminal) */}
             {def.termLabels !== false && term.label && (
               <text
-                x={5}
-                y={term.y < 0 ? 4 : term.y > 0 ? -1 : 3}
+                x={def.id === 'motor_dc_pm' ? 6 : 5}
+                y={
+                  def.id === 'motor_dc_pm'
+                    ? (term.id === 'A1' || term.id === 'A2' ? 11 : -1)
+                    : (term.y < 0 ? 4 : term.y > 0 ? -1 : 3)
+                }
                 fontSize={8}
                 fontWeight="500"
                 fill="#475569"
@@ -862,6 +866,10 @@ export function getTagPosition(def: ComponentDef): { x: number; y: number; textA
   }
   if (def.id === 'psu_3p_dc') {
     return { x: -28, y: 4, textAnchor: 'end' };
+  }
+  if (def.id === 'motor_dc_pm') {
+    // Bottom-left of the motor circle, clear of A1 (-30, 0) and PE (0, 30) (CADe_SIMU standard)
+    return { x: -22, y: 26, textAnchor: 'end' };
   }
   if (def.id.startsWith('motor_') || def.id === 'electric_brake') {
     // Left of the motor circle / brake body, clear of top/bottom terminals and right PE

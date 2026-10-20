@@ -65,4 +65,27 @@ describe('Standard Library Grid Alignment', () => {
       expect(tagPos.x).toBeLessThanOrEqual(minBoxX - 5);
     }
   });
+  it('motor_dc_pm has CADe_SIMU standard orientation with magnet bar on top and non-overlapping labels', async () => {
+    const { getTagPosition } = await import('../editor/Renderer');
+    const motor = STANDARD_LIBRARY.find((c) => c.id === 'motor_dc_pm');
+    expect(motor).toBeDefined();
+
+    // Terminals: A1 on left (-30, 0), A2 on right (30, 0), PE at bottom (0, 30)
+    const tA1 = motor?.terminals.find((t) => t.id === 'A1');
+    const tA2 = motor?.terminals.find((t) => t.id === 'A2');
+    const tPE = motor?.terminals.find((t) => t.id === 'PE');
+    expect(tA1).toEqual({ id: 'A1', x: -30, y: 0, label: 'A1' });
+    expect(tA2).toEqual({ id: 'A2', x: 30, y: 0, label: 'A2' });
+    expect(tPE).toEqual({ id: 'PE', x: 0, y: 30, label: 'PE' });
+
+    // Permanent magnet bar at top (y < -18) detached from circle (r = 18)
+    const magnetPath = motor?.symbol.find((s) => s.t === 'path' && s.d.includes('-25'));
+    expect(magnetPath).toBeDefined();
+
+    // Tag position must be in lower-left clear of A1 (-30, 0) and PE (0, 30)
+    const tagPos = getTagPosition(motor!);
+    expect(tagPos.y).toBeGreaterThan(15);
+    expect(tagPos.x).toBeLessThan(0);
+    expect(tagPos.textAnchor).toBe('end');
+  });
 });
