@@ -192,4 +192,70 @@ describe('Electronic Relays and Connections Library Sections', () => {
     // Lamp should be powered through the terminal block poles 1-2 and 3-4
     expect(sim1.activeOutputs['lamp1']).toBe(true);
   });
+
+  it('Phase loss relay operates SPDT changeover: 11-14 closes when healthy, 11-12 closes on phase loss', () => {
+    // healthy 3-phase system
+    const docHealthy: Doc = {
+      app: 'cadesimu-next',
+      version: 1,
+      sheet: {
+        format: 'A4',
+        orientation: 'landscape',
+        project: 'Phase Loss Relay SPDT Test',
+        title: 'Phase Loss Relay Test',
+        author: 'Tester',
+        date: '2026-10-20',
+        revision: '1',
+        sheetNo: '1',
+      },
+      elements: [
+        { id: 'pwr_3p', def: 'pwr_3p', x: 100, y: 100, rot: 0, tag: 'L1-L2-L3', props: {} },
+        { id: 'pwr_n', def: 'pwr_n', x: 200, y: 100, rot: 0, tag: 'N', props: {} },
+        { id: 'relay_plr', def: 'phase_loss_relay', x: 100, y: 200, rot: 0, tag: '-F1', props: {} },
+        { id: 'lamp_fault', def: 'pilot_lamp', x: 100, y: 330, rot: 0, tag: '-H_FAULT', props: { color: 'Rosso' } },
+        { id: 'lamp_ok', def: 'pilot_lamp', x: 140, y: 330, rot: 0, tag: '-H_OK', props: { color: 'Verde' } },
+      ],
+      wires: [
+        // L1 (80, 110) to relay L1 (80, 170)
+        { id: 'w1', pts: [{ x: 80, y: 110 }, { x: 80, y: 170 }] },
+        // L2 (100, 110) to relay L2 (100, 170)
+        { id: 'w2', pts: [{ x: 100, y: 110 }, { x: 100, y: 170 }] },
+        // L3 (120, 110) to relay L3 (120, 170)
+        { id: 'w3', pts: [{ x: 120, y: 110 }, { x: 120, y: 170 }] },
+
+        // Branch L1 (80, 110) down to common 11 (80, 230)
+        { id: 'w_c', pts: [{ x: 80, y: 170 }, { x: 60, y: 170 }, { x: 60, y: 230 }, { x: 80, y: 230 }] },
+
+        // Terminal 12 (NC) at (100, 230) to lamp_fault X1 at (100, 310)
+        { id: 'w_nc', pts: [{ x: 100, y: 230 }, { x: 100, y: 310 }] },
+
+        // Terminal 14 (NO) at (120, 230) to lamp_ok X1 at (140, 310)
+        { id: 'w_no', pts: [{ x: 120, y: 230 }, { x: 140, y: 230 }, { x: 140, y: 310 }] },
+
+        // Neutral to lamp_fault X2 (100, 350) and lamp_ok X2 (140, 350)
+        { id: 'w_n1', pts: [{ x: 200, y: 110 }, { x: 200, y: 370 }, { x: 100, y: 370 }, { x: 100, y: 350 }] },
+        { id: 'w_n2', pts: [{ x: 200, y: 370 }, { x: 140, y: 370 }, { x: 140, y: 350 }] },
+      ],
+    };
+
+    // When 3-phase is healthy:
+    const simHealthy = stepSimulation(docHealthy, { ...createInitialSimState(), running: true }, 0.05);
+    expect(simHealthy.activeOutputs['relay_plr']).toBe(true);
+    // Contact 11-14 (NO) closed -> lamp_ok is ON
+    expect(simHealthy.activeOutputs['lamp_ok']).toBe(true);
+    // Contact 11-12 (NC) open -> lamp_fault is OFF
+    expect(simHealthy.activeOutputs['lamp_fault']).toBeUndefined();
+
+    // Now disconnect Phase L3 (simulate phase loss):
+    const docFault: Doc = {
+      ...docHealthy,
+      wires: docHealthy.wires.filter((w) => w.id !== 'w3'),
+    };
+    const simFault = stepSimulation(docFault, { ...createInitialSimState(), running: true }, 0.05);
+    expect(simFault.activeOutputs['relay_plr']).toBeUndefined();
+    // Contact 11-14 (NO) opened -> lamp_ok is OFF
+    expect(simFault.activeOutputs['lamp_ok']).toBeUndefined();
+    // Contact 11-12 (NC) closed -> lamp_fault is ON (alarm triggered!)
+    expect(simFault.activeOutputs['lamp_fault']).toBe(true);
+  });
 });

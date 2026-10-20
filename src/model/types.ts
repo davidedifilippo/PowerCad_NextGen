@@ -27,7 +27,13 @@ export type Prim =
   /** Rotating rotor indicator, drawn only while a motor runs. */
   | (PrimBase & { t: 'rotor'; cx: number; cy: number; r: number });
 
-export interface TerminalDef { id: string; x: number; y: number; label?: string }
+export interface TerminalDef {
+  id: string;
+  x: number;
+  y: number;
+  label?: string;
+  desc?: string;
+}
 
 export type PropOption = string | { value: string; label: string };
 export interface PropDef {

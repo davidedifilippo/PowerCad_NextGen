@@ -644,11 +644,16 @@ export const PropertiesPanel: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Terminals summary */}
+        {/* Terminals summary & descriptions */}
         {def?.terminals && def.terminals.length > 0 && (
           <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
-            <label style={labelStyle}>Morsetti ({def.terminals.length})</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label style={{ ...labelStyle, marginBottom: 0 }}>Morsetti ({def.terminals.length})</label>
+              <span style={{ fontSize: 10, color: '#94a3b8' }}>Pinout / Funzioni</span>
+            </div>
+
+            {/* Quick terminal badges */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
               {def.terminals.map((t) => (
                 <span
                   key={t.id}
@@ -659,12 +664,62 @@ export const PropertiesPanel: React.FC<Props> = ({
                     borderRadius: 4,
                     padding: '2px 6px',
                     color: '#334155',
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    fontFamily: 'monospace',
                   }}
                 >
                   {t.label || t.id}
                 </span>
               ))}
+            </div>
+
+            {/* Detailed Terminal Breakdown */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                backgroundColor: '#f8fafc',
+                padding: '8px 10px',
+                borderRadius: 6,
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              {def.terminals.map((t) => {
+                const termLabel = t.label || t.id;
+                const desc = t.desc || getTerminalFallbackDesc(termLabel);
+                return (
+                  <div
+                    key={t.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: 11,
+                      lineHeight: '16px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        color: '#1e293b',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 3,
+                        padding: '1px 5px',
+                        minWidth: 24,
+                        textAlign: 'center',
+                      }}
+                    >
+                      {termLabel}
+                    </span>
+                    <span style={{ color: '#475569', marginLeft: 8, flex: 1, textAlign: 'right' }}>
+                      {desc}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -749,3 +804,87 @@ const secondaryBtnStyle: React.CSSProperties = {
   fontWeight: 600,
   cursor: 'pointer',
 };
+
+function getTerminalFallbackDesc(termLabel: string): string {
+  switch (termLabel) {
+    case '11':
+      return 'Comune contatto (C)';
+    case '12':
+      return 'Contatto NC (Apertura / Allarme)';
+    case '14':
+      return 'Contatto NO (Chiusura / Consenso)';
+    case '13':
+      return 'Contatto NO (Ingresso)';
+    case '21':
+    case '31':
+    case '41':
+      return 'Contatto NC (Ingresso)';
+    case '22':
+    case '32':
+    case '42':
+      return 'Contatto NC (Uscita)';
+    case '23':
+    case '33':
+    case '43':
+      return 'Contatto NO (Ingresso)';
+    case '24':
+    case '34':
+    case '44':
+      return 'Contatto NO (Uscita)';
+    case 'A1':
+      return 'Bobina comando (+)';
+    case 'A2':
+      return 'Bobina comando (-)';
+    case 'A3':
+      return 'Comando inversione';
+    case 'L1':
+      return 'Ingresso Fase L1';
+    case 'L2':
+      return 'Ingresso Fase L2';
+    case 'L3':
+      return 'Ingresso Fase L3';
+    case 'N':
+      return 'Neutro (N)';
+    case 'PE':
+      return 'Terra di protezione (PE)';
+    case '95':
+      return 'NC termica (Ingresso)';
+    case '96':
+      return 'NC termica (Sgancio guasto)';
+    case '97':
+      return 'NO termica (Ingresso allarme)';
+    case '98':
+      return 'NO termica (Segnalazione guasto)';
+    case '+':
+    case '+A1':
+    case '+1':
+      return 'Alimentazione positiva (+)';
+    case '-':
+    case '-A2':
+    case '-2':
+      return 'Alimentazione negativa (-)';
+    case 'U':
+    case 'U1':
+      return 'Morsetto motore U1';
+    case 'V':
+    case 'V1':
+      return 'Morsetto motore V1';
+    case 'W':
+    case 'W1':
+      return 'Morsetto motore W1';
+    case '1':
+      return 'Polo potenza 1 (Ingresso)';
+    case '2':
+      return 'Polo potenza 2 (Uscita)';
+    case '3':
+      return 'Polo potenza 3 (Ingresso)';
+    case '4':
+      return 'Polo potenza 4 (Uscita)';
+    case '5':
+      return 'Polo potenza 5 (Ingresso)';
+    case '6':
+      return 'Polo potenza 6 (Uscita)';
+    default:
+      return 'Terminale di connessione';
+  }
+}
