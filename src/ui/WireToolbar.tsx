@@ -17,8 +17,12 @@ export const WIRE_COLOR_MAP: Record<WireKind, string> = {
   pos: '#ef4444',
   neg: '#0f172a',
   aux: '#475569',
+  color_custom: '#a855f7',
   '3p_vert': '#9a3412',
+  '3p_vert_staggered': '#9a3412',
   '3p_horiz': '#9a3412',
+  '3p_horiz_staggered': '#9a3412',
+  pneumatic_tube: '#0284c7',
 };
 
 export const WireToolbar: React.FC<Props> = ({
@@ -114,9 +118,19 @@ export const WireToolbar: React.FC<Props> = ({
       ),
     },
     {
+      kind: 'color_custom',
+      label: 'Colorato',
+      tooltip: 'Cavo Colorato / Ausiliario Speciale (Viola) - Clicca o premi Esc per uscire',
+      renderIcon: () => (
+        <svg width="28" height="18" viewBox="0 0 28 18">
+          <line x1="2" y1="9" x2="26" y2="9" stroke="#a855f7" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
       kind: '3p_vert',
-      label: '3F Vert (|||)',
-      tooltip: 'Fascio 3 Cavi Trifase Verticali (L1 Marrone, L2 Nero, L3 Grigio - Passo 20px)',
+      label: '3F Vert 1',
+      tooltip: 'Fascio 3 Cavi Trifase Verticali Pari (L1 Marrone, L2 Nero, L3 Grigio - Passo 20px)',
       renderIcon: () => (
         <svg width="28" height="18" viewBox="0 0 28 18">
           <line x1="7" y1="2" x2="7" y2="16" stroke="#9a3412" strokeWidth="1.8" />
@@ -126,14 +140,48 @@ export const WireToolbar: React.FC<Props> = ({
       ),
     },
     {
+      kind: '3p_vert_staggered',
+      label: '3F Vert 2',
+      tooltip: 'Fascio 3 Cavi Trifase Verticali Sfalsati / Gradini a Pettine (Passo 20px)',
+      renderIcon: () => (
+        <svg width="28" height="18" viewBox="0 0 28 18">
+          <line x1="7" y1="2" x2="7" y2="16" stroke="#9a3412" strokeWidth="1.8" />
+          <line x1="14" y1="2" x2="14" y2="12" stroke="#0f172a" strokeWidth="1.8" />
+          <line x1="21" y1="2" x2="21" y2="8" stroke="#64748b" strokeWidth="1.8" />
+        </svg>
+      ),
+    },
+    {
       kind: '3p_horiz',
-      label: '3F Orizz (≡)',
-      tooltip: 'Fascio 3 Cavi Trifase Orizzontali (L1 Marrone, L2 Nero, L3 Grigio - Passo 20px)',
+      label: '3F Orizz 1',
+      tooltip: 'Fascio 3 Cavi Trifase Orizzontali Pari (L1 Marrone, L2 Nero, L3 Grigio - Passo 20px)',
       renderIcon: () => (
         <svg width="28" height="18" viewBox="0 0 28 18">
           <line x1="2" y1="4" x2="26" y2="4" stroke="#9a3412" strokeWidth="1.8" />
           <line x1="2" y1="9" x2="26" y2="9" stroke="#0f172a" strokeWidth="1.8" />
           <line x1="2" y1="14" x2="26" y2="14" stroke="#64748b" strokeWidth="1.8" />
+        </svg>
+      ),
+    },
+    {
+      kind: '3p_horiz_staggered',
+      label: '3F Orizz 2',
+      tooltip: 'Fascio 3 Cavi Trifase Orizzontali Sfalsati / Gradini a Pettine (Passo 20px)',
+      renderIcon: () => (
+        <svg width="28" height="18" viewBox="0 0 28 18">
+          <line x1="2" y1="4" x2="26" y2="4" stroke="#9a3412" strokeWidth="1.8" />
+          <line x1="2" y1="9" x2="20" y2="9" stroke="#0f172a" strokeWidth="1.8" />
+          <line x1="2" y1="14" x2="14" y2="14" stroke="#64748b" strokeWidth="1.8" />
+        </svg>
+      ),
+    },
+    {
+      kind: 'pneumatic_tube',
+      label: 'Tubo Pneum.',
+      tooltip: 'Tubo Flessibile per Aria Compressa / Pneumatica (Blu chiaro 3.5px)',
+      renderIcon: () => (
+        <svg width="28" height="18" viewBox="0 0 28 18">
+          <line x1="2" y1="9" x2="26" y2="9" stroke="#0284c7" strokeWidth="3.5" strokeLinecap="round" />
         </svg>
       ),
     },

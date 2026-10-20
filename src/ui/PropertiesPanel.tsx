@@ -29,6 +29,8 @@ export const WIRE_TYPE_OPTIONS: {
   { kind: 'pos', label: 'Positivo + (Rosso 24V)', shortLabel: '+ 24V', color: '#ef4444' },
   { kind: 'neg', label: 'Negativo - (Nero 0V)', shortLabel: '- 0V', color: '#0f172a' },
   { kind: 'aux', label: 'Comando / Ausiliario', shortLabel: 'Comando', color: '#475569' },
+  { kind: 'color_custom', label: 'Cavo Colorato (Viola)', shortLabel: 'Colorato', color: '#a855f7' },
+  { kind: 'pneumatic_tube', label: 'Tubo Pneumatico (Blu 3.5px)', shortLabel: 'Tubo Pneum.', color: '#0284c7' },
 ];
 
 export const PropertiesPanel: React.FC<Props> = ({

@@ -278,7 +278,13 @@ export const App: React.FC = () => {
             if (tool) {
               setActiveDefToPlace(null);
               // If wires are currently selected, convert them to this wire kind
-              if (selectedIds.size > 0 && tool !== '3p_vert' && tool !== '3p_horiz') {
+              if (
+                selectedIds.size > 0 &&
+                tool !== '3p_vert' &&
+                tool !== '3p_horiz' &&
+                tool !== '3p_vert_staggered' &&
+                tool !== '3p_horiz_staggered'
+              ) {
                 const hasWires = doc.wires.some((w) => selectedIds.has(w.id));
                 if (hasWires) {
                   const updatedWires = doc.wires.map((w) =>

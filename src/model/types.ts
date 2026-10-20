@@ -50,7 +50,19 @@ export type Behavior =
    *  - linked: driven by the device with the same tag (coil, timer, thermal relay, breaker, button)
    *  - momentary / latching: operated by the user during simulation
    */
-  | { type: 'contact'; actuation: 'linked' | 'momentary' | 'latching'; no?: [string, string][]; nc?: [string, string][]; defaultOn?: boolean; isRCD?: boolean; inputs?: string[]; outputs?: string[] }
+  | {
+      type: 'contact';
+      actuation: 'linked' | 'momentary' | 'latching';
+      no?: [string, string][];
+      nc?: [string, string][];
+      defaultOn?: boolean;
+      isRCD?: boolean;
+      coil?: { a: string; b: string };
+      phaseLoss?: { l1: string; l2: string; l3: string; n?: string };
+      ssrReversing?: boolean;
+      inputs?: string[];
+      outputs?: string[];
+    }
   | { type: 'coil'; a: string; b: string; mode: CoilMode }
   | { type: 'load'; kind: 'lamp' | 'lamp_flasher' | 'buzzer' | 'bell' | 'siren' | 'horn' | 'motor1' | 'motordc' | 'resistor'; a: string; b: string }
   | { type: 'motor3'; u: string; v: string; w: string }
@@ -147,8 +159,12 @@ export type WireKind =
   | 'pos'
   | 'neg'
   | 'aux'
+  | 'color_custom'
   | '3p_vert'
-  | '3p_horiz';
+  | '3p_vert_staggered'
+  | '3p_horiz'
+  | '3p_horiz_staggered'
+  | 'pneumatic_tube';
 
 export interface Wire {
   id: string;

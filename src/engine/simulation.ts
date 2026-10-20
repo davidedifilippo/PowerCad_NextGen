@@ -140,9 +140,29 @@ function buildConductivityGraph(
         isClosedNO = toggled;
         isClosedNC = !toggled;
       } else if (beh.actuation === 'linked') {
-        const isCoilActive = activeOutputs[elem.tag] ?? false;
+        const isCoilActive = (elem.tag && Boolean(activeOutputs[elem.tag])) || Boolean(activeOutputs[elem.id]);
         isClosedNO = isCoilActive;
         isClosedNC = !isCoilActive;
+      }
+
+      if (beh.ssrReversing) {
+        const fwdActive = Boolean(activeOutputs[elem.id + '_fwd']);
+        const revActive = Boolean(activeOutputs[elem.id + '_rev']);
+        if (fwdActive) {
+          const k1 = terms.get('1'), k2 = terms.get('2');
+          const k3 = terms.get('3'), k4 = terms.get('4');
+          const k5 = terms.get('5'), k6 = terms.get('6');
+          if (k1 && k2) dsu.union(k1, k2);
+          if (k3 && k4) dsu.union(k3, k4);
+          if (k5 && k6) dsu.union(k5, k6);
+        } else if (revActive) {
+          const k1 = terms.get('1'), k6 = terms.get('6');
+          const k3 = terms.get('3'), k4 = terms.get('4');
+          const k5 = terms.get('5'), k2 = terms.get('2');
+          if (k1 && k6) dsu.union(k1, k6);
+          if (k3 && k4) dsu.union(k3, k4);
+          if (k5 && k2) dsu.union(k5, k2);
+        }
       }
 
       if (beh.no) {
@@ -740,9 +760,57 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         if (has1 || has2) {
           newActiveOutputs[elem.id] = true;
         }
-      } else if (beh.type === 'contact' && (beh.actuation === 'momentary' || beh.actuation === 'latching')) {
-        if (state.elementStates[elem.id] && elem.tag) {
+      } else if (beh.type === 'contact') {
+        if ((beh.actuation === 'momentary' || beh.actuation === 'latching') && state.elementStates[elem.id] && elem.tag) {
           newActiveOutputs[elem.tag] = true;
+        }
+        if (beh.coil) {
+          const ka = terms.get(beh.coil.a);
+          const kb = terms.get(beh.coil.b);
+          const potA = ka ? netPotentials[ka] : undefined;
+          const potB = kb ? netPotentials[kb] : undefined;
+          if (isVoltageDifference(potA, potB)) {
+            newActiveOutputs[elem.id] = true;
+            if (elem.tag) newActiveOutputs[elem.tag] = true;
+          }
+        }
+        if (beh.ssrReversing) {
+          const kA1 = terms.get('A1');
+          const kA2 = terms.get('A2');
+          const kA3 = terms.get('A3');
+          const pA1 = kA1 ? netPotentials[kA1] : undefined;
+          const pA2 = kA2 ? netPotentials[kA2] : undefined;
+          const pA3 = kA3 ? netPotentials[kA3] : undefined;
+          const fwd = isVoltageDifference(pA1, pA2);
+          const rev = isVoltageDifference(pA3, pA2);
+          if (fwd) {
+            newActiveOutputs[elem.id + '_fwd'] = true;
+            newActiveOutputs[elem.id] = true;
+            if (elem.tag) newActiveOutputs[elem.tag] = true;
+          }
+          if (rev) {
+            newActiveOutputs[elem.id + '_rev'] = true;
+            newActiveOutputs[elem.id] = true;
+            if (elem.tag) newActiveOutputs[elem.tag] = true;
+          }
+        }
+        if (beh.phaseLoss) {
+          const k1 = terms.get(beh.phaseLoss.l1);
+          const k2 = terms.get(beh.phaseLoss.l2);
+          const k3 = terms.get(beh.phaseLoss.l3);
+          const p1 = k1 ? netPotentials[k1] : undefined;
+          const p2 = k2 ? netPotentials[k2] : undefined;
+          const p3 = k3 ? netPotentials[k3] : undefined;
+          let healthy = Boolean(p1 && p2 && p3 && p1 !== p2 && p2 !== p3 && p1 !== p3);
+          if (beh.phaseLoss.n) {
+            const kn = terms.get(beh.phaseLoss.n);
+            const pn = kn ? netPotentials[kn] : undefined;
+            if (!pn || pn !== 'N') healthy = false;
+          }
+          if (healthy) {
+            newActiveOutputs[elem.id] = true;
+            if (elem.tag) newActiveOutputs[elem.tag] = true;
+          }
         }
       } else if (beh.type === 'thermal') {
         if ((state.elementStates[elem.id] || state.activeOutputs[elem.tag] || activeOutputs[elem.tag]) && elem.tag) {

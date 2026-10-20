@@ -375,6 +375,52 @@ export const SchematicCanvas: React.FC<Props> = ({
         }
       });
       onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
+    } else if (activeWireTool === '3p_vert_staggered') {
+      const offsets = [-20, 0, 20];
+      const kinds: WireKind[] = ['phase', 'phase_l2', 'phase_l3'];
+      const colors = [WIRE_COLOR_MAP['phase'], WIRE_COLOR_MAP['phase_l2'], WIRE_COLOR_MAP['phase_l3']];
+      const newWires: Wire[] = [];
+      const dirY = targetPt.y >= start.y ? 1 : -1;
+      offsets.forEach((dx, i) => {
+        const wireKind = kinds[i];
+        const wireColor = colors[i];
+        const stepDy = (i - 1) * 20 * dirY;
+        const currentTargetY = targetPt.y + stepDy;
+        const currentCornerY = corner.y + stepDy;
+        if (hasCorner) {
+          newWires.push(
+            {
+              id: `wire_${ts}_${i}_a`,
+              kind: wireKind,
+              color: wireColor,
+              pts: [
+                { x: start.x + dx, y: start.y },
+                { x: corner.x + dx, y: currentCornerY },
+              ],
+            },
+            {
+              id: `wire_${ts}_${i}_b`,
+              kind: wireKind,
+              color: wireColor,
+              pts: [
+                { x: corner.x + dx, y: currentCornerY },
+                { x: targetPt.x + dx, y: currentTargetY },
+              ],
+            }
+          );
+        } else {
+          newWires.push({
+            id: `wire_${ts}_${i}`,
+            kind: wireKind,
+            color: wireColor,
+            pts: [
+              { x: start.x + dx, y: start.y },
+              { x: targetPt.x + dx, y: currentTargetY },
+            ],
+          });
+        }
+      });
+      onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
     } else if (activeWireTool === '3p_horiz') {
       const offsets = [-20, 0, 20];
       const kinds: WireKind[] = ['phase', 'phase_l2', 'phase_l3'];
@@ -412,6 +458,52 @@ export const SchematicCanvas: React.FC<Props> = ({
             pts: [
               { x: start.x, y: start.y + dy },
               { x: targetPt.x, y: targetPt.y + dy },
+            ],
+          });
+        }
+      });
+      onDocChange({ ...doc, wires: [...doc.wires, ...newWires] });
+    } else if (activeWireTool === '3p_horiz_staggered') {
+      const offsets = [-20, 0, 20];
+      const kinds: WireKind[] = ['phase', 'phase_l2', 'phase_l3'];
+      const colors = [WIRE_COLOR_MAP['phase'], WIRE_COLOR_MAP['phase_l2'], WIRE_COLOR_MAP['phase_l3']];
+      const newWires: Wire[] = [];
+      const dirX = targetPt.x >= start.x ? 1 : -1;
+      offsets.forEach((dy, i) => {
+        const wireKind = kinds[i];
+        const wireColor = colors[i];
+        const stepDx = (i - 1) * 20 * dirX;
+        const currentTargetX = targetPt.x + stepDx;
+        const currentCornerX = corner.x + stepDx;
+        if (hasCorner) {
+          newWires.push(
+            {
+              id: `wire_${ts}_${i}_a`,
+              kind: wireKind,
+              color: wireColor,
+              pts: [
+                { x: start.x, y: start.y + dy },
+                { x: currentCornerX, y: corner.y + dy },
+              ],
+            },
+            {
+              id: `wire_${ts}_${i}_b`,
+              kind: wireKind,
+              color: wireColor,
+              pts: [
+                { x: currentCornerX, y: corner.y + dy },
+                { x: currentTargetX, y: targetPt.y + dy },
+              ],
+            }
+          );
+        } else {
+          newWires.push({
+            id: `wire_${ts}_${i}`,
+            kind: wireKind,
+            color: wireColor,
+            pts: [
+              { x: start.x, y: start.y + dy },
+              { x: currentTargetX, y: targetPt.y + dy },
             ],
           });
         }

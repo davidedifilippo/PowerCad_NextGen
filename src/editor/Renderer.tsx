@@ -110,14 +110,25 @@ export const Renderer: React.FC<Props> = ({
               ? '#ef4444'
               : wire.kind === 'neg'
               ? '#0f172a'
+              : wire.kind === 'color_custom'
+              ? '#a855f7'
+              : wire.kind === 'pneumatic_tube'
+              ? '#0284c7'
               : '#334155');
           const isPe = wire.kind === 'pe' || wire.color === '#16a34a';
+          const isTube = wire.kind === 'pneumatic_tube';
           const stroke = isEnergized
             ? '#ef4444' // Bright red for live wire
             : isSelected
             ? '#2563eb' // Bright blue for selected wire
             : baseColor;
-          const strokeWidth = isEnergized ? 2.5 : isSelected ? 3 : 1.8;
+          const strokeWidth = isTube
+            ? (isSelected ? 4.5 : 3.5)
+            : isEnergized
+            ? 2.5
+            : isSelected
+            ? 3
+            : 1.8;
           const strokeDasharray = isPe && !isEnergized ? '6 3' : undefined;
 
           const d = wire.pts.reduce(
