@@ -477,6 +477,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       outputs: { '3': 'L', '4': 'N' },
     },
     symbol: [
+      // Background body when powered
+      { t: 'rect', x: -16, y: -13, w: 32, h: 26, fill: '#fed7aa', stroke: '#0f172a', r: 2, when: 'on' },
       // Primary leads
       { t: 'line', x1: -10, y1: -20, x2: -10, y2: -11 },
       { t: 'line', x1: 10, y1: -20, x2: 10, y2: -11 },
@@ -511,6 +513,8 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       outputs: { '4': 'L1', '5': 'L2', '6': 'L3' },
     },
     symbol: [
+      // Background body when powered
+      { t: 'rect', x: -26, y: -13, w: 52, h: 26, fill: '#fed7aa', stroke: '#0f172a', r: 2, when: 'on' },
       // Primary leads
       { t: 'line', x1: -20, y1: -20, x2: -20, y2: -11 },
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -11 },
@@ -548,7 +552,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     id: 'rectifier_bridge',
     name: 'Ponte Raddrizzatore',
     category: 'Alimentazione',
-    tagPrefix: '-T',
+    tagPrefix: '-V',
     terminals: [
       { id: '1', x: -20, y: 0, label: '1' },
       { id: '2', x: 20, y: 0, label: '2' },
@@ -568,7 +572,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 0, y1: 15, x2: 0, y2: 20 },
       // Diamond frame
       { t: 'path', d: 'M 0 -15 L 15 0 L 0 15 L -15 0 Z', fill: '#ffffff', when: 'off' },
-      { t: 'path', d: 'M 0 -15 L 15 0 L 0 15 L -15 0 Z', fill: '#f1f5f9', when: 'on' },
+      { t: 'path', d: 'M 0 -15 L 15 0 L 0 15 L -15 0 Z', fill: '#fed7aa', when: 'on' },
       // Internal diode symbol
       { t: 'line', x1: -8, y1: 0, x2: 8, y2: 0 },
       { t: 'path', d: 'M -4 -4 L -4 4 L 4 0 Z', fill: '#0f172a' },
@@ -582,7 +586,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     id: 'psu_1p_dc',
     name: 'Alimentatore Monofase',
     category: 'Alimentazione',
-    tagPrefix: '-T',
+    tagPrefix: '-V',
     terminals: [
       { id: '1', x: -10, y: -20, label: '1' },
       { id: '2', x: 10, y: -20, label: '2' },
@@ -604,7 +608,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 16, y1: 10, x2: 20, y2: 10 },
       // Enclosure box
       { t: 'rect', x: -16, y: -14, w: 32, h: 28, fill: '#ffffff', when: 'off' },
-      { t: 'rect', x: -16, y: -14, w: 32, h: 28, fill: '#f1f5f9', when: 'on' },
+      { t: 'rect', x: -16, y: -14, w: 32, h: 28, fill: '#fed7aa', when: 'on' },
       // Diagonal divider
       { t: 'line', x1: -16, y1: 14, x2: 16, y2: -14 },
       // AC sine wave ~
@@ -621,7 +625,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     id: 'psu_3p_dc',
     name: 'Alimentatore Trifase',
     category: 'Alimentazione',
-    tagPrefix: '-T',
+    tagPrefix: '-V',
     terminals: [
       { id: '1', x: -20, y: -20, label: '1' },
       { id: '2', x: 0, y: -20, label: '2' },
@@ -645,7 +649,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: 24, y1: 10, x2: 30, y2: 10 },
       // Enclosure box
       { t: 'rect', x: -24, y: -14, w: 48, h: 28, fill: '#ffffff', when: 'off' },
-      { t: 'rect', x: -24, y: -14, w: 48, h: 28, fill: '#f1f5f9', when: 'on' },
+      { t: 'rect', x: -24, y: -14, w: 48, h: 28, fill: '#fed7aa', when: 'on' },
       // Diagonal divider
       { t: 'line', x1: -24, y1: 14, x2: 24, y2: -14 },
       // AC sine wave ~

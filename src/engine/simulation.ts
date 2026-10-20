@@ -337,7 +337,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     }
   }
 
-  // Check short-circuits (Phase-Neutral, Phase-Phase, DC+/-)
+  // Check short-circuits (Phase-Neutral, Phase-Phase, DC+/-, Converter/Transformer outputs)
   if (!fault && !isGroundFault) {
     const incompatiblePairs: { p1: string; p2: string; desc: string }[] = [
       // Phase-Neutral
@@ -353,27 +353,136 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
       { p1: 'DC+', p2: 'DC-', desc: 'Corto circuito DC (+/-)' },
     ];
 
-    let detectedShortDesc: string | null = null;
-    let shortPairKeys: [string[], string[]] | null = null;
+    const findShortInGraph = (graph: DisjointSet): { desc: string; keysA: string[]; keysB: string[] } | null => {
+      // 1. Primary source incompatible pairs
+      for (const pair of incompatiblePairs) {
+        const keysA = potentialNetKeys.get(pair.p1);
+        const keysB = potentialNetKeys.get(pair.p2);
+        if (!keysA || !keysB) continue;
 
-    for (const pair of incompatiblePairs) {
-      const keysA = potentialNetKeys.get(pair.p1);
-      const keysB = potentialNetKeys.get(pair.p2);
-      if (!keysA || !keysB) continue;
+        const rootsA = keysA.map((k) => graph.find(k));
+        const rootsB = new Set(keysB.map((k) => graph.find(k)));
 
-      const rootsA = keysA.map((k) => checkGraph.find(k));
-      const rootsB = new Set(keysB.map((k) => checkGraph.find(k)));
-
-      if (rootsA.some((r) => rootsB.has(r))) {
-        detectedShortDesc = pair.desc;
-        shortPairKeys = [keysA, keysB];
-        break;
+        if (rootsA.some((r) => rootsB.has(r))) {
+          return { desc: pair.desc, keysA, keysB };
+        }
       }
-    }
 
-    if (detectedShortDesc && shortPairKeys) {
-      const [keysA, keysB] = shortPairKeys;
+      // 2. Converters & Transformers output short-circuits
+      for (const elem of doc.elements) {
+        const def = registry.get(elem.def);
+        if (!def || def.behavior.type !== 'converter') continue;
+        const terms = elemTermKeys.get(elem.id);
+        if (!terms) continue;
 
+        const beh = def.behavior;
+
+        // Check if converter input is energized in this graph
+        const inputPots: (string | undefined)[] = beh.inputs.map((tid) => {
+          const k = terms.get(tid);
+          if (!k) return undefined;
+          const root = graph.find(k);
+          for (const [pot, keys] of potentialNetKeys.entries()) {
+            for (const srcKey of keys) {
+              if (graph.find(srcKey) === root) return pot;
+            }
+          }
+          // Also check if fed by another active converter (e.g. transformer feeding a power supply)
+          for (const other of doc.elements) {
+            if (other.id === elem.id) continue;
+            const otherDef = registry.get(other.def);
+            if (!otherDef || otherDef.behavior.type !== 'converter') continue;
+            const otherTerms = elemTermKeys.get(other.id);
+            if (!otherTerms) continue;
+            for (const [otherTid, otherPot] of Object.entries(otherDef.behavior.outputs)) {
+              const otherK = otherTerms.get(otherTid);
+              if (otherK && graph.find(otherK) === root) {
+                return otherPot;
+              }
+            }
+          }
+          return undefined;
+        });
+
+        const isEnergized =
+          inputPots.length === 2
+            ? isVoltageDifference(inputPots[0], inputPots[1])
+            : inputPots.length >= 3
+            ? Boolean(inputPots[0] && inputPots[1] && inputPots[2] && inputPots[0] !== inputPots[1] && inputPots[1] !== inputPots[2] && inputPots[0] !== inputPots[2])
+            : false;
+
+        if (!isEnergized) continue;
+
+        const outEntries = Object.entries(beh.outputs);
+
+        // Check DC (+/-)
+        const posEntry = outEntries.find(([_, pot]) => pot === '+24V' || pot === '+' || pot === 'DC+');
+        const negEntry = outEntries.find(([_, pot]) => pot === '0V' || pot === '-' || pot === 'DC-');
+        if (posEntry && negEntry) {
+          const kPos = terms.get(posEntry[0]);
+          const kNeg = terms.get(negEntry[0]);
+          if (kPos && kNeg && graph.find(kPos) === graph.find(kNeg)) {
+            return {
+              desc: `Corto circuito DC (+/-) sull'uscita di ${elem.tag || def.name}`,
+              keysA: [kPos],
+              keysB: [kNeg],
+            };
+          }
+        }
+
+        // Check Single-Phase AC (L and N)
+        const lEntry = outEntries.find(([_, pot]) => pot === 'L');
+        const nEntry = outEntries.find(([_, pot]) => pot === 'N');
+        if (lEntry && nEntry) {
+          const kL = terms.get(lEntry[0]);
+          const kN = terms.get(nEntry[0]);
+          if (kL && kN && graph.find(kL) === graph.find(kN)) {
+            return {
+              desc: `Corto circuito secondario Fase-Neutro sull'uscita di ${elem.tag || def.name}`,
+              keysA: [kL],
+              keysB: [kN],
+            };
+          }
+        }
+
+        // Check Three-Phase AC (L1, L2, L3)
+        const l1Entry = outEntries.find(([_, pot]) => pot === 'L1');
+        const l2Entry = outEntries.find(([_, pot]) => pot === 'L2');
+        const l3Entry = outEntries.find(([_, pot]) => pot === 'L3');
+        if (l1Entry && l2Entry && l3Entry) {
+          const k1 = terms.get(l1Entry[0]);
+          const k2 = terms.get(l2Entry[0]);
+          const k3 = terms.get(l3Entry[0]);
+          if (k1 && k2 && graph.find(k1) === graph.find(k2)) {
+            return {
+              desc: `Corto circuito secondario L1-L2 sull'uscita di ${elem.tag || def.name}`,
+              keysA: [k1],
+              keysB: [k2],
+            };
+          }
+          if (k2 && k3 && graph.find(k2) === graph.find(k3)) {
+            return {
+              desc: `Corto circuito secondario L2-L3 sull'uscita di ${elem.tag || def.name}`,
+              keysA: [k2],
+              keysB: [k3],
+            };
+          }
+          if (k1 && k3 && graph.find(k1) === graph.find(k3)) {
+            return {
+              desc: `Corto circuito secondario L1-L3 sull'uscita di ${elem.tag || def.name}`,
+              keysA: [k1],
+              keysB: [k3],
+            };
+          }
+        }
+      }
+
+      return null;
+    };
+
+    const detectedShort = findShortInGraph(checkGraph);
+
+    if (detectedShort) {
       const closedProtections = doc.elements.filter((elem) => {
         const def = registry.get(elem.def);
         if (!def) return false;
@@ -400,9 +509,8 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
           elementStates,
           new Set([dev.id])
         );
-        const testRootsA = keysA.map((k) => testGraph.find(k));
-        const testRootsB = new Set(keysB.map((k) => testGraph.find(k)));
-        if (!testRootsA.some((r) => testRootsB.has(r))) {
+        const remainingShort = findShortInGraph(testGraph);
+        if (!remainingShort) {
           protectingDevice = dev;
           break;
         }
@@ -417,7 +525,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         const deviceName = isFuse ? 'Fusibile' : isRcd ? 'Interruttore differenziale' : 'Interruttore';
         faultAlert = {
           type: 'short_circuit',
-          message: `${deviceName} ${protectingDevice.tag || '-F'} scattato per ${detectedShortDesc.toLowerCase()}!`,
+          message: `${deviceName} ${protectingDevice.tag || '-F'} scattato per ${detectedShort.desc.toLowerCase()}!`,
           elemId: protectingDevice.id,
           tag: protectingDevice.tag,
           timestamp: Date.now(),
@@ -425,7 +533,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
       } else {
         fault = {
           type: 'short_circuit',
-          message: `${detectedShortDesc} rilevato! Nessuna protezione presente: simulazione interrotta per sicurezza.`,
+          message: `${detectedShort.desc} rilevato! Nessuna protezione presente: simulazione interrotta per sicurezza.`,
           timestamp: Date.now(),
         };
         running = false;

@@ -358,5 +358,136 @@ describe('Simulation Engine', () => {
     expect(stepTripped2.activeOutputs['lamp_nc']).toBeFalsy();
     expect(stepTripped2.activeOutputs['lamp_no']).toBe(true);
   });
-});
+  it('detects short circuit on DC output of single-phase power supply (psu_1p_dc) and halts simulation when unprotected', () => {
+    const psuShortDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Source L+N at (100, 100): L at (90, 110), N at (110, 110)
+        { id: 'src_ln', def: 'pwr_l_n', x: 100, y: 100, rot: 0 as const, tag: '-X', props: {} },
+        // psu_1p_dc at (100, 160): 1 at (90, 140), 2 at (110, 140), 3 (+) at (90, 180), 4 (-) at (110, 180)
+        { id: 'psu1', def: 'psu_1p_dc', x: 100, y: 160, rot: 0 as const, tag: '-V', props: {} },
+      ],
+      wires: [
+        // Connect L+N to PSU inputs 1 and 2
+        { id: 'w1', pts: [{ x: 90, y: 110 }, { x: 90, y: 140 }] },
+        { id: 'w2', pts: [{ x: 110, y: 110 }, { x: 110, y: 140 }] },
+        // Direct short-circuit between DC outputs 3 (+) and 4 (-)
+        { id: 'w_short', pts: [{ x: 90, y: 180 }, { x: 90, y: 210 }, { x: 110, y: 210 }, { x: 110, y: 180 }] },
+      ],
+    };
 
+    const sim = stepSimulation(psuShortDoc, { ...createInitialSimState(), running: true }, 0.05);
+    expect(sim.running).toBe(false);
+    expect(sim.paused).toBe(true);
+    expect(sim.fault).not.toBeNull();
+    expect(sim.fault?.type).toBe('short_circuit');
+    expect(sim.fault?.message).toContain('Corto circuito DC (+/-)');
+    expect(sim.fault?.message).toContain('-V');
+  });
+
+  it('trips upstream fuse when DC output of power supply (psu_1p_dc) is short-circuited', () => {
+    const psuFuseDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Source L+N at (100, 70): L at (90, 80), N at (110, 80)
+        { id: 'src_ln', def: 'pwr_l_n', x: 100, y: 70, rot: 0 as const, tag: '-X', props: {} },
+        // Fuse 1P at (90, 110): 1 at (90, 90), 2 at (90, 130)
+        { id: 'fuse1', def: 'fuse_1p', x: 90, y: 110, rot: 0 as const, tag: '-F1', props: {} },
+        // psu_1p_dc at (100, 160): 1 at (90, 140), 2 at (110, 140), 3 (+) at (90, 180), 4 (-) at (110, 180)
+        { id: 'psu1', def: 'psu_1p_dc', x: 100, y: 160, rot: 0 as const, tag: '-V', props: {} },
+      ],
+      wires: [
+        // Source L to fuse input 1
+        { id: 'w_l_fuse', pts: [{ x: 90, y: 80 }, { x: 90, y: 90 }] },
+        // Fuse output 2 to PSU input 1
+        { id: 'w_fuse_psu', pts: [{ x: 90, y: 130 }, { x: 90, y: 140 }] },
+        // Source N directly to PSU input 2
+        { id: 'w_n_psu', pts: [{ x: 110, y: 80 }, { x: 110, y: 140 }] },
+        // Direct short-circuit between DC outputs 3 (+) and 4 (-)
+        { id: 'w_short', pts: [{ x: 90, y: 180 }, { x: 90, y: 210 }, { x: 110, y: 210 }, { x: 110, y: 180 }] },
+      ],
+    };
+
+    const sim = stepSimulation(psuFuseDoc, { ...createInitialSimState(), running: true }, 0.05);
+    // Upstream fuse must trip!
+    expect(sim.elementStates['fuse1']).toBe(false);
+    expect(sim.faultAlert).not.toBeNull();
+    expect(sim.faultAlert?.type).toBe('short_circuit');
+    expect(sim.faultAlert?.message.toLowerCase()).toContain('fusibile');
+    expect(sim.faultAlert?.message.toLowerCase()).toContain('corto circuito dc');
+  });
+
+  it('detects secondary short circuit on single-phase transformer (transformer_1p)', () => {
+    const trafoDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Source L+N at (100, 100): L at (90, 110), N at (110, 110)
+        { id: 'src_ln', def: 'pwr_l_n', x: 100, y: 100, rot: 0 as const, tag: '-X', props: {} },
+        // transformer_1p at (100, 160): 1 at (90, 140), 2 at (110, 140), 3 (L) at (90, 180), 4 (N) at (110, 180)
+        { id: 'trafo1', def: 'transformer_1p', x: 100, y: 160, rot: 0 as const, tag: '-T1', props: {} },
+      ],
+      wires: [
+        { id: 'w1', pts: [{ x: 90, y: 110 }, { x: 90, y: 140 }] },
+        { id: 'w2', pts: [{ x: 110, y: 110 }, { x: 110, y: 140 }] },
+        // Direct short on secondary output
+        { id: 'w_short', pts: [{ x: 90, y: 180 }, { x: 90, y: 210 }, { x: 110, y: 210 }, { x: 110, y: 180 }] },
+      ],
+    };
+
+    const sim = stepSimulation(trafoDoc, { ...createInitialSimState(), running: true }, 0.05);
+    expect(sim.running).toBe(false);
+    expect(sim.fault).not.toBeNull();
+    expect(sim.fault?.message).toContain('Corto circuito secondario Fase-Neutro');
+    expect(sim.fault?.message).toContain('-T1');
+  });
+
+  it('detects secondary short circuit on three-phase transformer (transformer_3p)', () => {
+    const trafo3pDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Source 3P at (100, 100): L1 at (80, 110), L2 at (100, 110), L3 at (120, 110)
+        { id: 'src_3p', def: 'pwr_3p', x: 100, y: 100, rot: 0 as const, tag: '-X', props: {} },
+        // transformer_3p at (100, 160): 1 at (80, 140), 2 at (100, 140), 3 at (120, 140), 4 at (80, 180), 5 at (100, 180), 6 at (120, 180)
+        { id: 'trafo3', def: 'transformer_3p', x: 100, y: 160, rot: 0 as const, tag: '-T3', props: {} },
+      ],
+      wires: [
+        { id: 'w1', pts: [{ x: 80, y: 110 }, { x: 80, y: 140 }] },
+        { id: 'w2', pts: [{ x: 100, y: 110 }, { x: 100, y: 140 }] },
+        { id: 'w3', pts: [{ x: 120, y: 110 }, { x: 120, y: 140 }] },
+        // Direct short between secondary L1 (80, 180) and L2 (100, 180)
+        { id: 'w_short', pts: [{ x: 80, y: 180 }, { x: 80, y: 210 }, { x: 100, y: 210 }, { x: 100, y: 180 }] },
+      ],
+    };
+
+    const sim = stepSimulation(trafo3pDoc, { ...createInitialSimState(), running: true }, 0.05);
+    expect(sim.running).toBe(false);
+    expect(sim.fault).not.toBeNull();
+    expect(sim.fault?.message).toContain('Corto circuito secondario L1-L2');
+    expect(sim.fault?.message).toContain('-T3');
+  });
+
+  it('detects short circuit on DC output of three-phase power supply (psu_3p_dc)', () => {
+    const psu3pDoc: Doc = {
+      ...SAMPLE_DIRECT_START,
+      elements: [
+        // Source 3P at (100, 100): L1 at (80, 110), L2 at (100, 110), L3 at (120, 110)
+        { id: 'src_3p', def: 'pwr_3p', x: 100, y: 100, rot: 0 as const, tag: '-X', props: {} },
+        // psu_3p_dc at (100, 160): 1 at (80, 140), 2 at (100, 140), 3 at (120, 140), 4 (+) at (90, 180), 5 (-) at (110, 180)
+        { id: 'psu3', def: 'psu_3p_dc', x: 100, y: 160, rot: 0 as const, tag: '-V3', props: {} },
+      ],
+      wires: [
+        { id: 'w1', pts: [{ x: 80, y: 110 }, { x: 80, y: 140 }] },
+        { id: 'w2', pts: [{ x: 100, y: 110 }, { x: 100, y: 140 }] },
+        { id: 'w3', pts: [{ x: 120, y: 110 }, { x: 120, y: 140 }] },
+        // Direct short between 4 (+) and 5 (-)
+        { id: 'w_short', pts: [{ x: 90, y: 180 }, { x: 90, y: 210 }, { x: 110, y: 210 }, { x: 110, y: 180 }] },
+      ],
+    };
+
+    const sim = stepSimulation(psu3pDoc, { ...createInitialSimState(), running: true }, 0.05);
+    expect(sim.running).toBe(false);
+    expect(sim.fault).not.toBeNull();
+    expect(sim.fault?.message).toContain('Corto circuito DC (+/-)');
+    expect(sim.fault?.message).toContain('-V3');
+  });
+});

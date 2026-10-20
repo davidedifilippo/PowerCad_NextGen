@@ -28,6 +28,13 @@ export const CADESIMU_TYPE_MAP: Record<number, CadeCompMapping> = {
   3010: { def: 'pwr_l_n', yOffset: -10, xOffset: 10 },
   3011: { def: 'pwr_l_n_pe', yOffset: -10, xOffset: 20 },
 
+  // Trasformatori e Alimentatori (Transformers & Power Supplies)
+  3100: { def: 'transformer_1p', yOffset: 20 },
+  3101: { def: 'transformer_3p', yOffset: 20, xOffset: 20 },
+  3200: { def: 'psu_1p_dc', yOffset: 20 },
+  3201: { def: 'psu_3p_dc', yOffset: 20, xOffset: 20 },
+  3202: { def: 'rectifier_bridge', yOffset: 20 },
+
   // Fusibili (Fuses 5000-5008)
   5000: { def: 'fuse_1p', yOffset: 20 },
   5001: { def: 'fuse_1p_n', yOffset: 20, xOffset: 10 },
