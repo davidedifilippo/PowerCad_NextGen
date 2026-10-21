@@ -7130,7 +7130,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     behavior: {
       type: 'contact',
       actuation: 'linked',
-      phaseLoss: { l1: 'L1', l2: 'L2', l3: 'L3', n: 'N' },
+      phaseLoss: { l1: 'L1', l2: 'L2', l3: 'L3', n: 'N', checkSequence: true },
       nc: [['11', '12']],
       no: [['11', '14']],
     },
@@ -7169,7 +7169,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     behavior: {
       type: 'contact',
       actuation: 'linked',
-      phaseLoss: { l1: 'L1', l2: 'L2', l3: 'L3' },
+      phaseLoss: { l1: 'L1', l2: 'L2', l3: 'L3', checkSequence: true },
       nc: [['11', '12']],
       no: [['11', '14']],
     },

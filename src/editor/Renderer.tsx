@@ -752,6 +752,7 @@ const ElementItem: React.FC<{
           isThermalTripped={isThermalTripped}
           stepCount={simState.stepCount}
           isRunning={simState.running}
+          isRev={Boolean(simState.activeOutputs[elem.id + '_rev'])}
           customGlowColor={customGlowColor}
           elemProps={elem.props}
           defProps={def.props}
@@ -957,10 +958,11 @@ const PrimitiveItem: React.FC<{
   isThermalTripped?: boolean;
   stepCount: number;
   isRunning: boolean;
+  isRev?: boolean;
   customGlowColor?: string;
   elemProps?: Record<string, string | number>;
   defProps?: PropDef[];
-}> = ({ prim, isActive, isThermalTripped, stepCount, isRunning, customGlowColor, elemProps, defProps }) => {
+}> = ({ prim, isActive, isThermalTripped, stepCount, isRunning, isRev, customGlowColor, elemProps, defProps }) => {
   if (prim.when === 'on' && !isActive) return null;
   if (prim.when === 'off' && isActive) return null;
 
@@ -1117,8 +1119,8 @@ const PrimitiveItem: React.FC<{
       );
     }
     case 'rotor': {
-      // Rotating motor indicator animation when active
-      const angle = isRunning && isActive ? (stepCount * 36) % 360 : 0;
+      // Rotating motor indicator animation when active (supports forward and reverse phase sequence)
+      const angle = isRunning && isActive ? ((isRev ? -stepCount : stepCount) * 36) % 360 : 0;
       return (
         <g transform={`rotate(${angle}, ${prim.cx}, ${prim.cy})`}>
           <line

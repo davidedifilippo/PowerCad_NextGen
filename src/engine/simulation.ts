@@ -822,6 +822,15 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         // Running if all 3 distinct phases are present
         if (pU && pV && pW && pU !== pV && pV !== pW && pU !== pW) {
           newActiveOutputs[elem.id] = true;
+          const isDirect =
+            (pU === 'L1' && pV === 'L2' && pW === 'L3') ||
+            (pU === 'L2' && pV === 'L3' && pW === 'L1') ||
+            (pU === 'L3' && pV === 'L1' && pW === 'L2');
+          if (isDirect) {
+            newActiveOutputs[elem.id + '_fwd'] = true;
+          } else {
+            newActiveOutputs[elem.id + '_rev'] = true;
+          }
         }
       } else if (beh.type === 'motor3yd') {
         const pU1 = terms.get(beh.u1) ? netPotentials[terms.get(beh.u1)!] : undefined;
@@ -881,6 +890,17 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
             const kn = terms.get(beh.phaseLoss.n);
             const pn = kn ? netPotentials[kn] : undefined;
             if (!pn || pn !== 'N') healthy = false;
+          }
+          if (beh.phaseLoss.checkSequence && healthy) {
+            // Check direct cyclic sequence (L1 -> L2 -> L3)
+            // Permutations for clockwise positive sequence: (L1, L2, L3), (L2, L3, L1), (L3, L1, L2)
+            const isDirectSequence =
+              (p1 === 'L1' && p2 === 'L2' && p3 === 'L3') ||
+              (p1 === 'L2' && p2 === 'L3' && p3 === 'L1') ||
+              (p1 === 'L3' && p2 === 'L1' && p3 === 'L2');
+            if (!isDirectSequence) {
+              healthy = false;
+            }
           }
           if (healthy) {
             newActiveOutputs[elem.id] = true;

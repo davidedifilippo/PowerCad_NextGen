@@ -64,7 +64,7 @@ export type Behavior =
       defaultOn?: boolean;
       isRCD?: boolean;
       coil?: { a: string; b: string };
-      phaseLoss?: { l1: string; l2: string; l3: string; n?: string };
+      phaseLoss?: { l1: string; l2: string; l3: string; n?: string; checkSequence?: boolean };
       ssrReversing?: boolean;
       inputs?: string[];
       outputs?: string[];

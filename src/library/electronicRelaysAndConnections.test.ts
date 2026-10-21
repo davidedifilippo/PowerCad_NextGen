@@ -258,4 +258,78 @@ describe('Electronic Relays and Connections Library Sections', () => {
     // Contact 11-12 (NC) closed -> lamp_fault is ON (alarm triggered!)
     expect(simFault.activeOutputs['lamp_fault']).toBe(true);
   });
+
+  it('Phase sequence relay detects phase inversion and triggers alarm contact 11-12 NC', () => {
+    // 1. Direct sequence: L1 to L1, L2 to L2, L3 to L3
+    const docDirect: Doc = {
+      app: 'cadesimu-next',
+      version: 1,
+      sheet: {
+        format: 'A4',
+        orientation: 'landscape',
+        project: 'Phase Sequence Relay Test',
+        title: 'Phase Sequence Test',
+        author: 'Tester',
+        date: '2026-10-21',
+        revision: '1',
+        sheetNo: '1',
+      },
+      elements: [
+        { id: 'pwr_3p', def: 'pwr_3p', x: 100, y: 100, rot: 0, tag: 'L1-L2-L3', props: {} },
+        { id: 'pwr_n', def: 'pwr_n', x: 200, y: 100, rot: 0, tag: 'N', props: {} },
+        { id: 'relay_psr', def: 'phase_sequence_relay', x: 100, y: 200, rot: 0, tag: '-S1', props: {} },
+        { id: 'lamp_alarm', def: 'pilot_lamp', x: 100, y: 330, rot: 0, tag: '-H_ALARM', props: { color: 'Rosso' } },
+        { id: 'lamp_ok', def: 'pilot_lamp', x: 140, y: 330, rot: 0, tag: '-H_OK', props: { color: 'Verde' } },
+      ],
+      wires: [
+        // Direct wiring: L1 (80, 110) -> relay L1 (80, 170)
+        { id: 'w1', pts: [{ x: 80, y: 110 }, { x: 80, y: 170 }] },
+        // L2 (100, 110) -> relay L2 (100, 170)
+        { id: 'w2', pts: [{ x: 100, y: 110 }, { x: 100, y: 170 }] },
+        // L3 (120, 110) -> relay L3 (120, 170)
+        { id: 'w3', pts: [{ x: 120, y: 110 }, { x: 120, y: 170 }] },
+
+        // Branch L1 to Common 11 at (80, 230)
+        { id: 'w_c', pts: [{ x: 80, y: 170 }, { x: 60, y: 170 }, { x: 60, y: 230 }, { x: 80, y: 230 }] },
+        // 12 NC at (100, 230) to lamp_alarm X1 at (100, 310)
+        { id: 'w_nc', pts: [{ x: 100, y: 230 }, { x: 100, y: 310 }] },
+        // 14 NO at (120, 230) to lamp_ok X1 at (140, 310)
+        { id: 'w_no', pts: [{ x: 120, y: 230 }, { x: 140, y: 230 }, { x: 140, y: 310 }] },
+        // Neutral connections to lamps
+        { id: 'w_n1', pts: [{ x: 200, y: 110 }, { x: 200, y: 370 }, { x: 100, y: 370 }, { x: 100, y: 350 }] },
+        { id: 'w_n2', pts: [{ x: 200, y: 370 }, { x: 140, y: 370 }, { x: 140, y: 350 }] },
+      ],
+    };
+
+    // With direct sequence: Relay is energised, NO 11-14 closed (lamp_ok ON), NC 11-12 open (lamp_alarm OFF)
+    const simDirect = stepSimulation(docDirect, { ...createInitialSimState(), running: true }, 0.05);
+    expect(simDirect.activeOutputs['relay_psr']).toBe(true);
+    expect(simDirect.activeOutputs['lamp_ok']).toBe(true);
+    expect(simDirect.activeOutputs['lamp_alarm']).toBeUndefined();
+
+    // 2. Invert two phases: Swap L1 and L2 (L2 to terminal L1, L1 to terminal L2)
+    const docInverted: Doc = {
+      ...docDirect,
+      wires: [
+        // L2 (100, 110) routed to relay L1 (80, 170)
+        { id: 'w1_inv', pts: [{ x: 100, y: 110 }, { x: 80, y: 130 }, { x: 80, y: 170 }] },
+        // L1 (80, 110) routed to relay L2 (100, 170)
+        { id: 'w2_inv', pts: [{ x: 80, y: 110 }, { x: 100, y: 130 }, { x: 100, y: 170 }] },
+        // L3 (120, 110) -> relay L3 (120, 170)
+        { id: 'w3', pts: [{ x: 120, y: 110 }, { x: 120, y: 170 }] },
+        // Branch to Common 11
+        { id: 'w_c', pts: [{ x: 80, y: 170 }, { x: 60, y: 170 }, { x: 60, y: 230 }, { x: 80, y: 230 }] },
+        { id: 'w_nc', pts: [{ x: 100, y: 230 }, { x: 100, y: 310 }] },
+        { id: 'w_no', pts: [{ x: 120, y: 230 }, { x: 140, y: 230 }, { x: 140, y: 310 }] },
+        { id: 'w_n1', pts: [{ x: 200, y: 110 }, { x: 200, y: 370 }, { x: 100, y: 370 }, { x: 100, y: 350 }] },
+        { id: 'w_n2', pts: [{ x: 200, y: 370 }, { x: 140, y: 370 }, { x: 140, y: 350 }] },
+      ],
+    };
+
+    // Inverted sequence must de-energize the relay: NO 11-14 opens (lamp_ok OFF), NC 11-12 closes (lamp_alarm ON!)
+    const simInverted = stepSimulation(docInverted, { ...createInitialSimState(), running: true }, 0.05);
+    expect(simInverted.activeOutputs['relay_psr']).toBeUndefined();
+    expect(simInverted.activeOutputs['lamp_ok']).toBeUndefined();
+    expect(simInverted.activeOutputs['lamp_alarm']).toBe(true);
+  });
 });
