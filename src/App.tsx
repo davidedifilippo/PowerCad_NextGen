@@ -9,13 +9,17 @@ import { ComponentPalette } from './ui/ComponentPalette';
 import { SchematicCanvas } from './editor/SchematicCanvas';
 import { PropertiesPanel } from './ui/PropertiesPanel';
 import { Renderer } from './editor/Renderer';
-import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, X, CheckCircle2 } from 'lucide-react';
 import { registry } from './library/registry';
 import { TextModal, TextConfig } from './ui/TextModal';
 import { CartiglioModal } from './ui/CartiglioModal';
 import { PlcCodeModal } from './ui/PlcCodeModal';
+import { SaveDialogModal } from './ui/SaveDialogModal';
+import { RecentProjectsModal } from './ui/RecentProjectsModal';
 import { PageBar } from './ui/PageBar';
 import { getDocPages, normalizeDocWithPages } from './utils/pageUtils';
+import { saveDocToHandle, FileSaveResult } from './utils/fileSystemUtils';
+import { addRecentProject } from './utils/recentProjects';
 
 export interface ClipboardContent {
   elements: Element[];
@@ -42,6 +46,11 @@ export const App: React.FC = () => {
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
   const [showCartiglioModal, setShowCartiglioModal] = useState<boolean>(false);
   const [plcModalElement, setPlcModalElement] = useState<Element | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
+  const [showRecentsModal, setShowRecentsModal] = useState<boolean>(false);
+  const [currentFileHandle, setCurrentFileHandle] = useState<FileSystemFileHandle | null>(null);
+  const [currentFileName, setCurrentFileName] = useState<string | undefined>(undefined);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleConfirmText = (config: TextConfig) => {
     const textDef = registry.get('text_label');
@@ -91,6 +100,54 @@ export const App: React.FC = () => {
     // Also update active modal element reference
     setPlcModalElement((prev) => (prev && prev.id === elementId ? { ...prev, props: { ...prev.props, stCode: newStCode } } : prev));
   };
+
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 3200);
+  }, []);
+
+  const handleQuickSave = useCallback(async () => {
+    if (currentFileHandle) {
+      const res = await saveDocToHandle(doc, currentFileHandle);
+      if (res.success) {
+        addRecentProject(doc, res.fileName || currentFileName || 'schema.json');
+        showToast(`Schema salvato su "${res.fileName}"`);
+        return;
+      }
+    }
+    setShowSaveModal(true);
+  }, [doc, currentFileHandle, currentFileName, showToast]);
+
+  const handleSaveSuccess = (result: FileSaveResult) => {
+    if (result.handle) {
+      setCurrentFileHandle(result.handle);
+    }
+    if (result.fileName) {
+      setCurrentFileName(result.fileName);
+      showToast(`Salvato con successo: "${result.fileName}"`);
+    }
+  };
+
+  const handleOpenRecent = (recentDoc: Doc, fileName: string) => {
+    handleDocChange(recentDoc);
+    setCurrentFileName(fileName);
+    setCurrentFileHandle(null);
+    showToast(`Caricato progetto: "${fileName}"`);
+  };
+
+  // Global keyboard shortcut for Ctrl+S / Cmd+S
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleQuickSave();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleQuickSave]);
 
   const handleUndo = useCallback(() => {
     if (history.length === 0 || simState.running) return;
@@ -278,6 +335,10 @@ export const App: React.FC = () => {
           onPrint={handlePrint}
           onOpenTextModal={() => setShowTextModal(true)}
           onOpenCartiglioModal={() => setShowCartiglioModal(true)}
+          onSave={handleQuickSave}
+          onSaveAs={() => setShowSaveModal(true)}
+          onOpenRecents={() => setShowRecentsModal(true)}
+          currentFileName={currentFileName}
           zoom={zoom}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
@@ -545,6 +606,50 @@ export const App: React.FC = () => {
         simState={simState}
         onSave={handleSavePlcCode}
       />
+
+      {/* 6. Save As Modal (draw.io style with Device/Drive choice) */}
+      <SaveDialogModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        doc={doc}
+        currentFileName={currentFileName}
+        onSaveSuccess={handleSaveSuccess}
+      />
+
+      {/* 7. Recent Projects Modal */}
+      <RecentProjectsModal
+        isOpen={showRecentsModal}
+        onClose={() => setShowRecentsModal(false)}
+        onOpenProject={handleOpenRecent}
+      />
+
+      {/* Floating Save / Action Toast Notification */}
+      {toastMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#0f172a',
+            color: '#ffffff',
+            padding: '10px 18px',
+            borderRadius: 8,
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            fontSize: 13,
+            fontWeight: 600,
+            zIndex: 2000,
+            border: '1px solid #334155',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <CheckCircle2 size={18} color="#22c55e" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </>
   );
 };

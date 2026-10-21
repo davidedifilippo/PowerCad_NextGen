@@ -19,8 +19,10 @@ import {
   Type,
   Edit3,
   FolderInput,
+  Clock,
 } from 'lucide-react';
 import { parseCadeSimu } from '../utils/cadImporter';
+import { addRecentProject } from '../utils/recentProjects';
 
 interface Props {
   doc: Doc;
@@ -35,6 +37,10 @@ interface Props {
   onPrint: () => void;
   onOpenTextModal?: () => void;
   onOpenCartiglioModal?: () => void;
+  onSave?: () => void;
+  onSaveAs?: () => void;
+  onOpenRecents?: () => void;
+  currentFileName?: string;
   zoom: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -54,6 +60,10 @@ export const Toolbar: React.FC<Props> = ({
   onPrint,
   onOpenTextModal,
   onOpenCartiglioModal,
+  onSave,
+  onSaveAs,
+  onOpenRecents,
+  currentFileName,
   zoom,
   onZoomIn,
   onZoomOut,
@@ -141,6 +151,7 @@ export const Toolbar: React.FC<Props> = ({
       try {
         const loaded = JSON.parse(event.target?.result as string);
         if (loaded.elements && loaded.wires && loaded.sheet) {
+          addRecentProject(loaded, file.name);
           onDocChange(loaded);
         } else {
           alert('Il file non sembra uno schema valido.');
@@ -249,8 +260,31 @@ export const Toolbar: React.FC<Props> = ({
           >
             <FolderInput size={16} /> Importa .CAD
           </button>
-          <button title="Salva file JSON" style={btnStyle} onClick={handleSaveJson}>
+          <button
+            title={currentFileName ? `Salva modifiche su ${currentFileName} (Ctrl+S)` : 'Salva file (Ctrl+S)'}
+            style={{
+              ...btnStyle,
+              backgroundColor: '#0284c7',
+              color: '#ffffff',
+              fontWeight: 600,
+            }}
+            onClick={onSave || handleSaveJson}
+          >
             <Save size={16} /> Salva
+          </button>
+          <button
+            title="Salva con nome (scegli cartella e nome file su Dispositivo/Drive)"
+            style={btnStyle}
+            onClick={onSaveAs || handleSaveJson}
+          >
+            Salva come...
+          </button>
+          <button
+            title="Visualizza e apri progetti recenti salvati"
+            style={btnStyle}
+            onClick={onOpenRecents}
+          >
+            <Clock size={16} /> Recenti
           </button>
           <button
             title="Stampa Foglio di Disegno / Esporta PDF (Ctrl+P)"
