@@ -192,10 +192,20 @@ export interface Sheet {
   standard?: string;
 }
 
+export interface SheetPage {
+  id: string;
+  title: string;
+  elements: Element[];
+  wires: Wire[];
+}
+
 export interface Doc {
   app: 'powercad-nextgen' | 'electroforge' | 'cadesimu-next';
   version: 1;
   sheet: Sheet;
   elements: Element[];
   wires: Wire[];
+  /** Optional multi-page support. When present, pages[activePageIndex] syncs with elements & wires */
+  pages?: SheetPage[];
+  activePageIndex?: number;
 }

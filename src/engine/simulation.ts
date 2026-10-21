@@ -1,4 +1,5 @@
-import { Doc, Element, Pt } from '../model/types';
+import { Doc, Element, Pt, SheetPage } from '../model/types';
+import { getDocPages, getActivePageIndex } from '../utils/pageUtils';
 import { registry } from '../library/registry';
 import { localToWorld, ptKey, isPointOnSegment } from '../utils/geometry';
 
@@ -70,114 +71,151 @@ class DisjointSet {
 
 /** Builds conductivity graph for wires and closed component contacts */
 function buildConductivityGraph(
-  doc: Doc,
-  allNetworkPoints: Pt[],
+  pages: SheetPage[],
+  allNetworkPointsByPage: Map<number, Pt[]>,
   elemTermKeys: Map<string, Map<string, string>>,
   activeOutputs: Record<string, boolean>,
   elementStates: Record<string, boolean>,
-  ignoredElementIds?: Set<string>
+  ignoredElementIds?: Set<string>,
+  isMultiPage: boolean = false
 ): DisjointSet {
   const dsu = new DisjointSet();
 
-  // Collect all candidate branching points: component terminals + wire vertices
-  const allPoints: Pt[] = [...allNetworkPoints];
-  for (const wire of doc.wires) {
-    for (const p of wire.pts) {
-      allPoints.push(p);
-    }
-  }
+  const getPtKey = (p: Pt, pageIdx: number): string =>
+    isMultiPage ? `p${pageIdx}:${p.x},${p.y}` : ptKey(p);
 
-  // Wires and T-junction branching
-  for (const wire of doc.wires) {
-    for (let i = 0; i < wire.pts.length - 1; i++) {
-      const p1 = wire.pts[i];
-      const p2 = wire.pts[i + 1];
-      dsu.union(ptKey(p1), ptKey(p2));
+  // Wires and T-junction branching per page
+  for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+    const page = pages[pIdx];
+    const pts = allNetworkPointsByPage.get(pIdx) || [];
 
-      for (const pt of allPoints) {
-        if (isPointOnSegment(pt, p1, p2)) {
-          dsu.union(ptKey(p1), ptKey(pt));
+    for (const wire of page.wires) {
+      for (let i = 0; i < wire.pts.length - 1; i++) {
+        const p1 = wire.pts[i];
+        const p2 = wire.pts[i + 1];
+        dsu.union(getPtKey(p1, pIdx), getPtKey(p2, pIdx));
+
+        for (const pt of pts) {
+          if (isPointOnSegment(pt, p1, p2)) {
+            dsu.union(getPtKey(p1, pIdx), getPtKey(pt, pIdx));
+          }
         }
       }
     }
-  }
 
-  // Connect terminals through closed contacts / conductors
-  for (const elem of doc.elements) {
-    if (ignoredElementIds?.has(elem.id)) continue;
-    const def = registry.get(elem.def);
-    if (!def) continue;
-    const terms = elemTermKeys.get(elem.id);
-    if (!terms) continue;
+    // Connect terminals through closed contacts / conductors within this page
+    for (const elem of page.elements) {
+      if (ignoredElementIds?.has(elem.id)) continue;
+      const def = registry.get(elem.def);
+      if (!def) continue;
+      const terms = elemTermKeys.get(elem.id);
+      if (!terms) continue;
 
-    const beh = def.behavior;
+      const beh = def.behavior;
 
-    if (beh.type === 'conductor') {
-      if (elementStates[elem.id] === false) continue;
-      for (const [t1, t2] of beh.pairs) {
-        const k1 = terms.get(t1);
-        const k2 = terms.get(t2);
-        if (k1 && k2) dsu.union(k1, k2);
-      }
-    } else if (beh.type === 'thermal') {
-      for (const [t1, t2] of beh.pairs) {
-        const k1 = terms.get(t1);
-        const k2 = terms.get(t2);
-        if (k1 && k2) dsu.union(k1, k2);
-      }
-    } else if (beh.type === 'contact') {
-      let isClosedNO = false;
-      let isClosedNC = false;
-
-      if (beh.actuation === 'momentary') {
-        const pressed = Boolean(elementStates[elem.id]);
-        isClosedNO = pressed;
-        isClosedNC = !pressed;
-      } else if (beh.actuation === 'latching') {
-        const toggled = Boolean(
-          elementStates[elem.id] ?? (beh.defaultOn ?? false)
-        );
-        isClosedNO = toggled;
-        isClosedNC = !toggled;
-      } else if (beh.actuation === 'linked') {
-        const isCoilActive = (elem.tag && Boolean(activeOutputs[elem.tag])) || Boolean(activeOutputs[elem.id]);
-        isClosedNO = isCoilActive;
-        isClosedNC = !isCoilActive;
-      }
-
-      if (beh.ssrReversing) {
-        const fwdActive = Boolean(activeOutputs[elem.id + '_fwd']);
-        const revActive = Boolean(activeOutputs[elem.id + '_rev']);
-        if (fwdActive) {
-          const k1 = terms.get('1'), k2 = terms.get('2');
-          const k3 = terms.get('3'), k4 = terms.get('4');
-          const k5 = terms.get('5'), k6 = terms.get('6');
+      if (beh.type === 'conductor') {
+        if (elementStates[elem.id] === false) continue;
+        for (const [t1, t2] of beh.pairs) {
+          const k1 = terms.get(t1);
+          const k2 = terms.get(t2);
           if (k1 && k2) dsu.union(k1, k2);
-          if (k3 && k4) dsu.union(k3, k4);
-          if (k5 && k6) dsu.union(k5, k6);
-        } else if (revActive) {
-          const k1 = terms.get('1'), k6 = terms.get('6');
-          const k3 = terms.get('3'), k4 = terms.get('4');
-          const k5 = terms.get('5'), k2 = terms.get('2');
-          if (k1 && k6) dsu.union(k1, k6);
-          if (k3 && k4) dsu.union(k3, k4);
-          if (k5 && k2) dsu.union(k5, k2);
         }
-      }
+      } else if (beh.type === 'thermal') {
+        for (const [t1, t2] of beh.pairs) {
+          const k1 = terms.get(t1);
+          const k2 = terms.get(t2);
+          if (k1 && k2) dsu.union(k1, k2);
+        }
+      } else if (beh.type === 'contact') {
+        let isClosedNO = false;
+        let isClosedNC = false;
 
-      if (beh.no) {
-        for (const [t1, t2] of beh.no) {
-          const k1 = terms.get(t1);
-          const k2 = terms.get(t2);
-          if (k1 && k2 && isClosedNO) dsu.union(k1, k2);
+        if (beh.actuation === 'momentary') {
+          const pressed = Boolean(elementStates[elem.id]);
+          isClosedNO = pressed;
+          isClosedNC = !pressed;
+        } else if (beh.actuation === 'latching') {
+          const toggled = Boolean(
+            elementStates[elem.id] ?? (beh.defaultOn ?? false)
+          );
+          isClosedNO = toggled;
+          isClosedNC = !toggled;
+        } else if (beh.actuation === 'linked') {
+          const isCoilActive = (elem.tag && Boolean(activeOutputs[elem.tag])) || Boolean(activeOutputs[elem.id]);
+          isClosedNO = isCoilActive;
+          isClosedNC = !isCoilActive;
+        }
+
+        if (beh.ssrReversing) {
+          const fwdActive = Boolean(activeOutputs[elem.id + '_fwd']);
+          const revActive = Boolean(activeOutputs[elem.id + '_rev']);
+          if (fwdActive) {
+            const k1 = terms.get('1'), k2 = terms.get('2');
+            const k3 = terms.get('3'), k4 = terms.get('4');
+            const k5 = terms.get('5'), k6 = terms.get('6');
+            if (k1 && k2) dsu.union(k1, k2);
+            if (k3 && k4) dsu.union(k3, k4);
+            if (k5 && k6) dsu.union(k5, k6);
+          } else if (revActive) {
+            const k1 = terms.get('1'), k6 = terms.get('6');
+            const k3 = terms.get('3'), k4 = terms.get('4');
+            const k5 = terms.get('5'), k2 = terms.get('2');
+            if (k1 && k6) dsu.union(k1, k6);
+            if (k3 && k4) dsu.union(k3, k4);
+            if (k5 && k2) dsu.union(k5, k2);
+          }
+        }
+
+        if (beh.no) {
+          for (const [t1, t2] of beh.no) {
+            const k1 = terms.get(t1);
+            const k2 = terms.get(t2);
+            if (k1 && k2 && isClosedNO) dsu.union(k1, k2);
+          }
+        }
+        if (beh.nc) {
+          for (const [t1, t2] of beh.nc) {
+            const k1 = terms.get(t1);
+            const k2 = terms.get(t2);
+            if (k1 && k2 && isClosedNC) dsu.union(k1, k2);
+          }
         }
       }
-      if (beh.nc) {
-        for (const [t1, t2] of beh.nc) {
-          const k1 = terms.get(t1);
-          const k2 = terms.get(t2);
-          if (k1 && k2 && isClosedNC) dsu.union(k1, k2);
+    }
+  }
+
+  // Cross-page Wire Reference Markers (ref_marker_output and ref_marker_input)
+  const refOutputs = new Map<string, string[]>();
+  const refInputs = new Map<string, string[]>();
+
+  for (const page of pages) {
+    for (const elem of page.elements) {
+      if (elem.def === 'ref_marker_output') {
+        const refName = String(elem.props?.ref || '').trim();
+        const terms = elemTermKeys.get(elem.id);
+        const k = terms?.get('1');
+        if (refName && k) {
+          if (!refOutputs.has(refName)) refOutputs.set(refName, []);
+          refOutputs.get(refName)!.push(k);
         }
+      } else if (elem.def === 'ref_marker_input') {
+        const refName = String(elem.props?.ref || '').trim();
+        const terms = elemTermKeys.get(elem.id);
+        const k = terms?.get('1');
+        if (refName && k) {
+          if (!refInputs.has(refName)) refInputs.set(refName, []);
+          refInputs.get(refName)!.push(k);
+        }
+      }
+    }
+  }
+
+  for (const [refName, outKeys] of refOutputs.entries()) {
+    const inKeys = refInputs.get(refName);
+    if (!inKeys) continue;
+    for (const kOut of outKeys) {
+      for (const kIn of inKeys) {
+        dsu.union(kOut, kIn);
       }
     }
   }
@@ -194,25 +232,46 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     return state;
   }
 
-  // Collect all network points (all wire vertices and all absolute terminal positions)
-  const allNetworkPoints: Pt[] = [];
-  for (const wire of doc.wires) {
-    for (const p of wire.pts) allNetworkPoints.push(p);
+  const pages = getDocPages(doc);
+  const isMultiPage = pages.length > 1;
+  const activePageIndex = getActivePageIndex(doc);
+
+  const getPtKey = (p: Pt, pageIdx: number): string =>
+    isMultiPage ? `p${pageIdx}:${p.x},${p.y}` : ptKey(p);
+
+  // Collect all network points per page
+  const allNetworkPointsByPage = new Map<number, Pt[]>();
+  for (let i = 0; i < pages.length; i++) allNetworkPointsByPage.set(i, []);
+
+  for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+    const page = pages[pIdx];
+    const pts = allNetworkPointsByPage.get(pIdx)!;
+    for (const wire of page.wires) {
+      for (const p of wire.pts) pts.push(p);
+    }
   }
 
-  // Map elements and their absolute terminal positions
+  // Map elements and their absolute terminal positions across all pages
   const elemTermKeys = new Map<string, Map<string, string>>();
-  for (const elem of doc.elements) {
-    const def = registry.get(elem.def);
-    if (!def) continue;
-    const termMap = new Map<string, string>();
-    for (const term of def.terminals) {
-      const world = localToWorld(elem.x, elem.y, term, elem.rot);
-      const key = ptKey(world);
-      termMap.set(term.id, key);
-      allNetworkPoints.push(world);
+  const allElements: Element[] = [];
+
+  for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+    const page = pages[pIdx];
+    const pts = allNetworkPointsByPage.get(pIdx)!;
+
+    for (const elem of page.elements) {
+      allElements.push(elem);
+      const def = registry.get(elem.def);
+      if (!def) continue;
+      const termMap = new Map<string, string>();
+      for (const term of def.terminals) {
+        const world = localToWorld(elem.x, elem.y, term, elem.rot);
+        const key = getPtKey(world, pIdx);
+        termMap.set(term.id, key);
+        pts.push(world);
+      }
+      elemTermKeys.set(elem.id, termMap);
     }
-    elemTermKeys.set(elem.id, termMap);
   }
 
   // Collect terminal keys for Phase sources, Earth PE, and Neutral
@@ -221,7 +280,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
   const neutralTermKeys: string[] = [];
   const potentialNetKeys = new Map<string, string[]>();
 
-  for (const elem of doc.elements) {
+  for (const elem of allElements) {
     const def = registry.get(elem.def);
     if (!def) continue;
     const terms = elemTermKeys.get(elem.id);
@@ -259,14 +318,14 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
   let paused = state.paused;
 
   // Initial connectivity check for ground faults & short circuits
-  const checkGraph = buildConductivityGraph(doc, allNetworkPoints, elemTermKeys, activeOutputs, elementStates);
+  const checkGraph = buildConductivityGraph(pages, allNetworkPointsByPage, elemTermKeys, activeOutputs, elementStates, undefined, isMultiPage);
   const phaseRoots = new Set(phaseTermKeys.map((k) => checkGraph.find(k)));
   const peRoots = new Set(peTermKeys.map((k) => checkGraph.find(k)));
   const hasDirectGroundFault = [...phaseRoots].some((r) => peRoots.has(r));
 
   let loadFaultElem: Element | null = null;
   if (!hasDirectGroundFault) {
-    for (const elem of doc.elements) {
+    for (const elem of allElements) {
       const def = registry.get(elem.def);
       if (!def || def.behavior.type !== 'load') continue;
       const terms = elemTermKeys.get(elem.id);
@@ -291,7 +350,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
 
   if (isGroundFault) {
     // Find all closed RCDs (differenziali)
-    const closedRcds = doc.elements.filter((elem) => {
+    const closedRcds = allElements.filter((elem) => {
       const def = registry.get(elem.def);
       if (!def) return false;
       const isRcd = elem.def.startsWith('rcd_') || (def.behavior as any).isRCD === true;
@@ -301,14 +360,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
 
     let protectingRcd: Element | null = null;
     for (const rcd of closedRcds) {
-      const testGraph = buildConductivityGraph(
-        doc,
-        allNetworkPoints,
-        elemTermKeys,
-        activeOutputs,
-        elementStates,
-        new Set([rcd.id])
-      );
+      const testGraph = buildConductivityGraph(pages, allNetworkPointsByPage, elemTermKeys, activeOutputs, elementStates, new Set([rcd.id]), isMultiPage);
       const testPhaseRoots = new Set(phaseTermKeys.map((k) => testGraph.find(k)));
       const testPeRoots = new Set(peTermKeys.map((k) => testGraph.find(k)));
 
@@ -389,7 +441,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
       }
 
       // 2. Converters & Transformers output short-circuits
-      for (const elem of doc.elements) {
+      for (const elem of allElements) {
         const def = registry.get(elem.def);
         if (!def || def.behavior.type !== 'converter') continue;
         const terms = elemTermKeys.get(elem.id);
@@ -503,7 +555,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     const detectedShort = findShortInGraph(checkGraph);
 
     if (detectedShort) {
-      const closedProtections = doc.elements.filter((elem) => {
+      const closedProtections = allElements.filter((elem) => {
         const def = registry.get(elem.def);
         if (!def) return false;
         const isProtection =
@@ -521,14 +573,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
 
       let protectingDevice: Element | null = null;
       for (const dev of closedProtections) {
-        const testGraph = buildConductivityGraph(
-          doc,
-          allNetworkPoints,
-          elemTermKeys,
-          activeOutputs,
-          elementStates,
-          new Set([dev.id])
-        );
+        const testGraph = buildConductivityGraph(pages, allNetworkPointsByPage, elemTermKeys, activeOutputs, elementStates, new Set([dev.id]), isMultiPage);
         const remainingShort = findShortInGraph(testGraph);
         if (!remainingShort) {
           protectingDevice = dev;
@@ -581,11 +626,11 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
   const MAX_ITERATIONS = 5;
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
     // Re-create conductivity graph for this iteration
-    const stepDsu = buildConductivityGraph(doc, allNetworkPoints, elemTermKeys, activeOutputs, elementStates);
+    const stepDsu = buildConductivityGraph(pages, allNetworkPointsByPage, elemTermKeys, activeOutputs, elementStates, undefined, isMultiPage);
 
     // Inject potentials from sources and active converters
     const netPotentialMap = new Map<string, string>();
-    for (const elem of doc.elements) {
+    for (const elem of allElements) {
       const def = registry.get(elem.def);
       if (!def) continue;
       const terms = elemTermKeys.get(elem.id);
@@ -625,28 +670,34 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     }
 
     // Ensure PE wires get potential 'PE' even without a pwr_pe source
-    for (const wire of doc.wires) {
-      if (wire.kind === 'pe' && wire.pts.length > 0) {
-        const root = stepDsu.find(ptKey(wire.pts[0]));
-        if (!netPotentialMap.has(root)) {
-          netPotentialMap.set(root, 'PE');
+    for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+      const page = pages[pIdx];
+      for (const wire of page.wires) {
+        if (wire.kind === 'pe' && wire.pts.length > 0) {
+          const root = stepDsu.find(getPtKey(wire.pts[0], pIdx));
+          if (!netPotentialMap.has(root)) {
+            netPotentialMap.set(root, 'PE');
+          }
         }
       }
     }
 
     // Read potentials for all terminals & nodes
     netPotentials = {};
-    for (const pt of allNetworkPoints) {
-      const k = ptKey(pt);
-      const root = stepDsu.find(k);
-      const pot = netPotentialMap.get(root);
-      if (pot) netPotentials[k] = pot;
+    for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+      const pts = allNetworkPointsByPage.get(pIdx) || [];
+      for (const pt of pts) {
+        const k = getPtKey(pt, pIdx);
+        const root = stepDsu.find(k);
+        const pot = netPotentialMap.get(root);
+        if (pot) netPotentials[k] = pot;
+      }
     }
 
     // Now evaluate loads and coils
     const newActiveOutputs: Record<string, boolean> = {};
 
-    for (const elem of doc.elements) {
+    for (const elem of allElements) {
       const def = registry.get(elem.def);
       if (!def) continue;
       const terms = elemTermKeys.get(elem.id);
@@ -664,7 +715,10 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
         const energized = isVoltageDifference(potA, potB);
 
         if (beh.mode === 'mono') {
-          if (energized) newActiveOutputs[elem.tag] = true;
+          if (energized) {
+            newActiveOutputs[elem.id] = true;
+            if (elem.tag) newActiveOutputs[elem.tag] = true;
+          }
         } else if (beh.mode === 'ton') {
           const delaySec = Number(elem.props?.delay ?? 3);
           if (energized) {
@@ -924,7 +978,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     }
 
     // Second pass in iteration: evaluate electro-pneumatic actuators (driven by -M solenoid coils and driving -B sensors)
-    for (const elem of doc.elements) {
+    for (const elem of allElements) {
       const def = registry.get(elem.def);
       if (!def || def.behavior.type !== 'pneumatic') continue;
       const beh = def.behavior;
@@ -967,15 +1021,44 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
     activeOutputs = newActiveOutputs;
   }
 
-  // Determine energized wires for visual feedback (highlight live phase/positive wires in red)
+  // Determine energized wires for visual feedback across all pages
   const energizedWires = new Set<string>();
-  for (const wire of doc.wires) {
-    for (const p of wire.pts) {
-      const key = ptKey(p);
-      const pot = netPotentials[key];
-      if (pot && (pot.startsWith('L') || pot === '+24V')) {
-        energizedWires.add(wire.id);
-        break;
+  for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+    const page = pages[pIdx];
+    for (const wire of page.wires) {
+      for (const p of wire.pts) {
+        const key = getPtKey(p, pIdx);
+        const pot = netPotentials[key];
+        if (pot && (pot.startsWith('L') || pot === '+24V' || pot === '+')) {
+          energizedWires.add(wire.id);
+          break;
+        }
+      }
+    }
+  }
+
+  // Populate active page potentials with simple ptKey for renderer compatibility
+  if (isMultiPage) {
+    const activePage = pages[activePageIndex];
+    if (activePage) {
+      for (const wire of activePage.wires) {
+        for (const p of wire.pts) {
+          const fullKey = `p${activePageIndex}:${p.x},${p.y}`;
+          if (netPotentials[fullKey]) {
+            netPotentials[ptKey(p)] = netPotentials[fullKey];
+          }
+        }
+      }
+      for (const elem of activePage.elements) {
+        const def = registry.get(elem.def);
+        if (!def) continue;
+        for (const term of def.terminals) {
+          const world = localToWorld(elem.x, elem.y, term, elem.rot);
+          const fullKey = `p${activePageIndex}:${world.x},${world.y}`;
+          if (netPotentials[fullKey]) {
+            netPotentials[ptKey(world)] = netPotentials[fullKey];
+          }
+        }
       }
     }
   }

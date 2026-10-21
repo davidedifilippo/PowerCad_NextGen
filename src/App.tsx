@@ -13,6 +13,8 @@ import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
 import { registry } from './library/registry';
 import { TextModal, TextConfig } from './ui/TextModal';
 import { CartiglioModal } from './ui/CartiglioModal';
+import { PageBar } from './ui/PageBar';
+import { getDocPages, normalizeDocWithPages } from './utils/pageUtils';
 
 export interface ClipboardContent {
   elements: Element[];
@@ -69,11 +71,12 @@ export const App: React.FC = () => {
   // Update doc with optional history tracking (recordHistory=false during intermediate drag steps)
   const handleDocChange = useCallback(
     (newDoc: Doc, recordHistory: boolean = true) => {
+      const normalized = normalizeDocWithPages(newDoc);
       if (recordHistory) {
         setHistory((prev) => [...prev.slice(-40), doc]);
         setRedoStack([]);
       }
-      setDoc(newDoc);
+      setDoc(normalized);
     },
     [doc]
   );
@@ -301,6 +304,16 @@ export const App: React.FC = () => {
           disabled={simState.running}
         />
 
+        {/* Multi-Page Navigation Bar */}
+        <PageBar
+          doc={doc}
+          onDocChange={(newDoc) => {
+            setSelectedIds(new Set());
+            handleDocChange(newDoc);
+          }}
+          isSimRunning={simState.running}
+        />
+
         {/* Main Workspace Area */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
           {/* Floating Fault Alert (e.g. Unprotected Ground Fault or Short Circuit) */}
@@ -456,21 +469,44 @@ export const App: React.FC = () => {
               size: ${doc.sheet.format} ${doc.sheet.orientation};
               margin: 4mm;
             }
+            .print-page {
+              page-break-after: always;
+              height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
           }
         `}</style>
-        <svg
-          viewBox={`0 0 ${sheetW} ${sheetH}`}
-          width="100%"
-          height="100%"
-          style={{ display: 'block', backgroundColor: '#ffffff' }}
-        >
-          <Renderer
-            doc={doc}
-            simState={createInitialSimState()}
-            selectedId={null}
-            selectedIds={new Set()}
-          />
-        </svg>
+        {getDocPages(doc).map((pageItem, pIdx, arr) => {
+          const pageDoc: Doc = {
+            ...doc,
+            elements: pageItem.elements,
+            wires: pageItem.wires,
+            sheet: {
+              ...doc.sheet,
+              title: pageItem.title || doc.sheet.title,
+              sheetNo: `${pIdx + 1}/${arr.length}`,
+            },
+          };
+          return (
+            <div key={pageItem.id} className="print-page">
+              <svg
+                viewBox={`0 0 ${sheetW} ${sheetH}`}
+                width="100%"
+                height="100%"
+                style={{ display: 'block', backgroundColor: '#ffffff' }}
+              >
+                <Renderer
+                  doc={pageDoc}
+                  simState={createInitialSimState()}
+                  selectedId={null}
+                  selectedIds={new Set()}
+                />
+              </svg>
+            </div>
+          );
+        })}
       </div>
 
       {/* 3. Text Insertion & Configuration Modal */}
