@@ -262,6 +262,80 @@ export const ComponentPalette: React.FC<Props> = ({
                       Testo
                     </span>
                   </div>
+                ) : comp.id === 'plc_arduino_opta' ? (
+                  <svg
+                    width="54"
+                    height="54"
+                    viewBox="0 0 54 54"
+                    style={{ overflow: 'visible' }}
+                  >
+                    {/* Badge bianca con contorno nero */}
+                    <rect
+                      x="1.5"
+                      y="1.5"
+                      width="51"
+                      height="51"
+                      rx="8"
+                      fill="#ffffff"
+                      stroke="#000000"
+                      strokeWidth="2"
+                    />
+
+                    {/* Simbolo Infinito Arduino */}
+                    <path
+                      d="M 27 19 C 23.2 11.2, 10 11.2, 10 19 C 10 26.8, 23.2 26.8, 27 19 C 30.8 11.2, 44 11.2, 44 19 C 44 26.8, 30.8 26.8, 27 19 Z"
+                      fill="none"
+                      stroke="#000000"
+                      strokeWidth="3.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+                    {/* Polo - (Meno nel cerchio sinistro) */}
+                    <line
+                      x1="14"
+                      y1="19"
+                      x2="22"
+                      y2="19"
+                      stroke="#000000"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                    />
+
+                    {/* Polo + (Piu nel cerchio destro) */}
+                    <line
+                      x1="32"
+                      y1="19"
+                      x2="40"
+                      y2="19"
+                      stroke="#000000"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="36"
+                      y1="15"
+                      x2="36"
+                      y2="23"
+                      stroke="#000000"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                    />
+
+                    {/* Scritta OPTA */}
+                    <text
+                      x="27"
+                      y="43"
+                      textAnchor="middle"
+                      fill="#000000"
+                      fontSize="12"
+                      fontWeight="900"
+                      fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                      letterSpacing="2"
+                    >
+                      OPTA
+                    </text>
+                  </svg>
                 ) : (
                   <svg
                     width="60"
