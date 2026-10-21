@@ -13,6 +13,7 @@ import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
 import { registry } from './library/registry';
 import { TextModal, TextConfig } from './ui/TextModal';
 import { CartiglioModal } from './ui/CartiglioModal';
+import { PlcCodeModal } from './ui/PlcCodeModal';
 import { PageBar } from './ui/PageBar';
 import { getDocPages, normalizeDocWithPages } from './utils/pageUtils';
 
@@ -40,6 +41,7 @@ export const App: React.FC = () => {
   const [activeWireTool, setActiveWireTool] = useState<WireKind | null>(null);
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
   const [showCartiglioModal, setShowCartiglioModal] = useState<boolean>(false);
+  const [plcModalElement, setPlcModalElement] = useState<Element | null>(null);
 
   const handleConfirmText = (config: TextConfig) => {
     const textDef = registry.get('text_label');
@@ -80,6 +82,15 @@ export const App: React.FC = () => {
     },
     [doc]
   );
+
+  const handleSavePlcCode = (elementId: string, newStCode: string) => {
+    const updated = doc.elements.map((el) =>
+      el.id === elementId ? { ...el, props: { ...el.props, stCode: newStCode } } : el
+    );
+    handleDocChange({ ...doc, elements: updated });
+    // Also update active modal element reference
+    setPlcModalElement((prev) => (prev && prev.id === elementId ? { ...prev, props: { ...prev.props, stCode: newStCode } } : prev));
+  };
 
   const handleUndo = useCallback(() => {
     if (history.length === 0 || simState.running) return;
@@ -447,6 +458,7 @@ export const App: React.FC = () => {
             pan={pan}
             onPanChange={setPan}
             onEditTitleBlock={() => setShowCartiglioModal(true)}
+            onOpenPlcEditor={(el) => setPlcModalElement(el)}
           />
 
           {/* Right Properties & Settings Panel */}
@@ -457,6 +469,7 @@ export const App: React.FC = () => {
             onDocChange={handleDocChange}
             onDeleteSelected={handleDeleteSelected}
             onCopySelected={handleCopy}
+            onOpenPlcEditor={(el) => setPlcModalElement(el)}
           />
         </div>
       </div>
@@ -522,6 +535,15 @@ export const App: React.FC = () => {
         onClose={() => setShowCartiglioModal(false)}
         sheet={doc.sheet}
         onSave={(newSheet) => handleDocChange({ ...doc, sheet: newSheet })}
+      />
+
+      {/* 5. PLC IEC 61131-3 Structured Text Modal */}
+      <PlcCodeModal
+        isOpen={Boolean(plcModalElement)}
+        onClose={() => setPlcModalElement(null)}
+        element={plcModalElement}
+        simState={simState}
+        onSave={handleSavePlcCode}
       />
     </>
   );

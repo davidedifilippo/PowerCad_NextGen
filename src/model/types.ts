@@ -121,6 +121,16 @@ export type Behavior =
       defaultSensorRetracted?: string;
       defaultSensorExtended?: string;
     }
+  /** Micro-PLC / Programmable Logic Controller (e.g. Arduino Opta) with IEC 61131-3 logic runtime */
+  | {
+      type: 'plc';
+      model: 'opta';
+      vin: string[];
+      gnd: string[];
+      inputs: string[];
+      relays: [string, string][];
+      defaultProgram?: string;
+    }
   | { type: 'none' };
 
 export interface ComponentDef {

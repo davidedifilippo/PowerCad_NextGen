@@ -39,6 +39,7 @@ interface Props {
   pan: Pt;
   onPanChange: (p: Pt) => void;
   onEditTitleBlock?: () => void;
+  onOpenPlcEditor?: (elem: Element) => void;
 }
 
 export const SchematicCanvas: React.FC<Props> = ({
@@ -63,6 +64,7 @@ export const SchematicCanvas: React.FC<Props> = ({
   pan,
   onPanChange,
   onEditTitleBlock,
+  onOpenPlcEditor,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -1404,6 +1406,14 @@ export const SchematicCanvas: React.FC<Props> = ({
     }
   };
 
+  // Double click on element (open PLC ST editor if PLC element)
+  const handleElementDoubleClick = (elem: Element, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (elem.def === 'plc_arduino_opta' || elem.def.startsWith('plc_')) {
+      onOpenPlcEditor?.(elem);
+    }
+  };
+
   // MouseDown on terminal handle -> start drag-to-wire or finish click-to-wire
   const handleTerminalMouseDown = (
     _elem: Element,
@@ -1583,6 +1593,7 @@ export const SchematicCanvas: React.FC<Props> = ({
             selectedIds={selectedIds}
             selectionBox={selectionBox}
             onElementClick={handleElementClick}
+            onElementDoubleClick={handleElementDoubleClick}
             onElementMouseDown={handleElementMouseDown}
             onElementContextMenu={handleElementContextMenu}
             onWireClick={handleWireClick}

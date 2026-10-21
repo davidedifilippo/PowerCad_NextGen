@@ -1,4 +1,5 @@
 import { Doc, Element, Pt, SheetPage } from '../model/types';
+import { PlcMemory, createInitialPlcMemory, runPlcScanCycle } from '../plc/stRuntime';
 import { getDocPages, getActivePageIndex } from '../utils/pageUtils';
 import { registry } from '../library/registry';
 import { localToWorld, ptKey, isPointOnSegment } from '../utils/geometry';
@@ -29,6 +30,7 @@ export interface SimState {
   fault?: SimFault | null;
   /** Notification alert when a protection tripped (e.g. differential breaker / RCD tripped) */
   faultAlert?: SimFault | null;
+  plcMemories?: Record<string, PlcMemory>;
 }
 
 export function createInitialSimState(): SimState {
@@ -43,6 +45,7 @@ export function createInitialSimState(): SimState {
     stepCount: 0,
     fault: null,
     faultAlert: null,
+    plcMemories: {},
   };
 }
 
@@ -112,6 +115,24 @@ function buildConductivityGraph(
       if (!terms) continue;
 
       const beh = def.behavior;
+
+      if (beh.type === 'plc') {
+        // Internal bus bridges for VIN1-VIN2 and GND1-GND2
+        const kVin1 = terms.get('VIN1'), kVin2 = terms.get('VIN2');
+        if (kVin1 && kVin2) dsu.union(kVin1, kVin2);
+        const kGnd1 = terms.get('GND1'), kGnd2 = terms.get('GND2');
+        if (kGnd1 && kGnd2) dsu.union(kGnd1, kGnd2);
+
+        // Relay outputs closed by PLC runtime logic
+        beh.relays.forEach((pair, idx) => {
+          const qKey = elem.id + '_q' + (idx + 1);
+          if (activeOutputs[qKey]) {
+            const k1 = terms.get(pair[0]);
+            const k2 = terms.get(pair[1]);
+            if (k1 && k2) dsu.union(k1, k2);
+          }
+        });
+      }
 
       if (beh.type === 'conductor') {
         if (elementStates[elem.id] === false) continue;
@@ -869,6 +890,63 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
       } else if (beh.type === 'thermal') {
         if ((state.elementStates[elem.id] || state.activeOutputs[elem.tag] || activeOutputs[elem.tag]) && elem.tag) {
           newActiveOutputs[elem.tag] = true;
+        }
+      } else if (beh.type === 'plc') {
+        // Verify 12/24V DC power supply on VIN and GND
+        const vinTerms = beh.vin.map((tid) => terms.get(tid)).filter(Boolean) as string[];
+        const gndTerms = beh.gnd.map((tid) => terms.get(tid)).filter(Boolean) as string[];
+        const vinPots = vinTerms.map((k) => netPotentials[k]).filter(Boolean);
+        const gndPots = gndTerms.map((k) => netPotentials[k]).filter(Boolean);
+
+        let isPowered = false;
+        for (const vp of vinPots) {
+          for (const gp of gndPots) {
+            if (isVoltageDifference(vp, gp)) {
+              isPowered = true;
+              break;
+            }
+          }
+          if (isPowered) break;
+          // Fallback if connected to +24V rail
+          if (vp === '+24V' || vp === '+') {
+            isPowered = true;
+            break;
+          }
+        }
+
+        if (isPowered) {
+          newActiveOutputs[elem.id] = true;
+          newActiveOutputs[elem.id + '_pwr'] = true;
+          newActiveOutputs[elem.id + '_run'] = true;
+          if (elem.tag) newActiveOutputs[elem.tag] = true;
+
+          // Read digital and analog input terminals
+          const inputs: Record<string, boolean | number> = {};
+          beh.inputs.forEach((inId) => {
+            const tk = terms.get(inId);
+            const p = tk ? netPotentials[tk] : undefined;
+            const isHigh = Boolean(p && (p.startsWith('L') || p === '+24V' || p === '+' || p === '1'));
+            inputs[inId] = isHigh;
+            if (isHigh) {
+              newActiveOutputs[elem.id + '_' + inId.toLowerCase()] = true;
+            }
+          });
+
+          // Fetch or initialize PLC memory
+          const curMem = state.plcMemories?.[elem.id] || createInitialPlcMemory();
+          const code = String(elem.props?.stCode || beh.defaultProgram || '');
+          const result = runPlcScanCycle(code, inputs, curMem, dtSec);
+          if (state.plcMemories) {
+            state.plcMemories[elem.id] = result.memory;
+          }
+
+          // Drive relay contacts Q1..Q4 based on PLC outputs
+          beh.relays.forEach((_, idx) => {
+            const qName = 'Q' + (idx + 1);
+            if (result.outputs[qName]) {
+              newActiveOutputs[elem.id + '_q' + (idx + 1)] = true;
+            }
+          });
         }
       } else if (beh.type === 'converter') {
         const inputPots = beh.inputs.map((tid) => {

@@ -11,6 +11,7 @@ interface Props {
   selectedIds?: Set<string>;
   selectionBox?: Box | null;
   onElementClick?: (elem: Element, e: React.MouseEvent) => void;
+  onElementDoubleClick?: (elem: Element, e: React.MouseEvent) => void;
   onElementMouseDown?: (elem: Element, e: React.MouseEvent) => void;
   onElementContextMenu?: (elem: Element, e: React.MouseEvent) => void;
   onWireClick?: (wire: Wire, e: React.MouseEvent) => void;
@@ -55,6 +56,7 @@ export const Renderer: React.FC<Props> = ({
   selectedIds,
   selectionBox,
   onElementClick,
+  onElementDoubleClick,
   onElementMouseDown,
   onElementContextMenu,
   onWireClick,
@@ -249,6 +251,7 @@ export const Renderer: React.FC<Props> = ({
             simState={simState}
             isSelected={isItemSelected(elem.id)}
             onClick={(e) => onElementClick?.(elem, e)}
+            onDoubleClick={(e) => onElementDoubleClick?.(elem, e)}
             onMouseDown={(e) => onElementMouseDown?.(elem, e)}
             onContextMenu={(e) => onElementContextMenu?.(elem, e)}
             onTerminalClick={(termId, pos) => onTerminalClick?.(elem, termId, pos)}
@@ -635,6 +638,7 @@ const ElementItem: React.FC<{
   simState: SimState;
   isSelected: boolean;
   onClick: (e: React.MouseEvent) => void;
+  onDoubleClick?: (e: React.MouseEvent) => void;
   onMouseDown: (e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent) => void;
   onTerminalClick: (termId: string, pos: { x: number; y: number }) => void;
@@ -645,6 +649,7 @@ const ElementItem: React.FC<{
   simState,
   isSelected,
   onClick,
+  onDoubleClick,
   onMouseDown,
   onContextMenu,
   onTerminalClick,
@@ -684,6 +689,7 @@ const ElementItem: React.FC<{
       className={`element-item ${isSelected ? 'selected' : ''}`}
       transform={`translate(${elem.x}, ${elem.y}) rotate(${elem.rot})`}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       onMouseDown={onMouseDown}
       onContextMenu={onContextMenu}
       style={{ cursor: simState.running ? (def.id === 'text_label' ? 'default' : 'pointer') : 'move' }}

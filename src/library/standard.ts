@@ -7715,5 +7715,122 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       },
     ],
   },
-];
+  // ==================== CONTROLLER PLC ====================
+  {
+    id: 'plc_arduino_opta',
+    name: 'Arduino Opta (Micro-PLC 8I / 4O Relè)',
+    category: 'PLC',
+    description:
+      'Micro-PLC industriale Arduino Opta: alimentazione 12/24V DC, 8 ingressi digitali/analogici (I1..I8) e 4 uscite a relè NO isolate (11-14, 21-24, 31-34, 41-44). Programmabile in IEC 61131-3 Structured Text.',
+    tagPrefix: '-PLC',
+    termLabels: true,
+    terminals: [
+      // Ingressi superiori I1..I8 (passo 20px)
+      { id: 'I1', x: -70, y: -70, label: 'I1', desc: 'Ingresso Digitale/Analogico I1' },
+      { id: 'I2', x: -50, y: -70, label: 'I2', desc: 'Ingresso Digitale/Analogico I2' },
+      { id: 'I3', x: -30, y: -70, label: 'I3', desc: 'Ingresso Digitale/Analogico I3' },
+      { id: 'I4', x: -10, y: -70, label: 'I4', desc: 'Ingresso Digitale/Analogico I4' },
+      { id: 'I5', x: 10, y: -70, label: 'I5', desc: 'Ingresso Digitale/Analogico I5' },
+      { id: 'I6', x: 30, y: -70, label: 'I6', desc: 'Ingresso Digitale/Analogico I6' },
+      { id: 'I7', x: 50, y: -70, label: 'I7', desc: 'Ingresso Digitale/Analogico I7' },
+      { id: 'I8', x: 70, y: -70, label: 'I8', desc: 'Ingresso Digitale/Analogico I8' },
 
+      // Alimentazione a sinistra (passo 20px)
+      { id: 'VIN1', x: -100, y: -30, label: '+', desc: 'Alimentazione +12..24V DC' },
+      { id: 'GND1', x: -100, y: -10, label: '-', desc: 'Massa / 0V DC (Riferimento)' },
+      { id: 'VIN2', x: -100, y: 10, label: '+', desc: 'Rilancio Alimentazione +' },
+      { id: 'GND2', x: -100, y: 30, label: '-', desc: 'Rilancio Massa -' },
+
+      // Uscite a relè inferiori (4 relè NO isolati, passo 20px)
+      { id: '11', x: -70, y: 70, label: '11', desc: 'Relè Q1 - Polo 11 (Comune/Ingresso NO)' },
+      { id: '14', x: -50, y: 70, label: '14', desc: 'Relè Q1 - Polo 14 (Uscita NO)' },
+      { id: '21', x: -30, y: 70, label: '21', desc: 'Relè Q2 - Polo 21 (Comune/Ingresso NO)' },
+      { id: '24', x: -10, y: 70, label: '24', desc: 'Relè Q2 - Polo 24 (Uscita NO)' },
+      { id: '31', x: 10, y: 70, label: '31', desc: 'Relè Q3 - Polo 31 (Comune/Ingresso NO)' },
+      { id: '34', x: 30, y: 70, label: '34', desc: 'Relè Q3 - Polo 34 (Uscita NO)' },
+      { id: '41', x: 50, y: 70, label: '41', desc: 'Relè Q4 - Polo 41 (Comune/Ingresso NO)' },
+      { id: '44', x: 70, y: 70, label: '44', desc: 'Relè Q4 - Polo 44 (Uscita NO)' },
+    ],
+    behavior: {
+      type: 'plc',
+      model: 'opta',
+      vin: ['VIN1', 'VIN2'],
+      gnd: ['GND1', 'GND2'],
+      inputs: ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8'],
+      relays: [
+        ['11', '14'],
+        ['21', '24'],
+        ['31', '34'],
+        ['41', '44'],
+      ],
+      defaultProgram: '// Programma Arduino Opta (IEC 61131-3 Structured Text)\n// Avviamento diretto Marcia/Arresto con autoritenuta\nQ1 := (I1 OR Q1) AND NOT I2;\n',
+    },
+    props: [
+      {
+        key: 'stCode',
+        label: 'Programma IEC 61131-3 ST',
+        type: 'text',
+        default: 'Q1 := (I1 OR Q1) AND NOT I2;',
+      },
+    ],
+    symbol: [
+      // Corpo principale Opta (profilo guida DIN industriale)
+      { t: 'rect', x: -90, y: -60, w: 180, h: 120, r: 6, fill: '#1e293b', stroke: '#0f172a' },
+      // Banda blu Finder superiore
+      { t: 'rect', x: -90, y: -60, w: 180, h: 6, fill: '#0284c7' },
+      // Display / Area frontale
+      { t: 'rect', x: -80, y: -38, w: 160, h: 76, r: 4, fill: '#0f172a', stroke: '#334155' },
+
+      // Reofori morsetti superiori (8 ingressi)
+      { t: 'line', x1: -70, y1: -70, x2: -70, y2: -60 },
+      { t: 'line', x1: -50, y1: -70, x2: -50, y2: -60 },
+      { t: 'line', x1: -30, y1: -70, x2: -30, y2: -60 },
+      { t: 'line', x1: -10, y1: -70, x2: -10, y2: -60 },
+      { t: 'line', x1: 10, y1: -70, x2: 10, y2: -60 },
+      { t: 'line', x1: 30, y1: -70, x2: 30, y2: -60 },
+      { t: 'line', x1: 50, y1: -70, x2: 50, y2: -60 },
+      { t: 'line', x1: 70, y1: -70, x2: 70, y2: -60 },
+
+      // Reofori morsetti alimentazione a sinistra
+      { t: 'line', x1: -100, y1: -30, x2: -90, y2: -30 },
+      { t: 'line', x1: -100, y1: -10, x2: -90, y2: -10 },
+      { t: 'line', x1: -100, y1: 10, x2: -90, y2: 10 },
+      { t: 'line', x1: -100, y1: 30, x2: -90, y2: 30 },
+
+      // Reofori morsetti inferiori (4 relè Q1..Q4)
+      { t: 'line', x1: -70, y1: 60, x2: -70, y2: 70 },
+      { t: 'line', x1: -50, y1: 60, x2: -50, y2: 70 },
+      { t: 'line', x1: -30, y1: 60, x2: -30, y2: 70 },
+      { t: 'line', x1: -10, y1: 60, x2: -10, y2: 70 },
+      { t: 'line', x1: 10, y1: 60, x2: 10, y2: 70 },
+      { t: 'line', x1: 30, y1: 60, x2: 30, y2: 70 },
+      { t: 'line', x1: 50, y1: 60, x2: 50, y2: 70 },
+      { t: 'line', x1: 70, y1: 60, x2: 70, y2: 70 },
+
+      // Diciture e Branding Opta / Finder
+      { t: 'text', x: -70, y: -22, text: 'ARDUINO OPTA', fill: '#38bdf8', size: 9, bold: true },
+      { t: 'text', x: 70, y: -22, text: 'FINDER 8A.04', fill: '#94a3b8', size: 7.5, anchor: 'end' },
+      { t: 'text', x: -70, y: -10, text: '12..24V DC', fill: '#64748b', size: 6.5 },
+      { t: 'text', x: 70, y: -10, text: 'IEC 61131-3 ST', fill: '#10b981', size: 7, anchor: 'end', bold: true },
+
+      // LED di stato PWR, RUN
+      { t: 'circle', cx: -70, cy: 5, r: 3.5, fill: '#334155' },
+      { t: 'circle', cx: -70, cy: 5, r: 3.5, fill: '#22c55e', when: 'on' },
+      { t: 'text', x: -70, y: 15, text: 'PWR', size: 5.5, fill: '#94a3b8', anchor: 'middle' },
+
+      { t: 'circle', cx: -50, cy: 5, r: 3.5, fill: '#334155' },
+      { t: 'circle', cx: -50, cy: 5, r: 3.5, fill: '#38bdf8', when: 'on' },
+      { t: 'text', x: -50, y: 15, text: 'RUN', size: 5.5, fill: '#94a3b8', anchor: 'middle' },
+
+      // Dicitura istruzione al click
+      { t: 'text', x: 10, y: 10, text: '[ Doppio Clic: Codice ST ]', fill: '#cbd5e1', size: 7, anchor: 'middle' },
+
+      // Etichette uscite relè Q1..Q4 sul frontale
+      { t: 'text', x: -60, y: 50, text: 'Q1', size: 7.5, fill: '#cbd5e1', anchor: 'middle', bold: true },
+      { t: 'text', x: -20, y: 50, text: 'Q2', size: 7.5, fill: '#cbd5e1', anchor: 'middle', bold: true },
+      { t: 'text', x: 20, y: 50, text: 'Q3', size: 7.5, fill: '#cbd5e1', anchor: 'middle', bold: true },
+      { t: 'text', x: 60, y: 50, text: 'Q4', size: 7.5, fill: '#cbd5e1', anchor: 'middle', bold: true },
+    ],
+  },
+
+];

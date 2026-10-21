@@ -1,7 +1,7 @@
 import React from 'react';
-import { Doc, WireKind } from '../model/types';
+import { Doc, WireKind, Element } from '../model/types';
 import { registry } from '../library/registry';
-import { Trash2, RotateCw, Settings, Info, Layers, Copy, Check, Activity, Type, Bold, Italic, Sparkles } from 'lucide-react';
+import { Trash2, RotateCw, Settings, Info, Layers, Copy, Check, Activity, Type, Bold, Italic, Sparkles, Cpu, Terminal } from 'lucide-react';
 import { WIRE_COLOR_MAP } from './WireToolbar';
 import { PRESET_TEXTS, FONT_SIZES, COLOR_OPTIONS, FRAME_OPTIONS } from './TextModal';
 
@@ -12,6 +12,7 @@ interface Props {
   onDocChange: (doc: Doc) => void;
   onDeleteSelected: () => void;
   onCopySelected?: () => void;
+  onOpenPlcEditor?: (elem: Element) => void;
 }
 
 export const WIRE_TYPE_OPTIONS: {
@@ -40,6 +41,7 @@ export const PropertiesPanel: React.FC<Props> = ({
   onDocChange,
   onDeleteSelected,
   onCopySelected,
+  onOpenPlcEditor,
 }) => {
   if (selectedIds && selectedIds.size > 1) {
     const elemCount = doc.elements.filter((el) => selectedIds.has(el.id)).length;
@@ -597,6 +599,57 @@ export const PropertiesPanel: React.FC<Props> = ({
             </button>
           </div>
         </div>
+
+        {/* PLC ST Code Editor Button */}
+        {def?.behavior?.type === 'plc' && (
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+            <label style={labelStyle}>Logica di Controllo PLC</label>
+            <div
+              style={{
+                backgroundColor: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                borderRadius: 8,
+                padding: 12,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Cpu size={16} color="#0284c7" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#0369a1' }}>
+                  IEC 61131-3 Structured Text
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: '#0369a1', lineHeight: '15px' }}>
+                Programma logico che elabora gli ingressi I1..I8 e pilota le uscite relè Q1..Q4.
+              </div>
+              <button
+                type="button"
+                onClick={() => onOpenPlcEditor?.(elem)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  border: 'none',
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(2, 132, 199, 0.3)',
+                  transition: 'background-color 0.15s ease',
+                }}
+              >
+                <Terminal size={14} />
+                <span>Modifica Programma ST...</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Properties */}
         {def?.props && def.props.length > 0 && (
