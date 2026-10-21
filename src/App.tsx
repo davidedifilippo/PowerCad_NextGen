@@ -16,6 +16,7 @@ import { CartiglioModal } from './ui/CartiglioModal';
 import { PlcCodeModal } from './ui/PlcCodeModal';
 import { SaveDialogModal } from './ui/SaveDialogModal';
 import { RecentProjectsModal } from './ui/RecentProjectsModal';
+import { AiCopilotDrawer } from './ui/AiCopilotDrawer';
 import { PageBar } from './ui/PageBar';
 import { getDocPages, normalizeDocWithPages } from './utils/pageUtils';
 import { saveDocToHandle, FileSaveResult } from './utils/fileSystemUtils';
@@ -48,6 +49,7 @@ export const App: React.FC = () => {
   const [plcModalElement, setPlcModalElement] = useState<Element | null>(null);
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
   const [showRecentsModal, setShowRecentsModal] = useState<boolean>(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState<boolean>(false);
   const [currentFileHandle, setCurrentFileHandle] = useState<FileSystemFileHandle | null>(null);
   const [currentFileName, setCurrentFileName] = useState<string | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -338,6 +340,8 @@ export const App: React.FC = () => {
           onSave={handleQuickSave}
           onSaveAs={() => setShowSaveModal(true)}
           onOpenRecents={() => setShowRecentsModal(true)}
+          onToggleCopilot={() => setIsCopilotOpen((prev) => !prev)}
+          isCopilotOpen={isCopilotOpen}
           currentFileName={currentFileName}
           zoom={zoom}
           onZoomIn={handleZoomIn}
@@ -621,6 +625,15 @@ export const App: React.FC = () => {
         isOpen={showRecentsModal}
         onClose={() => setShowRecentsModal(false)}
         onOpenProject={handleOpenRecent}
+      />
+
+      {/* 8. AI Copilot Drawer */}
+      <AiCopilotDrawer
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+        doc={doc}
+        onDocChange={handleDocChange}
+        simState={simState}
       />
 
       {/* Floating Save / Action Toast Notification */}

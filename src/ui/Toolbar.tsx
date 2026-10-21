@@ -20,6 +20,7 @@ import {
   Edit3,
   FolderInput,
   Clock,
+  Sparkles,
 } from 'lucide-react';
 import { parseCadeSimu } from '../utils/cadImporter';
 import { addRecentProject } from '../utils/recentProjects';
@@ -40,6 +41,8 @@ interface Props {
   onSave?: () => void;
   onSaveAs?: () => void;
   onOpenRecents?: () => void;
+  onToggleCopilot?: () => void;
+  isCopilotOpen?: boolean;
   currentFileName?: string;
   zoom: number;
   onZoomIn: () => void;
@@ -63,6 +66,8 @@ export const Toolbar: React.FC<Props> = ({
   onSave,
   onSaveAs,
   onOpenRecents,
+  onToggleCopilot,
+  isCopilotOpen,
   currentFileName,
   zoom,
   onZoomIn,
@@ -390,6 +395,32 @@ export const Toolbar: React.FC<Props> = ({
           >
             <Type size={15} />
             <span>Testo</span>
+          </button>
+        </div>
+      )}
+
+      {/* AI Copilot Button */}
+      {onToggleCopilot && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            title="Apri Assistente AI Copilot"
+            style={{
+              ...btnStyle,
+              background: isCopilotOpen
+                ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)'
+                : '#1e293b',
+              color: '#ffffff',
+              border: isCopilotOpen ? '1px solid #a78bfa' : '1px solid #475569',
+              fontWeight: 600,
+              padding: '6px 12px',
+              gap: 6,
+              boxShadow: isCopilotOpen ? '0 0 10px rgba(139, 92, 246, 0.45)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+            onClick={onToggleCopilot}
+          >
+            <Sparkles size={15} color={isCopilotOpen ? '#fde047' : '#a78bfa'} />
+            <span>Copilot AI</span>
           </button>
         </div>
       )}
