@@ -1703,8 +1703,102 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: -40, y1: -11, x2: -33, y2: -11, dash: true },
     ],
   },
-
-  // ==================== SCARICATORI DI SOVRATENSIONE (SPD) ====================
+  {
+    id: 'breaker_undervoltage_2p',
+    name: 'Interruttore 2P con Sganciatore di Minima Tensione',
+    category: 'Protezioni',
+    description: 'Interruttore bipolare associato meccanicamente a sganciatore/bobina di minima tensione (morsetti 1-3 / 2-4).',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -30, label: '1' },
+      { id: '3', x: 10, y: -30, label: '3' },
+      { id: '2', x: -10, y: 30, label: '2' },
+      { id: '4', x: 10, y: 30, label: '4' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-10)
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: -4, transform: 'rotate(-22 -10 14)', when: 'off' },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: -16, when: 'on' },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 30 },
+      // Pole 2: (10)
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: -4, transform: 'rotate(-22 10 14)', when: 'off' },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: -16, when: 'on' },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 30 },
+      // Mechanical link between poles
+      { t: 'line', x1: -10, y1: 0, x2: 10, y2: 0, dash: true },
+      // Undervoltage actuator flag on the left
+      { t: 'line', x1: -10, y1: 0, x2: -24, y2: 0, dash: true },
+      { t: 'path', d: 'M -24 -6 L -30 0 L -24 6 Z', fill: '#0f172a' },
+      // Coupling extension to the right toward coil block U
+      { t: 'line', x1: 10, y1: 0, x2: 30, y2: 0, dash: true },
+    ],
+  },
+  {
+    id: 'breaker_undervoltage_4p',
+    name: 'Interruttore 4P con Sganciatore di Minima Tensione',
+    category: 'Protezioni',
+    description: 'Interruttore tetrapolare (3P+N) con sganciatore/bobina di minima tensione (morsetti 1-3-5-7 / 2-4-6-8).',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -30, y: -30, label: '1' },
+      { id: '3', x: -10, y: -30, label: '3' },
+      { id: '5', x: 10, y: -30, label: '5' },
+      { id: '7', x: 30, y: -30, label: '7' },
+      { id: '2', x: -30, y: 30, label: '2' },
+      { id: '4', x: -10, y: 30, label: '4' },
+      { id: '6', x: 10, y: 30, label: '6' },
+      { id: '8', x: 30, y: 30, label: '8' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      no: [
+        ['1', '2'],
+        ['3', '4'],
+        ['5', '6'],
+        ['7', '8'],
+      ],
+    },
+    symbol: [
+      // Pole 1: (-30) L1
+      { t: 'line', x1: -30, y1: -30, x2: -30, y2: -16 },
+      { t: 'line', x1: -30, y1: 14, x2: -30, y2: -4, transform: 'rotate(-22 -30 14)', when: 'off' },
+      { t: 'line', x1: -30, y1: 14, x2: -30, y2: -16, when: 'on' },
+      { t: 'line', x1: -30, y1: 14, x2: -30, y2: 30 },
+      // Pole 2: (-10) L2
+      { t: 'line', x1: -10, y1: -30, x2: -10, y2: -16 },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: -4, transform: 'rotate(-22 -10 14)', when: 'off' },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: -16, when: 'on' },
+      { t: 'line', x1: -10, y1: 14, x2: -10, y2: 30 },
+      // Pole 3: (10) L3
+      { t: 'line', x1: 10, y1: -30, x2: 10, y2: -16 },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: -4, transform: 'rotate(-22 10 14)', when: 'off' },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: -16, when: 'on' },
+      { t: 'line', x1: 10, y1: 14, x2: 10, y2: 30 },
+      // Pole 4: (30) N
+      { t: 'line', x1: 30, y1: -30, x2: 30, y2: -16 },
+      { t: 'line', x1: 30, y1: 14, x2: 30, y2: -4, transform: 'rotate(-22 30 14)', when: 'off' },
+      { t: 'line', x1: 30, y1: 14, x2: 30, y2: -16, when: 'on' },
+      { t: 'line', x1: 30, y1: 14, x2: 30, y2: 30 },
+      // Mechanical link between poles
+      { t: 'line', x1: -30, y1: 0, x2: 30, y2: 0, dash: true },
+      // Undervoltage actuator flag on the left
+      { t: 'line', x1: -30, y1: 0, x2: -44, y2: 0, dash: true },
+      { t: 'path', d: 'M -44 -6 L -50 0 L -44 6 Z', fill: '#0f172a' },
+      // Coupling extension to the right toward coil block U
+      { t: 'line', x1: 30, y1: 0, x2: 50, y2: 0, dash: true },
+    ],
+  },
   {
     id: 'spd_surge_arrester_2p',
     name: 'Scaricatore di Sovratensione SPD 2P',
@@ -4056,6 +4150,71 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
   },
 
   // ==================== BOBINE & SEGNALI ====================
+  // --- Gruppo 0: Sganciatori e Relè di Minima Tensione (U) ---
+  {
+    id: 'coil_undervoltage_1p',
+    name: 'Sganciatore di Minima Tensione (U) Monofase',
+    category: 'Bobine e Segnali',
+    description: 'Bobina / sganciatore di minima tensione per circuiti monofase (morsetti D1-D2). Se diseccitata, sgancia l\'interruttore associato.',
+    tagPrefix: '-F',
+    terminals: [
+      { id: 'D1', x: 0, y: -20, label: 'D1' },
+      { id: 'D2', x: 0, y: 20, label: 'D2' },
+    ],
+    behavior: { type: 'coil', a: 'D1', b: 'D2', mode: 'mono' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      // Enclosure box (24x24)
+      { t: 'rect', x: -12, y: -12, w: 24, h: 24, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -12, y: -12, w: 24, h: 24, fill: '#fed7aa', when: 'on' },
+      // "U" label inside
+      { t: 'text', x: 0, y: 4, text: 'U', size: 12, bold: true, anchor: 'middle' },
+      // Coupling dashed line to the left
+      { t: 'line', x1: -12, y1: 0, x2: -30, y2: 0, dash: true },
+    ],
+  },
+  {
+    id: 'coil_undervoltage_3p',
+    name: 'Relè Controllo Minima Tensione / Mancanza Fase (U) Trifase',
+    category: 'Bobine e Segnali',
+    description: 'Relè di controllo per sistema trifase (3x A1 e 3x A2/N). Se manca una fase o tensione insufficiente, sgancia l\'interruttore associato.',
+    tagPrefix: '-F',
+    terminals: [
+      { id: 'A1_1', x: -20, y: -20, label: 'A1' },
+      { id: 'A1_2', x: 0, y: -20, label: 'A1' },
+      { id: 'A1_3', x: 20, y: -20, label: 'A1' },
+      { id: 'A2_1', x: -20, y: 20, label: 'A2' },
+      { id: 'A2_2', x: 0, y: 20, label: 'A2' },
+      { id: 'A2_3', x: 20, y: 20, label: 'A2' },
+    ],
+    behavior: {
+      type: 'contact',
+      actuation: 'linked',
+      phaseLoss: { l1: 'A1_1', l2: 'A1_2', l3: 'A1_3', n: 'A2_1' },
+      nc: [
+        ['A2_1', 'A2_2'],
+        ['A2_2', 'A2_3'],
+      ],
+    },
+    symbol: [
+      // Top leads
+      { t: 'line', x1: -20, y1: -20, x2: -20, y2: -12 },
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -12 },
+      { t: 'line', x1: 20, y1: -20, x2: 20, y2: -12 },
+      // Bottom leads
+      { t: 'line', x1: -20, y1: 12, x2: -20, y2: 20 },
+      { t: 'line', x1: 0, y1: 12, x2: 0, y2: 20 },
+      { t: 'line', x1: 20, y1: 12, x2: 20, y2: 20 },
+      // Enclosure box
+      { t: 'rect', x: -28, y: -12, w: 56, h: 24, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -28, y: -12, w: 56, h: 24, fill: '#fed7aa', when: 'on' },
+      // "U" label inside
+      { t: 'text', x: 0, y: 5, text: 'U', size: 14, bold: true, anchor: 'middle' },
+      // Coupling dashed line to the left
+      { t: 'line', x1: -28, y1: 0, x2: -50, y2: 0, dash: true },
+    ],
+  },
   // --- Gruppo 1: Bobine Contattori, Relè ed Elettrovalvola ---
   {
     id: 'coil_standard',

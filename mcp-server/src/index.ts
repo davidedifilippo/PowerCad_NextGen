@@ -355,6 +355,36 @@ const TOOLS: Tool[] = [
       required: ['filePath', 'docJson'],
     },
   },
+  {
+    name: 'cad_set_document',
+    description:
+      'Imposta l\'intero documento di progetto CAD (inclusi fogli multipli / pagine, componenti e collegamenti) sulla canvas in un\'unica operazione e resetta l\'handle del file per evitare sovrascritture accidentali.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        doc: {
+          type: 'object',
+          description: 'Oggetto Doc completo conforme alla specifica di CADe_SIMU Next.',
+        },
+      },
+      required: ['doc'],
+    },
+  },
+  {
+    name: 'cad_switch_page',
+    description:
+      'Commuta la visualizzazione corrente del foglio da disegno alla pagina specificata dall\'indice (0-based).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        pageIndex: {
+          type: 'number',
+          description: 'Indice della pagina da visualizzare (0 per la prima, 1 per la seconda, ecc.).',
+        },
+      },
+      required: ['pageIndex'],
+    },
+  },
 ];
 
 // Handle ListTools
@@ -486,6 +516,32 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (req) => {
             {
               type: 'text',
               text: `Schema salvato con successo in: ${absPath}`,
+            },
+          ],
+        };
+      }
+
+      case 'cad_set_document': {
+        const doc = args?.doc as any;
+        const result = await sendBrowserRpc('set_document', { doc });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'cad_switch_page': {
+        const pageIndex = (args?.pageIndex as number) ?? 0;
+        const result = await sendBrowserRpc('switch_page', { pageIndex });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
             },
           ],
         };

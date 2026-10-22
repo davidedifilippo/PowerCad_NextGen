@@ -3,6 +3,7 @@ import { Doc } from '../model/types';
 import { SimState } from '../engine/simulation';
 import { getCircuitSummary, executeCadActions, validateDRC, CadAction } from '../ai/cadCommands';
 import { registry } from '../library/registry';
+import { switchPage } from '../utils/pageUtils';
 
 interface McpBridgeProps {
   doc: Doc;
@@ -345,6 +346,44 @@ export function useMcpBridge({
                 }));
 
                 ws.send(JSON.stringify({ id: req.id, result: { catalog, count: catalog.length } }));
+                break;
+              }
+
+              case 'set_document': {
+                const newDoc = req.params?.doc;
+                if (!newDoc) {
+                  ws.send(JSON.stringify({ id: req.id, error: 'Parametro "doc" mancante.' }));
+                  break;
+                }
+                current.onDocChange(newDoc);
+                current.onResetFileHandle?.();
+                ws.send(
+                  JSON.stringify({
+                    id: req.id,
+                    result: {
+                      success: true,
+                      pagesCount: newDoc.pages?.length || 1,
+                      elementsCount: newDoc.elements?.length || 0,
+                      wiresCount: newDoc.wires?.length || 0,
+                    },
+                  })
+                );
+                break;
+              }
+
+              case 'switch_page': {
+                const targetIndex = req.params?.pageIndex ?? 0;
+                const switched = switchPage(current.doc, targetIndex);
+                current.onDocChange(switched);
+                ws.send(
+                  JSON.stringify({
+                    id: req.id,
+                    result: {
+                      success: true,
+                      activePageIndex: targetIndex,
+                    },
+                  })
+                );
                 break;
               }
 
