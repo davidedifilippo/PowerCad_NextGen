@@ -105,7 +105,7 @@ export const CAD_TOOL_DEFINITIONS = [
               x: { type: 'number', description: 'Coordinata X (multiplo di 10)' },
               y: { type: 'number', description: 'Coordinata Y (multiplo di 10)' },
               tag: { type: 'string', description: 'Sigla componente (es. -KM1, -Q1)' },
-              rot: { type: 'number', enum: [0, 90, 180, 270], description: 'Rotazione' },
+              rot: { type: 'number', description: 'Rotazione in gradi (0, 90, 180, 270)' },
               id: { type: 'string', description: 'ID o tag per rimozione' },
               from: { type: 'string', description: 'Morsetto sorgente es. "-KM1:A1"' },
               to: { type: 'string', description: 'Morsetto destinazione es. "-SB1:14"' },
@@ -173,6 +173,48 @@ export const CAD_TOOL_DEFINITIONS = [
 ];
 
 /**
+ * Recursively converts any standard JSON Schema to a strict Gemini OpenAPI schema
+ */
+export function toGeminiSchema(schema: any): any {
+  if (!schema || typeof schema !== 'object') return schema;
+
+  const res: any = {};
+  if (schema.type) {
+    const rawType = String(schema.type).toUpperCase();
+    res.type = rawType === 'INTEGER' ? 'NUMBER' : rawType;
+  }
+  if (schema.description) {
+    res.description = schema.description;
+  }
+
+  // Google Gemini API strictly requires that 'enum' is only defined on STRING types
+  if (Array.isArray(schema.enum)) {
+    if (res.type === 'STRING') {
+      res.enum = schema.enum.map((v: any) => String(v));
+    } else {
+      res.description = (res.description ? res.description + ' ' : '') + `(Ammessi: ${schema.enum.join(', ')})`;
+    }
+  }
+
+  if (schema.properties && typeof schema.properties === 'object') {
+    res.properties = {};
+    for (const [k, v] of Object.entries(schema.properties)) {
+      res.properties[k] = toGeminiSchema(v);
+    }
+  }
+
+  if (Array.isArray(schema.required)) {
+    res.required = schema.required;
+  }
+
+  if (schema.items) {
+    res.items = toGeminiSchema(schema.items);
+  }
+
+  return res;
+}
+
+/**
  * Formats tool definitions for Google Gemini API (functionDeclarations)
  */
 export function getGeminiToolsDeclaration() {
@@ -181,21 +223,7 @@ export function getGeminiToolsDeclaration() {
       functionDeclarations: CAD_TOOL_DEFINITIONS.map((t) => ({
         name: t.name,
         description: t.description,
-        parameters: {
-          type: 'OBJECT',
-          properties: Object.fromEntries(
-            Object.entries(t.parameters.properties).map(([k, v]: [string, any]) => [
-              k,
-              {
-                type: v.type.toUpperCase(),
-                description: v.description,
-                ...(v.enum ? { enum: v.enum } : {}),
-                ...(v.items ? { items: v.items } : {}),
-              },
-            ])
-          ),
-          required: t.parameters.required || [],
-        },
+        parameters: toGeminiSchema(t.parameters),
       })),
     },
   ];

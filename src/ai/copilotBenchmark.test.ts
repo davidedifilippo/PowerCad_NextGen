@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { SAMPLE_DIRECT_START } from '../samples/directStart';
-import { CadExecutionContext, dispatchCadTool, CAD_TOOL_DEFINITIONS } from './cadToolDispatcher';
+import { CadExecutionContext, dispatchCadTool, CAD_TOOL_DEFINITIONS, getGeminiToolsDeclaration } from './cadToolDispatcher';
 import { extractFallbackToolCall, sendAiPrompt, AiConfig } from './aiService';
 import { createInitialSimState, SimState } from '../engine/simulation';
 
@@ -15,6 +15,36 @@ describe('CAD Tool Dispatcher & Copilot Tool Parity', () => {
     expect(toolNames).toContain('cad_get_library');
     expect(toolNames).toContain('cad_switch_page');
     expect(toolNames).toContain('cad_get_status');
+  });
+
+  it('genera dichiarazioni tool per Gemini conformi alle specifiche API (nessun enum numerico e tipi maiuscoli)', () => {
+    const geminiDecl = getGeminiToolsDeclaration();
+    expect(geminiDecl[0].functionDeclarations.length).toBe(8);
+
+    function checkSchema(s: any) {
+      if (!s || typeof s !== 'object') return;
+      if (s.type) {
+        expect(s.type).toBe(s.type.toUpperCase());
+      }
+      if (s.enum) {
+        expect(s.type).toBe('STRING');
+        for (const item of s.enum) {
+          expect(typeof item).toBe('string');
+        }
+      }
+      if (s.properties) {
+        for (const v of Object.values(s.properties)) {
+          checkSchema(v);
+        }
+      }
+      if (s.items) {
+        checkSchema(s.items);
+      }
+    }
+
+    for (const fn of geminiDecl[0].functionDeclarations) {
+      checkSchema(fn.parameters);
+    }
   });
 
   it('esegue cad_control_simulation per avviare e arrestare la simulazione', async () => {
