@@ -27,6 +27,9 @@ lerna-debug.log*
 *.sln
 *.sw?
 
+# Scratch & temporary test scripts
+scratch/
+
 # Environment variables
 .env
 .env.local
