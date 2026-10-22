@@ -38,6 +38,7 @@ interface Props {
   onPrint: () => void;
   onOpenTextModal?: () => void;
   onOpenCartiglioModal?: () => void;
+  onNewProject?: () => void;
   onSave?: () => void;
   onSaveAs?: () => void;
   onOpenRecents?: () => void;
@@ -64,6 +65,7 @@ export const Toolbar: React.FC<Props> = ({
   onPrint,
   onOpenTextModal,
   onOpenCartiglioModal,
+  onNewProject,
   onSave,
   onSaveAs,
   onOpenRecents,
@@ -236,13 +238,17 @@ export const Toolbar: React.FC<Props> = ({
             style={btnStyle}
             onClick={() => {
               if (confirm('Vuoi creare un nuovo schema vuoto?')) {
-                onDocChange({
-                  app: 'powercad-nextgen',
-                  version: 1,
-                  sheet: { ...doc.sheet, title: 'Nuovo Schema' },
-                  elements: [],
-                  wires: [],
-                });
+                if (onNewProject) {
+                  onNewProject();
+                } else {
+                  onDocChange({
+                    app: 'powercad-nextgen',
+                    version: 1,
+                    sheet: { ...doc.sheet, title: 'Nuovo Schema' },
+                    elements: [],
+                    wires: [],
+                  });
+                }
               }
             }}
           >

@@ -140,6 +140,28 @@ export const App: React.FC = () => {
     showToast(`Caricato progetto: "${fileName}"`);
   };
 
+  const handleNewProject = useCallback(() => {
+    setCurrentFileHandle(null);
+    setCurrentFileName(undefined);
+    handleDocChange({
+      app: 'powercad-nextgen',
+      version: 1,
+      sheet: {
+        format: 'A4',
+        orientation: 'landscape',
+        project: 'Nuovo Progetto',
+        title: 'Nuovo Schema',
+        author: '',
+        date: new Date().toISOString().split('T')[0],
+        revision: '1.0',
+        sheetNo: '1',
+      },
+      elements: [],
+      wires: [],
+    });
+    showToast('Nuovo progetto creato (premi Salva per scegliere dove salvarlo).');
+  }, [handleDocChange, showToast]);
+
   // Global keyboard shortcut for Ctrl+S / Cmd+S
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -203,6 +225,10 @@ export const App: React.FC = () => {
     onStartSim: handleStartSim,
     onStopSim: handleStopSim,
     currentFileName,
+    onResetFileHandle: () => {
+      setCurrentFileHandle(null);
+      setCurrentFileName(undefined);
+    },
   });
 
   const handleDeleteSelected = useCallback(() => {
@@ -349,6 +375,7 @@ export const App: React.FC = () => {
           onPrint={handlePrint}
           onOpenTextModal={() => setShowTextModal(true)}
           onOpenCartiglioModal={() => setShowCartiglioModal(true)}
+          onNewProject={handleNewProject}
           onSave={handleQuickSave}
           onSaveAs={() => setShowSaveModal(true)}
           onOpenRecents={() => setShowRecentsModal(true)}

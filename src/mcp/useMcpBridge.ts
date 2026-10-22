@@ -12,6 +12,7 @@ interface McpBridgeProps {
   onStartSim: () => void;
   onStopSim: () => void;
   currentFileName?: string;
+  onResetFileHandle?: () => void;
   wsUrl?: string;
 }
 
@@ -23,6 +24,7 @@ export function useMcpBridge({
   onStartSim,
   onStopSim,
   currentFileName,
+  onResetFileHandle,
   wsUrl = 'ws://localhost:4321',
 }: McpBridgeProps) {
   const [isMcpConnected, setIsMcpConnected] = useState<boolean>(false);
@@ -37,6 +39,7 @@ export function useMcpBridge({
     onStartSim,
     onStopSim,
     currentFileName,
+    onResetFileHandle,
   });
 
   useEffect(() => {
@@ -48,8 +51,9 @@ export function useMcpBridge({
       onStartSim,
       onStopSim,
       currentFileName,
+      onResetFileHandle,
     };
-  }, [doc, onDocChange, simState, onSimStateChange, onStartSim, onStopSim, currentFileName]);
+  }, [doc, onDocChange, simState, onSimStateChange, onStartSim, onStopSim, currentFileName, onResetFileHandle]);
 
   // Broadcast status to MCP server on state change
   useEffect(() => {
@@ -130,6 +134,9 @@ export function useMcpBridge({
                 const actions: CadAction[] = req.params?.actions || [];
                 const res = executeCadActions(current.doc, actions);
                 current.onDocChange(res.doc);
+                if (actions.some((a) => (a as any).action === 'clear_sheet' || (a as any).type === 'clear_sheet')) {
+                  current.onResetFileHandle?.();
+                }
                 ws.send(
                   JSON.stringify({
                     id: req.id,
