@@ -2682,8 +2682,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     behavior: {
       type: 'contact',
       actuation: 'latching',
-      defaultOn: false,
-      no: [['1', '3']],
+      defaultPos: 0,
+      selectorPositions: [
+        [],            // pos 0: zero aperto (nessun contatto)
+        [['1', '2']],  // pos 1: Posizione I (connette 1 con 2)
+        [['1', '3']],  // pos 2: Posizione II (connette 1 con 3)
+      ],
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
@@ -2691,12 +2695,15 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: -10, y1: 8, x2: -5, y2: 8 },
       { t: 'line', x1: 10, y1: 20, x2: 10, y2: 8 },
       { t: 'line', x1: 10, y1: 8, x2: 5, y2: 8 },
-      // Center open when off, closed to 3 when on
-      { t: 'line', x1: 0, y1: -8, x2: 0, y2: 8, when: 'off' },
-      { t: 'line', x1: 0, y1: -8, x2: 5, y2: 8, when: 'on' },
+      // Pivot to contacts for each position
+      { t: 'line', x1: 0, y1: -8, x2: 0, y2: 8, when: 'pos_0' },
+      { t: 'line', x1: -15, y1: 0, x2: 0, y2: 0, dash: true, when: 'pos_0' },
+      { t: 'line', x1: 0, y1: -8, x2: -5, y2: 8, when: 'pos_1' },
+      { t: 'line', x1: -15, y1: 0, x2: -2.5, y2: 0, dash: true, when: 'pos_1' },
+      { t: 'line', x1: 0, y1: -8, x2: 5, y2: 8, when: 'pos_2' },
+      { t: 'line', x1: -15, y1: 0, x2: 2.5, y2: 0, dash: true, when: 'pos_2' },
       { t: 'text', x: -14, y: -10, text: 'I-0-II', size: 7, anchor: 'middle' },
       { t: 'path', d: 'M -18 3 L -15 3 L -15 -3 L -12 -3' },
-      { t: 'line', x1: -15, y1: 0, x2: 0, y2: 0, dash: true },
     ],
   },
   {
@@ -2714,9 +2721,12 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     behavior: {
       type: 'contact',
       actuation: 'latching',
-      defaultOn: false,
-      nc: [['1', '2']],
-      no: [['1', '3']],
+      defaultPos: 0,
+      selectorPositions: [
+        [['1', '2']],  // pos 0: Posizione I (connette 1 con 2)
+        [['1', '3']],  // pos 1: Posizione II (connette 1 con 3)
+        [['1', '4']],  // pos 2: Posizione III (connette 1 con 4)
+      ],
     },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -8 },
@@ -2726,12 +2736,15 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
       { t: 'line', x1: -3, y1: 8, x2: 3, y2: 8 },
       { t: 'line', x1: 20, y1: 20, x2: 20, y2: 8 },
       { t: 'line', x1: 14, y1: 8, x2: 20, y2: 8 },
-      { t: 'line', x1: 0, y1: -8, x2: -14, y2: 8, when: 'off' },
-      { t: 'line', x1: 0, y1: -8, x2: 0, y2: 8, when: 'on' },
+      // Pivot to contacts for each position
+      { t: 'line', x1: 0, y1: -8, x2: -14, y2: 8, when: 'pos_0' },
+      { t: 'line', x1: -19, y1: 0, x2: -7, y2: 0, dash: true, when: 'pos_0' },
+      { t: 'line', x1: 0, y1: -8, x2: 0, y2: 8, when: 'pos_1' },
+      { t: 'line', x1: -19, y1: 0, x2: 0, y2: 0, dash: true, when: 'pos_1' },
+      { t: 'line', x1: 0, y1: -8, x2: 14, y2: 8, when: 'pos_2' },
+      { t: 'line', x1: -19, y1: 0, x2: 7, y2: 0, dash: true, when: 'pos_2' },
       { t: 'text', x: -16, y: -10, text: 'I-II-III', size: 7, anchor: 'middle' },
       { t: 'path', d: 'M -22 3 L -19 3 L -19 -3 L -16 -3' },
-      { t: 'line', x1: -19, y1: 0, x2: -7, y2: 0, dash: true, when: 'off' },
-      { t: 'line', x1: -19, y1: 0, x2: 0, y2: 0, dash: true, when: 'on' },
     ],
   },
   {

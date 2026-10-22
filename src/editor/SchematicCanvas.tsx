@@ -1364,6 +1364,24 @@ export const SchematicCanvas: React.FC<Props> = ({
             }));
           }, 400);
         } else if (def.behavior.actuation === 'latching') {
+          if (def.behavior.selectorPositions && def.behavior.selectorPositions.length > 0) {
+            const numPositions = def.behavior.selectorPositions.length;
+            onSimStateChange((prev) => {
+              const raw = prev.elementStates[elem.id];
+              const currentPos =
+                typeof raw === 'number'
+                  ? raw
+                  : typeof raw === 'boolean'
+                  ? (raw ? 1 : 0)
+                  : (def.behavior.type === 'contact' ? (def.behavior.defaultPos ?? 0) : 0);
+              const nextPos = (currentPos + 1) % numPositions;
+              return {
+                ...prev,
+                elementStates: { ...prev.elementStates, [elem.id]: nextPos },
+              };
+            });
+            return;
+          }
           const defaultState = def.behavior.defaultOn ?? false;
           onSimStateChange((prev) => {
             const current = prev.elementStates[elem.id] ?? defaultState;

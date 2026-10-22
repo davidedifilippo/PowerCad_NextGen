@@ -666,10 +666,25 @@ const ElementItem: React.FC<{
     def.behavior.type === 'contact' && def.behavior.actuation === 'latching'
       ? def.behavior.defaultOn ?? false
       : false;
-  const isInteractivePressed = simState.elementStates[elem.id] ?? defaultState;
-  const isOutputActive = simState.activeOutputs[elem.id] || simState.activeOutputs[elem.tag] || false;
+  const isInteractivePressed = Boolean(simState.elementStates[elem.id] ?? defaultState);
+  const isOutputActive = Boolean(simState.activeOutputs[elem.id] || simState.activeOutputs[elem.tag]);
   const isActive = isInteractivePressed || isOutputActive;
   const isThermalTripped = def.behavior.type === 'thermal' && isActive;
+
+  // Selector position for multi-position switches
+  const defaultPos =
+    def.behavior.type === 'contact' && def.behavior.selectorPositions
+      ? (def.behavior.defaultPos ?? 0)
+      : undefined;
+  const rawState = simState.elementStates[elem.id];
+  const selectorPos =
+    def.behavior.type === 'contact' && def.behavior.selectorPositions
+      ? (typeof rawState === 'number'
+          ? rawState
+          : typeof rawState === 'boolean'
+          ? (rawState ? 1 : 0)
+          : (defaultPos ?? 0))
+      : undefined;
 
   // Color resolution for pilot lamp
   let customGlowColor: string | undefined;
@@ -749,6 +764,7 @@ const ElementItem: React.FC<{
           key={idx}
           prim={prim}
           isActive={isActive}
+          selectorPos={selectorPos}
           isThermalTripped={isThermalTripped}
           stepCount={simState.stepCount}
           isRunning={simState.running}
@@ -955,6 +971,7 @@ export function getTagPosition(def: ComponentDef): { x: number; y: number; textA
 const PrimitiveItem: React.FC<{
   prim: Prim;
   isActive: boolean;
+  selectorPos?: number;
   isThermalTripped?: boolean;
   stepCount: number;
   isRunning: boolean;
@@ -962,9 +979,18 @@ const PrimitiveItem: React.FC<{
   customGlowColor?: string;
   elemProps?: Record<string, string | number>;
   defProps?: PropDef[];
-}> = ({ prim, isActive, isThermalTripped, stepCount, isRunning, isRev, customGlowColor, elemProps, defProps }) => {
-  if (prim.when === 'on' && !isActive) return null;
-  if (prim.when === 'off' && isActive) return null;
+}> = ({ prim, isActive, selectorPos, isThermalTripped, stepCount, isRunning, isRev, customGlowColor, elemProps, defProps }) => {
+  if (prim.when) {
+    if (prim.when.startsWith('pos_')) {
+      const targetPos = parseInt(prim.when.slice(4), 10);
+      const curPos = selectorPos ?? 0;
+      if (curPos !== targetPos) return null;
+    } else if (prim.when === 'on' && !isActive) {
+      return null;
+    } else if (prim.when === 'off' && isActive) {
+      return null;
+    }
+  }
 
   const stroke = isThermalTripped ? '#ea580c' : (prim.stroke || '#0f172a');
   const strokeWidth = prim.t === 'line' ? (prim.w || 1.5) : 1.5;

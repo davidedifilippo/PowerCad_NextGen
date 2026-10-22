@@ -490,4 +490,55 @@ describe('Simulation Engine', () => {
     expect(sim.fault?.message).toContain('Corto circuito DC (+/-)');
     expect(sim.fault?.message).toContain('-V3');
   });
+
+  it('correctly simulates 3-position selector switch_3pos_center_off and switch_3pos', () => {
+    // switch_3pos_center_off at (100, 200): 1 at (100, 180), 2 at (90, 220), 3 at (110, 220)
+    // Source L at (100, 100): 1 at (100, 110)
+    // Lamp 1 at (90, 300): X1 at (90, 280), X2 at (90, 320)
+    // Lamp 2 at (110, 300): X1 at (110, 280), X2 at (110, 320)
+    // Source N at (100, 400): 1 at (100, 390) (rot: 180)
+    const doc: Doc = {
+      app: 'powercad-nextgen',
+      version: 1,
+      sheet: {
+        format: 'A4',
+        orientation: 'landscape',
+        project: 'Test',
+        title: 'Selector Test',
+        author: 'Test',
+        date: '2026-10-22',
+        revision: '1',
+        sheetNo: '1',
+      },
+      elements: [
+        { id: 'src_l', def: 'pwr_l', x: 100, y: 100, rot: 0 as const, tag: 'L', props: {} },
+        { id: 'sw_s2', def: 'switch_3pos_center_off', x: 100, y: 200, rot: 0 as const, tag: '-S2', props: {} },
+        { id: 'lamp_p2', def: 'pilot_lamp', x: 90, y: 300, rot: 0 as const, tag: '-P2', props: {} },
+        { id: 'lamp_p3', def: 'pilot_lamp', x: 110, y: 300, rot: 0 as const, tag: '-P3', props: {} },
+        { id: 'src_n', def: 'pwr_n', x: 100, y: 400, rot: 180 as const, tag: 'N', props: {} },
+      ],
+      wires: [
+        { id: 'w1', pts: [{ x: 100, y: 110 }, { x: 100, y: 180 }] },
+        { id: 'w2', pts: [{ x: 90, y: 220 }, { x: 90, y: 280 }] },
+        { id: 'w3', pts: [{ x: 110, y: 220 }, { x: 110, y: 280 }] },
+        { id: 'w4', pts: [{ x: 90, y: 320 }, { x: 90, y: 390 }, { x: 100, y: 390 }] },
+        { id: 'w5', pts: [{ x: 110, y: 320 }, { x: 110, y: 390 }, { x: 100, y: 390 }] },
+      ],
+    };
+
+    // Position 0: Center open -> both lamps off
+    const sim0 = stepSimulation(doc, { ...createInitialSimState(), running: true, elementStates: { sw_s2: 0 } }, 0.05);
+    expect(sim0.activeOutputs['lamp_p2']).toBeFalsy();
+    expect(sim0.activeOutputs['lamp_p3']).toBeFalsy();
+
+    // Position 1: Pos I (1-2) -> lamp P2 on, lamp P3 off
+    const sim1 = stepSimulation(doc, { ...createInitialSimState(), running: true, elementStates: { sw_s2: 1 } }, 0.05);
+    expect(sim1.activeOutputs['lamp_p2']).toBe(true);
+    expect(sim1.activeOutputs['lamp_p3']).toBeFalsy();
+
+    // Position 2: Pos II (1-3) -> lamp P2 off, lamp P3 on
+    const sim2 = stepSimulation(doc, { ...createInitialSimState(), running: true, elementStates: { sw_s2: 2 } }, 0.05);
+    expect(sim2.activeOutputs['lamp_p2']).toBeFalsy();
+    expect(sim2.activeOutputs['lamp_p3']).toBe(true);
+  });
 });

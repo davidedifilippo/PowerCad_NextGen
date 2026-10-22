@@ -15,8 +15,8 @@ export interface SimFault {
 export interface SimState {
   running: boolean;
   paused: boolean;
-  /** Interactive state of elements: pressed buttons, toggled switches, tripped thermals */
-  elementStates: Record<string, boolean>;
+  /** Interactive state of elements: pressed buttons, toggled switches, rotary selector positions, tripped thermals */
+  elementStates: Record<string, boolean | number>;
   /** Which coils / loads / motors are active in the current step */
   activeOutputs: Record<string, boolean>;
   /** Timers progress in seconds for TON coils: tag -> elapsed seconds */
@@ -78,7 +78,7 @@ function buildConductivityGraph(
   allNetworkPointsByPage: Map<number, Pt[]>,
   elemTermKeys: Map<string, Map<string, string>>,
   activeOutputs: Record<string, boolean>,
-  elementStates: Record<string, boolean>,
+  elementStates: Record<string, boolean | number>,
   ignoredElementIds?: Set<string>,
   isMultiPage: boolean = false
 ): DisjointSet {
@@ -148,6 +148,23 @@ function buildConductivityGraph(
           if (k1 && k2) dsu.union(k1, k2);
         }
       } else if (beh.type === 'contact') {
+        if (beh.selectorPositions && beh.selectorPositions.length > 0) {
+          const raw = elementStates[elem.id];
+          const currentPos =
+            typeof raw === 'number'
+              ? raw
+              : typeof raw === 'boolean'
+              ? (raw ? 1 : 0)
+              : (beh.defaultPos ?? 0);
+          const activePairs = beh.selectorPositions[currentPos] || [];
+          for (const [t1, t2] of activePairs) {
+            const k1 = terms.get(t1);
+            const k2 = terms.get(t2);
+            if (k1 && k2) dsu.union(k1, k2);
+          }
+          continue;
+        }
+
         let isClosedNO = false;
         let isClosedNC = false;
 
@@ -1021,7 +1038,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
           case 'sr': {
             const setH = ins[0] ? isHigh(ins[0]) : false;
             const rstH = ins[1] ? isHigh(ins[1]) : false;
-            let latched = state.elementStates[elem.id] ?? false;
+            let latched = Boolean(state.elementStates[elem.id] ?? false);
             if (setH) latched = true;
             if (rstH) latched = false;
             state.elementStates[elem.id] = latched;

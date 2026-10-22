@@ -3,8 +3,8 @@
 export interface Pt { x: number; y: number }
 export interface Rect { x: number; y: number; w: number; h: number }
 
-/** Visibility condition for a primitive: drawn only when the element is active / inactive. */
-export type When = 'on' | 'off';
+/** Visibility condition for a primitive: drawn only when the element is active / inactive / at a selector position (e.g. pos_0, pos_1, pos_2). */
+export type When = 'on' | 'off' | string;
 
 interface PrimBase { when?: When; stroke?: string; dash?: boolean; w?: number; transform?: string }
 export type Prim =
@@ -61,6 +61,8 @@ export type Behavior =
       actuation: 'linked' | 'momentary' | 'latching';
       no?: [string, string][];
       nc?: [string, string][];
+      selectorPositions?: [string, string][][];
+      defaultPos?: number;
       defaultOn?: boolean;
       isRCD?: boolean;
       coil?: { a: string; b: string };

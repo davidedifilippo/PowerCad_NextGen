@@ -210,6 +210,38 @@ export function useMcpBridge({
 
                 const setSimState = current.onSimStateChange;
 
+                // 0. Selettore rotativo multi-posizione (es. commutatori a 3 posizioni)
+                if (def?.behavior.type === 'contact' && def.behavior.selectorPositions && def.behavior.selectorPositions.length > 0) {
+                  const numPositions = def.behavior.selectorPositions.length;
+                  const raw = current.simState.elementStates[elem.id];
+                  const cur =
+                    typeof raw === 'number'
+                      ? raw
+                      : typeof raw === 'boolean'
+                      ? (raw ? 1 : 0)
+                      : (def.behavior.type === 'contact' ? (def.behavior.defaultPos ?? 0) : 0);
+                  const targetPos = (cur + 1) % numPositions;
+
+                  setSimState((prev) => ({
+                    ...prev,
+                    elementStates: { ...prev.elementStates, [elem.id]: targetPos },
+                  }));
+
+                  ws.send(
+                    JSON.stringify({
+                      id: req.id,
+                      result: {
+                        success: true,
+                        component: elem.tag || elem.id,
+                        action: 'selector_cycle',
+                        position: targetPos,
+                        message: `Selettore "${elem.tag || elem.id}" commutato alla posizione successiva (${targetPos}).`,
+                      },
+                    })
+                  );
+                  break;
+                }
+
                 // 1. Pressione impulsiva (tipica di pulsanti di marcia/arresto NA o NC)
                 if (action === 'press') {
                   setSimState((prev) => ({
