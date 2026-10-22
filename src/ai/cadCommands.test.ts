@@ -113,4 +113,42 @@ describe('CAD AI Commands Engine', () => {
     expect(issues.length).toBe(1);
     expect(issues[0]).toContain('-KM99');
   });
+
+  it('correctly handles remove_component with id and replaces power source', () => {
+    const actions = [
+      {
+        action: 'remove_component' as const,
+        id: 'src_pwr',
+      },
+      {
+        action: 'add_component' as const,
+        def: 'pwr_3p_pe',
+        x: 130,
+        y: 100,
+        tag: 'LINEA',
+      },
+      {
+        action: 'connect_terminals' as const,
+        from: 'LINEA:L1',
+        to: '-Q1:1',
+        kind: 'power',
+      },
+    ];
+
+    const result = executeCadActions(SAMPLE_DIRECT_START, actions);
+    expect(result.errors).toEqual([]);
+    expect(result.successCount).toBe(3);
+
+    // Verify src_pwr was removed and pwr_3p_pe was added
+    expect(result.doc.elements.find((el) => el.id === 'src_pwr')).toBeUndefined();
+    const newSrc = result.doc.elements.find((el) => el.def === 'pwr_3p_pe');
+    expect(newSrc).toBeDefined();
+    expect(newSrc?.tag).toBe('LINEA');
+
+    // Verify terminal connection between LINEA:L1 and -Q1:1
+    const lineL1Term = resolveTerminal(result.doc, 'LINEA:L1');
+    const q1Term = resolveTerminal(result.doc, '-Q1:1');
+    expect(lineL1Term).not.toBeNull();
+    expect(q1Term).not.toBeNull();
+  });
 });

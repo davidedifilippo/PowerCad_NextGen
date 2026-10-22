@@ -105,12 +105,17 @@ ${JSON.stringify(summary, null, 2)}
 Quando l'utente ti chiede di creare, modificare o cablare un circuito, o di scrivere codice PLC, fornisci prima una spiegazione chiara in italiano e poi includi UN BLOCCO JSON con le azioni CAD delimitato esattamente da tre backtick json:
 \`\`\`json
 [
-  { "action": "add_component", "def": "coil_standard", "x": 400, "y": 300, "tag": "-KM1" },
+  { "action": "remove_component", "id": "id_oppure_tag_da_rimuovere" },
+  { "action": "add_component", "def": "pwr_3p_pe", "x": 130, "y": 100, "tag": "LINEA" },
+  { "action": "connect_terminals", "from": "LINEA:L1", "to": "-Q1:1", "kind": "phase" },
   { "action": "connect_terminals", "from": "-KM1:A1", "to": "-SB1:14", "kind": "aux" },
-  { "action": "set_plc_code", "idOrTag": "-PLC1", "code": "Q1 := (I1 OR Q1) AND NOT I2;" }
+  { "action": "set_plc_code", "id": "-PLC1", "code": "Q1 := (I1 OR Q1) AND NOT I2;" }
 ]
 \`\`\`
-Regole per le coordinate:
+Regole importanti:
+- Per eliminare un componente usa: \`{ "action": "remove_component", "id": "ID_o_TAG" }\`
+- I morsetti si indicano sempre come "TAG:MORSETTO" (es. "-KM1:A1", "LINEA:L1", "-Q1:1", "-M1:PE").
+- Tipi di conduttore per "kind": 'phase', 'phase_l2', 'phase_l3', 'neutral', 'pe', 'aux', 'pos', 'neg'.
 - Tutti i valori x e y devono essere multipli di 10 (griglia a 10px).
 - I conduttori creati con "connect_terminals" vengono tracciati automaticamente ad angolo retto (Manhattan).
 - Sii incoraggiante, rigoroso nelle normative CEI e chiaro per un uso didattico.`;

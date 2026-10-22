@@ -49,31 +49,39 @@ export type CadAction =
     }
   | {
       action: 'remove_component';
-      idOrTag: string;
+      idOrTag?: string;
+      id?: string;
+      tag?: string;
+      target?: string;
     }
   | {
       action: 'connect_terminals';
       from: string; // e.g. "-KM1:14" or "elementId:14"
       to: string; // e.g. "-H1:X1"
-      kind?: WireKind;
+      kind?: WireKind | string;
     }
   | {
       action: 'add_wire';
       pts: Pt[];
-      kind?: WireKind;
+      kind?: WireKind | string;
     }
   | {
       action: 'remove_wire';
-      wireId: string;
+      wireId?: string;
+      id?: string;
     }
   | {
       action: 'set_plc_code';
-      idOrTag: string;
+      idOrTag?: string;
+      id?: string;
+      tag?: string;
       code: string;
     }
   | {
       action: 'update_props';
-      idOrTag: string;
+      idOrTag?: string;
+      id?: string;
+      tag?: string;
       props: Record<string, any>;
     };
 
@@ -84,6 +92,24 @@ export interface ExecutionResult {
 }
 
 /**
+ * Normalizes wire kinds passed by LLMs (e.g. 'power', 'potenza', 'fase', 'pe', 'neutro')
+ */
+export function normalizeWireKind(kind?: string): WireKind {
+  if (!kind) return 'aux';
+  const k = kind.toLowerCase().trim();
+  if (k === 'power' || k === 'potenza' || k === 'fase' || k === 'phase' || k === 'l1' || k === 'phase_l1') return 'phase';
+  if (k === 'l2' || k === 'phase_l2') return 'phase_l2';
+  if (k === 'l3' || k === 'phase_l3') return 'phase_l3';
+  if (k === 'pe' || k === 'ground' || k === 'terra' || k === 'protezione') return 'pe';
+  if (k === 'n' || k === 'neutral' || k === 'neutro') return 'neutral';
+  if (k === 'pos' || k === '+24v' || k === '24v' || k === 'dc_pos') return 'pos';
+  if (k === 'neg' || k === '0v' || k === 'gnd' || k === 'dc_neg') return 'neg';
+  if (k === 'aux' || k === 'auxiliary' || k === 'ausiliario' || k === 'control' || k === 'comando') return 'aux';
+  if (k === 'pneumatic' || k === 'pneumatic_tube' || k === 'aria') return 'pneumatic_tube';
+  return 'aux';
+}
+
+/**
  * Resolves an element and terminal by formatted specifier:
  * e.g. "-KM1:14" or "id_123:A1"
  */
@@ -91,19 +117,28 @@ export function resolveTerminal(
   doc: Doc,
   spec: string
 ): { elem: Element; def: ComponentDef; termId: string; worldPos: Pt } | null {
+  if (!spec || typeof spec !== 'string') return null;
   const parts = spec.trim().split(':');
   if (parts.length !== 2) return null;
   const [ident, termId] = parts;
+  const identLower = ident.toLowerCase();
+  const termLower = termId.toLowerCase();
 
   // Find all elements matching by Tag or by ID
   const matchingElements = doc.elements.filter(
-    (el) => el.tag.toLowerCase() === ident.toLowerCase() || el.id.toLowerCase() === ident.toLowerCase()
+    (el) =>
+      (el.tag && el.tag.toLowerCase() === identLower) ||
+      (el.id && el.id.toLowerCase() === identLower)
   );
 
   for (const elem of matchingElements) {
     const def = registry.get(elem.def);
     if (!def) continue;
-    const term = def.terminals.find((t) => t.id === termId || (t.label && t.label === termId));
+    const term = def.terminals.find(
+      (t) =>
+        t.id.toLowerCase() === termLower ||
+        (t.label && t.label.toLowerCase() === termLower)
+    );
     if (term) {
       const worldPos = localToWorld(elem.x, elem.y, term, elem.rot);
       return { elem, def, termId: term.id, worldPos };
@@ -259,13 +294,49 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
         }
 
         case 'remove_component': {
-          const target = updatedElements.find(
-            (el) => el.id === act.idOrTag || el.tag.toLowerCase() === act.idOrTag.toLowerCase()
-          );
-          if (!target) {
-            errors.push(`Componente "${act.idOrTag}" non trovato per la rimozione.`);
+          const rawId =
+            (act as any).idOrTag ||
+            (act as any).id ||
+            (act as any).tag ||
+            (act as any).target;
+
+          if (!rawId) {
+            errors.push('Identificatore componente mancante per la rimozione.');
             continue;
           }
+
+          const strId = String(rawId).toLowerCase().trim();
+          const target = updatedElements.find(
+            (el) =>
+              (el.id && el.id.toLowerCase() === strId) ||
+              (el.tag && el.tag.toLowerCase() === strId)
+          );
+
+          if (!target) {
+            errors.push(`Componente "${rawId}" non trovato per la rimozione.`);
+            continue;
+          }
+
+          // Rimuovi anche i fili che erano collegati ai morsetti del componente rimosso
+          const def = registry.get(target.def);
+          if (def && def.terminals) {
+            const termPositions = def.terminals.map((t) =>
+              localToWorld(target.x, target.y, t, target.rot)
+            );
+            updatedWires = updatedWires.filter((w) => {
+              if (!w.pts || w.pts.length < 2) return false;
+              const start = w.pts[0];
+              const end = w.pts[w.pts.length - 1];
+              const touchesStart = termPositions.some(
+                (tp) => Math.hypot(tp.x - start.x, tp.y - start.y) < 5
+              );
+              const touchesEnd = termPositions.some(
+                (tp) => Math.hypot(tp.x - end.x, tp.y - end.y) < 5
+              );
+              return !touchesStart && !touchesEnd;
+            });
+          }
+
           updatedElements = updatedElements.filter((el) => el.id !== target.id);
           successCount++;
           break;
@@ -286,10 +357,11 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
           }
 
           const pts = routeManhattanWire(fromTerm.worldPos, toTerm.worldPos);
+          const wireKind = normalizeWireKind(act.kind);
           const newWire: Wire = {
             id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             pts,
-            kind: act.kind || 'aux',
+            kind: wireKind,
           };
 
           updatedWires.push(newWire);
@@ -303,10 +375,11 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
             continue;
           }
           const snappedPts = act.pts.map((p) => snapPt(p));
+          const wireKind = normalizeWireKind(act.kind);
           const newWire: Wire = {
             id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             pts: snappedPts,
-            kind: act.kind || 'aux',
+            kind: wireKind,
           };
           updatedWires.push(newWire);
           successCount++;
@@ -314,10 +387,15 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
         }
 
         case 'remove_wire': {
+          const rawId = (act as any).wireId || (act as any).id;
+          if (!rawId) {
+            errors.push('Identificatore filo mancante.');
+            continue;
+          }
           const before = updatedWires.length;
-          updatedWires = updatedWires.filter((w) => w.id !== act.wireId);
+          updatedWires = updatedWires.filter((w) => w.id !== rawId);
           if (updatedWires.length === before) {
-            errors.push(`Filo "${act.wireId}" non trovato.`);
+            errors.push(`Filo "${rawId}" non trovato.`);
             continue;
           }
           successCount++;
@@ -325,11 +403,19 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
         }
 
         case 'set_plc_code': {
+          const rawId = (act as any).idOrTag || (act as any).id || (act as any).tag;
+          if (!rawId) {
+            errors.push('Identificatore modulo PLC mancante.');
+            continue;
+          }
+          const strId = String(rawId).toLowerCase().trim();
           const target = updatedElements.find(
-            (el) => el.id === act.idOrTag || el.tag.toLowerCase() === act.idOrTag.toLowerCase()
+            (el) =>
+              (el.id && el.id.toLowerCase() === strId) ||
+              (el.tag && el.tag.toLowerCase() === strId)
           );
           if (!target) {
-            errors.push(`Modulo PLC "${act.idOrTag}" non trovato.`);
+            errors.push(`Modulo PLC "${rawId}" non trovato.`);
             continue;
           }
           updatedElements = updatedElements.map((el) =>
@@ -340,11 +426,19 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
         }
 
         case 'update_props': {
+          const rawId = (act as any).idOrTag || (act as any).id || (act as any).tag;
+          if (!rawId) {
+            errors.push('Identificatore componente mancante.');
+            continue;
+          }
+          const strId = String(rawId).toLowerCase().trim();
           const target = updatedElements.find(
-            (el) => el.id === act.idOrTag || el.tag.toLowerCase() === act.idOrTag.toLowerCase()
+            (el) =>
+              (el.id && el.id.toLowerCase() === strId) ||
+              (el.tag && el.tag.toLowerCase() === strId)
           );
           if (!target) {
-            errors.push(`Componente "${act.idOrTag}" non trovato.`);
+            errors.push(`Componente "${rawId}" non trovato.`);
             continue;
           }
           updatedElements = updatedElements.map((el) =>
