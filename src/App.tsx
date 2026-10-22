@@ -17,6 +17,7 @@ import { PlcCodeModal } from './ui/PlcCodeModal';
 import { SaveDialogModal } from './ui/SaveDialogModal';
 import { RecentProjectsModal } from './ui/RecentProjectsModal';
 import { AiCopilotDrawer } from './ui/AiCopilotDrawer';
+import { useMcpBridge } from './mcp/useMcpBridge';
 import { PageBar } from './ui/PageBar';
 import { getDocPages, normalizeDocWithPages } from './utils/pageUtils';
 import { saveDocToHandle, FileSaveResult } from './utils/fileSystemUtils';
@@ -193,6 +194,16 @@ export const App: React.FC = () => {
     setSimState(createInitialSimState());
   };
 
+  // Real-time MCP Server Bridge (ws://localhost:4321)
+  const { isMcpConnected } = useMcpBridge({
+    doc,
+    onDocChange: handleDocChange,
+    simState,
+    onStartSim: handleStartSim,
+    onStopSim: handleStopSim,
+    currentFileName,
+  });
+
   const handleDeleteSelected = useCallback(() => {
     if (selectedIds.size === 0 || simState.running) return;
     const newElements = doc.elements.filter((el) => !selectedIds.has(el.id));
@@ -342,6 +353,7 @@ export const App: React.FC = () => {
           onOpenRecents={() => setShowRecentsModal(true)}
           onToggleCopilot={() => setIsCopilotOpen((prev) => !prev)}
           isCopilotOpen={isCopilotOpen}
+          isMcpConnected={isMcpConnected}
           currentFileName={currentFileName}
           zoom={zoom}
           onZoomIn={handleZoomIn}

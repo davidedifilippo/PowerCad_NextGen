@@ -43,6 +43,7 @@ interface Props {
   onOpenRecents?: () => void;
   onToggleCopilot?: () => void;
   isCopilotOpen?: boolean;
+  isMcpConnected?: boolean;
   currentFileName?: string;
   zoom: number;
   onZoomIn: () => void;
@@ -68,6 +69,7 @@ export const Toolbar: React.FC<Props> = ({
   onOpenRecents,
   onToggleCopilot,
   isCopilotOpen,
+  isMcpConnected,
   currentFileName,
   zoom,
   onZoomIn,
@@ -424,6 +426,41 @@ export const Toolbar: React.FC<Props> = ({
           </button>
         </div>
       )}
+
+      {/* MCP Bridge Status Badge */}
+      <div
+        title={
+          isMcpConnected
+            ? 'MCP Server Locale Connesso (Antigravity / Claude / Cursor collegato)'
+            : 'MCP Server Standby (avvia "npm run mcp" per collegare un agente desktop)'
+        }
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '5px 9px',
+          borderRadius: 6,
+          backgroundColor: isMcpConnected ? '#064e3b' : '#1e293b',
+          border: isMcpConnected ? '1px solid #059669' : '1px solid #334155',
+          color: isMcpConnected ? '#a7f3d0' : '#94a3b8',
+          fontSize: 11,
+          fontWeight: 600,
+          cursor: 'default',
+          userSelect: 'none',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        <span
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            backgroundColor: isMcpConnected ? '#10b981' : '#64748b',
+            boxShadow: isMcpConnected ? '0 0 8px #10b981' : 'none',
+          }}
+        />
+        <span>MCP</span>
+      </div>
 
       {/* Simulation Controls (Play / Stop) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

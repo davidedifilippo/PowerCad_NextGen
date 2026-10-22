@@ -1,0 +1,33 @@
+{
+  "$comment": "Esempio di configurazione per registrare powercad-mcp nei vari client AI",
+  "antigravity": {
+    "mcpServers": {
+      "powercad": {
+        "command": "node",
+        "args": [
+          "c:/Users/IngDiFilippo/Documents/Antigravity_projects_2026/cadesimu-next/mcp-server/dist/index.js"
+        ]
+      }
+    }
+  },
+  "claude_desktop_mac": {
+    "mcpServers": {
+      "powercad": {
+        "command": "node",
+        "args": [
+          "/Users/TUO_UTENTE/PERCORSO/cadesimu-next/mcp-server/dist/index.js"
+        ]
+      }
+    }
+  },
+  "claude_desktop_windows": {
+    "mcpServers": {
+      "powercad": {
+        "command": "node",
+        "args": [
+          "C:\\Users\\IngDiFilippo\\Documents\\Antigravity_projects_2026\\cadesimu-next\\mcp-server\\dist\\index.js"
+        ]
+      }
+    }
+  }
+}
