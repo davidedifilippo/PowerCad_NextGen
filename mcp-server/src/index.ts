@@ -229,6 +229,32 @@ const TOOLS: Tool[] = [
     },
   },
   {
+    name: 'cad_interact_element',
+    description:
+      'Interagisce con un componente del circuito durante la simulazione (es. preme un pulsante di marcia come -SB2, un pulsante di arresto come -SB1, apre o chiude un magnetotermico come -Q1, o fa scattare un relè termico). Se la simulazione non è attiva, viene avviata automaticamente.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        idOrTag: {
+          type: 'string',
+          description:
+            'Tag o ID del componente con cui interagire (es. "-SB2", "-SB1", "-Q1", "-FR1"). Supporta corrispondenza parziale (es. "-SB2" trova "-SB2 (Marcia)").',
+        },
+        action: {
+          type: 'string',
+          enum: ['press', 'toggle', 'open', 'close'],
+          description:
+            '"press" per pulsanti impulsivi (preme e rilascia automaticamente dopo durationMs), "toggle" per commutare interruttori/sezionatori, "close" per chiudere, "open" per aprire. Default: "press".',
+        },
+        durationMs: {
+          type: 'number',
+          description: 'Durata della pressione in millisecondi per pulsanti impulsivi (default: 400).',
+        },
+      },
+      required: ['idOrTag'],
+    },
+  },
+  {
     name: 'cad_get_library',
     description:
       'Elenca tutti i componenti disponibili nella libreria di PowerCAD, suddivisi per categoria, con i relativi morsetti (pinout) e prefissi tag predefiniti.',
@@ -341,6 +367,21 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (req) => {
       case 'cad_control_simulation': {
         const command = args?.command as string;
         const result = await sendBrowserRpc('control_simulation', { command });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'cad_interact_element': {
+        const idOrTag = args?.idOrTag as string;
+        const action = (args?.action as string) || 'press';
+        const durationMs = (args?.durationMs as number) || 400;
+        const result = await sendBrowserRpc('interact_element', { idOrTag, action, durationMs });
         return {
           content: [
             {

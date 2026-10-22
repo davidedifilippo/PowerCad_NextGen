@@ -8,6 +8,7 @@ interface McpBridgeProps {
   doc: Doc;
   onDocChange: (newDoc: Doc) => void;
   simState: SimState;
+  onSimStateChange?: React.Dispatch<React.SetStateAction<SimState>>;
   onStartSim: () => void;
   onStopSim: () => void;
   currentFileName?: string;
@@ -18,6 +19,7 @@ export function useMcpBridge({
   doc,
   onDocChange,
   simState,
+  onSimStateChange,
   onStartSim,
   onStopSim,
   currentFileName,
@@ -31,6 +33,7 @@ export function useMcpBridge({
     doc,
     onDocChange,
     simState,
+    onSimStateChange,
     onStartSim,
     onStopSim,
     currentFileName,
@@ -41,11 +44,12 @@ export function useMcpBridge({
       doc,
       onDocChange,
       simState,
+      onSimStateChange,
       onStartSim,
       onStopSim,
       currentFileName,
     };
-  }, [doc, onDocChange, simState, onStartSim, onStopSim, currentFileName]);
+  }, [doc, onDocChange, simState, onSimStateChange, onStartSim, onStopSim, currentFileName]);
 
   // Broadcast status to MCP server on state change
   useEffect(() => {
@@ -154,6 +158,131 @@ export function useMcpBridge({
                   current.onStopSim();
                 }
                 ws.send(JSON.stringify({ id: req.id, result: { command: cmd, success: true } }));
+                break;
+              }
+
+              case 'interact_element': {
+                const idOrTag = (req.params?.idOrTag || '').trim().toLowerCase();
+                const action = req.params?.action || 'press';
+                const durationMs = req.params?.durationMs || 400;
+
+                if (!idOrTag) {
+                  ws.send(JSON.stringify({ id: req.id, error: 'Parametro "idOrTag" mancante.' }));
+                  break;
+                }
+
+                // Avvia automaticamente la simulazione se è ferma
+                if (!current.simState.running) {
+                  current.onStartSim();
+                }
+
+                // Trova componente per id, tag esatto o corrispondenza parziale (es. "-SB2" trova "-SB2 (Marcia)")
+                const elem =
+                  current.doc.elements.find(
+                    (el) =>
+                      el.id.toLowerCase() === idOrTag ||
+                      (el.tag && el.tag.toLowerCase() === idOrTag)
+                  ) ||
+                  current.doc.elements.find(
+                    (el) => el.tag && el.tag.toLowerCase().includes(idOrTag)
+                  );
+
+                if (!elem) {
+                  ws.send(
+                    JSON.stringify({
+                      id: req.id,
+                      error: `Componente "${req.params?.idOrTag}" non trovato nello schema corrente.`,
+                    })
+                  );
+                  break;
+                }
+
+                const def = registry.get(elem.def);
+                if (!current.onSimStateChange) {
+                  ws.send(
+                    JSON.stringify({
+                      id: req.id,
+                      error: 'Interazione non configurata (onSimStateChange mancante in useMcpBridge).',
+                    })
+                  );
+                  break;
+                }
+
+                const setSimState = current.onSimStateChange;
+
+                // 1. Pressione impulsiva (tipica di pulsanti di marcia/arresto NA o NC)
+                if (action === 'press') {
+                  setSimState((prev) => ({
+                    ...prev,
+                    elementStates: { ...prev.elementStates, [elem.id]: true },
+                  }));
+                  setTimeout(() => {
+                    setSimState((prev) => ({
+                      ...prev,
+                      elementStates: { ...prev.elementStates, [elem.id]: false },
+                    }));
+                  }, durationMs);
+
+                  ws.send(
+                    JSON.stringify({
+                      id: req.id,
+                      result: {
+                        success: true,
+                        component: elem.tag || elem.id,
+                        action: 'press',
+                        durationMs,
+                        message: `Pulsante "${elem.tag || elem.id}" premuto per ${durationMs}ms e rilasciato.`,
+                      },
+                    })
+                  );
+                  break;
+                }
+
+                // 2. Chiusura o apertura fissa
+                if (action === 'close' || action === 'open') {
+                  const targetState = action === 'close';
+                  setSimState((prev) => ({
+                    ...prev,
+                    elementStates: { ...prev.elementStates, [elem.id]: targetState },
+                    activeOutputs: elem.tag ? { ...prev.activeOutputs, [elem.tag]: targetState } : prev.activeOutputs,
+                  }));
+                  ws.send(
+                    JSON.stringify({
+                      id: req.id,
+                      result: {
+                        success: true,
+                        component: elem.tag || elem.id,
+                        action,
+                        state: targetState,
+                        message: `Stato componente "${elem.tag || elem.id}" impostato a ${targetState ? 'CHIUSO/ATTIVO' : 'APERTO/INATTIVO'}.`,
+                      },
+                    })
+                  );
+                  break;
+                }
+
+                // 3. Toggle stato (interruttore/sezionatore)
+                setSimState((prev) => {
+                  const currentVal = prev.elementStates[elem.id] ?? (def?.behavior as any)?.defaultOn ?? false;
+                  const nextVal = !currentVal;
+                  return {
+                    ...prev,
+                    elementStates: { ...prev.elementStates, [elem.id]: nextVal },
+                    activeOutputs: elem.tag ? { ...prev.activeOutputs, [elem.tag]: nextVal } : prev.activeOutputs,
+                  };
+                });
+
+                ws.send(
+                  JSON.stringify({
+                    id: req.id,
+                    result: {
+                      success: true,
+                      component: elem.tag || elem.id,
+                      action: 'toggle',
+                      message: `Componente "${elem.tag || elem.id}" commutato (toggle).`,
+                    },
+                  })
+                );
                 break;
               }
 

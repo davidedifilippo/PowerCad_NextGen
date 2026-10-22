@@ -199,6 +199,7 @@ export const App: React.FC = () => {
     doc,
     onDocChange: handleDocChange,
     simState,
+    onSimStateChange: setSimState,
     onStartSim: handleStartSim,
     onStopSim: handleStopSim,
     currentFileName,
