@@ -83,6 +83,15 @@ export type CadAction =
       id?: string;
       tag?: string;
       props: Record<string, any>;
+    }
+  | {
+      action: 'set_sheet_info';
+      title?: string;
+      project?: string;
+      author?: string;
+      date?: string;
+      revision?: string;
+      sheetNo?: string;
     };
 
 export interface ExecutionResult {
@@ -258,6 +267,7 @@ export function getCircuitSummary(doc: Doc, simState?: SimState): CircuitSummary
 export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResult {
   let updatedElements = [...doc.elements];
   let updatedWires = [...doc.wires];
+  let updatedSheet = { ...doc.sheet };
   const errors: string[] = [];
   let successCount = 0;
 
@@ -447,6 +457,20 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
           successCount++;
           break;
         }
+
+        case 'set_sheet_info': {
+          updatedSheet = {
+            ...updatedSheet,
+            ...(act.title !== undefined ? { title: act.title } : {}),
+            ...(act.project !== undefined ? { project: act.project } : {}),
+            ...(act.author !== undefined ? { author: act.author } : {}),
+            ...(act.date !== undefined ? { date: act.date } : {}),
+            ...(act.revision !== undefined ? { revision: act.revision } : {}),
+            ...(act.sheetNo !== undefined ? { sheetNo: act.sheetNo } : {}),
+          };
+          successCount++;
+          break;
+        }
       }
     } catch (err: any) {
       errors.push(`Errore nell'esecuzione dell'azione "${act.action}": ${err?.message || err}`);
@@ -456,6 +480,7 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
   return {
     doc: {
       ...doc,
+      sheet: updatedSheet,
       elements: updatedElements,
       wires: updatedWires,
     },
