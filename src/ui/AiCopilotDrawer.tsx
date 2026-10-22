@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Doc } from '../model/types';
-import { SimState } from '../engine/simulation';
+import { SimState, createInitialSimState } from '../engine/simulation';
 import {
   AiConfig,
   ChatMessage,
@@ -21,7 +21,12 @@ import {
   AlertCircle,
   RefreshCw,
   ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Wrench,
 } from 'lucide-react';
+import { CadExecutionContext } from '../ai/cadToolDispatcher';
 
 interface Props {
   isOpen: boolean;
@@ -29,6 +34,11 @@ interface Props {
   doc: Doc;
   onDocChange: (newDoc: Doc) => void;
   simState?: SimState;
+  onSimStateChange?: React.Dispatch<React.SetStateAction<SimState>>;
+  onStartSim?: () => void;
+  onStopSim?: () => void;
+  currentFileName?: string;
+  onResetFileHandle?: () => void;
 }
 
 export const AiCopilotDrawer: React.FC<Props> = ({
@@ -37,6 +47,11 @@ export const AiCopilotDrawer: React.FC<Props> = ({
   doc,
   onDocChange,
   simState,
+  onSimStateChange,
+  onStartSim,
+  onStopSim,
+  currentFileName,
+  onResetFileHandle,
 }) => {
   const [config, setConfig] = useState<AiConfig>(loadAiConfig());
   const [activeTab, setActiveTab] = useState<'chat' | 'settings'>('chat');
@@ -45,13 +60,15 @@ export const AiCopilotDrawer: React.FC<Props> = ({
       id: 'welcome',
       role: 'assistant',
       content:
-        'Ciao! Sono il tuo Copilot AI per PowerCAD.\nPosso aiutarti a progettare schemi di comando e potenza, verificare anomalie o guasti, cablare componenti e generare programmi Structured Text per Arduino Opta.\n\nCome posso aiutarti oggi?',
+        'Ciao! Sono il tuo Copilot AI per CADe_SIMU Next.\nPosso aiutarti a progettare schemi elettrici, simulare il circuito, premere pulsanti/sezionatori, verificare errori DRC e scrivere codice PLC.\n\nCome posso aiutarti oggi?',
       timestamp: Date.now(),
     },
   ]);
   const [inputPrompt, setInputPrompt] = useState<string>('');
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeToolStatus, setActiveToolStatus] = useState<string | null>(null);
+  const [expandedTraceIds, setExpandedTraceIds] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [ollamaModelsList, setOllamaModelsList] = useState<string[]>([]);
   const [isDetectingOllama, setIsDetectingOllama] = useState<boolean>(false);
@@ -178,14 +195,32 @@ export const AiCopilotDrawer: React.FC<Props> = ({
     setAttachedImage(null);
     setIsLoading(true);
 
+    const executionCtx: CadExecutionContext = {
+      doc,
+      onDocChange,
+      simState: simState || createInitialSimState(),
+      onSimStateChange,
+      onStartSim,
+      onStopSim,
+      currentFileName,
+      onResetFileHandle,
+    };
+
+    setActiveToolStatus('Interrogazione modello AI...');
+
     try {
       const response = await sendAiPrompt(
         prompt,
-        doc,
+        executionCtx,
         config,
         newHistory,
         curImg || undefined,
-        simState
+        undefined,
+        (step) => {
+          if (step.toolCall) {
+            setActiveToolStatus(`Esecuzione strumento: ${step.toolCall.tool}...`);
+          }
+        }
       );
 
       const assistantMsg: ChatMessage = {
@@ -193,6 +228,7 @@ export const AiCopilotDrawer: React.FC<Props> = ({
         role: 'assistant',
         content: response.text,
         proposedActions: response.actions,
+        trace: response.trace,
         timestamp: Date.now(),
       };
 
@@ -201,6 +237,7 @@ export const AiCopilotDrawer: React.FC<Props> = ({
       setErrorMessage(err?.message || 'Si è verificato un errore durante la comunicazione con l\'IA.');
     } finally {
       setIsLoading(false);
+      setActiveToolStatus(null);
     }
   };
 
@@ -851,6 +888,100 @@ export const AiCopilotDrawer: React.FC<Props> = ({
                       )}
                     </div>
                   )}
+
+                  {/* Interaction Trace Card (Tool execution history) */}
+                  {msg.trace && msg.trace.steps && msg.trace.steps.length > 0 && (
+                    <div
+                      style={{
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 8,
+                        padding: '8px 10px',
+                        marginTop: 4,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                        }}
+                        onClick={() => {
+                          setExpandedTraceIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(msg.id)) next.delete(msg.id);
+                            else next.add(msg.id);
+                            return next;
+                          });
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#334155' }}>
+                          <Wrench size={13} color="#64748b" />
+                          <span>Strumenti CAD eseguiti ({msg.trace.steps.length})</span>
+                          <span style={{ fontSize: 9.5, padding: '1px 5px', borderRadius: 4, backgroundColor: '#e2e8f0', color: '#475569' }}>
+                            {(msg.trace.durationMs / 1000).toFixed(1)}s
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <button
+                            type="button"
+                            title="Copia log traccia JSON negli appunti"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(JSON.stringify(msg.trace, null, 2));
+                              alert('Traccia JSON copiata negli appunti!');
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              border: '1px solid #cbd5e1',
+                              backgroundColor: '#ffffff',
+                              color: '#475569',
+                              fontSize: 10,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Copy size={11} />
+                            <span>Copia JSON</span>
+                          </button>
+                          {expandedTraceIds.has(msg.id) ? <ChevronUp size={14} color="#64748b" /> : <ChevronDown size={14} color="#64748b" />}
+                        </div>
+                      </div>
+
+                      {expandedTraceIds.has(msg.id) && (
+                        <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 10.5, borderTop: '1px solid #e2e8f0', paddingTop: 6 }}>
+                          {msg.trace.steps.map((st, i) => (
+                            <div key={i} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 600, color: '#0f172a' }}>
+                                <span>#{st.step}: <code>{st.toolCall?.tool}</code></span>
+                                <span style={{ color: st.toolResult?.success ? '#16a34a' : '#dc2626' }}>
+                                  {st.toolResult?.success ? '✓ Successo' : '✗ Errore'}
+                                </span>
+                              </div>
+                              {st.toolCall?.args && (
+                                <div style={{ color: '#64748b', fontSize: 10, fontFamily: 'monospace', marginTop: 2, whiteSpace: 'pre-wrap' }}>
+                                  {JSON.stringify(st.toolCall.args)}
+                                </div>
+                              )}
+                              {st.toolResult?.message && (
+                                <div style={{ color: '#334155', marginTop: 3 }}>
+                                  {st.toolResult.message}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -862,7 +993,7 @@ export const AiCopilotDrawer: React.FC<Props> = ({
                   padding: '10px 14px',
                   borderRadius: 10,
                   backgroundColor: '#f1f5f9',
-                  color: '#64748b',
+                  color: '#475569',
                   fontSize: 12,
                   display: 'flex',
                   alignItems: 'center',
@@ -870,7 +1001,7 @@ export const AiCopilotDrawer: React.FC<Props> = ({
                 }}
               >
                 <Sparkles size={14} className="animate-spin" color="#3b82f6" />
-                <span>Il Copilot sta analizzando lo schema...</span>
+                <span>{activeToolStatus || 'Il Copilot sta analizzando lo schema...'}</span>
               </div>
             )}
 

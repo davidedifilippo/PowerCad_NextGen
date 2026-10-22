@@ -674,6 +674,14 @@ export const App: React.FC = () => {
         doc={doc}
         onDocChange={handleDocChange}
         simState={simState}
+        onSimStateChange={setSimState}
+        onStartSim={handleStartSim}
+        onStopSim={handleStopSim}
+        currentFileName={currentFileName}
+        onResetFileHandle={() => {
+          setCurrentFileHandle(null);
+          setCurrentFileName(undefined);
+        }}
       />
 
       {/* Floating Save / Action Toast Notification */}

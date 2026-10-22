@@ -1,6 +1,13 @@
 import { Doc } from '../model/types';
-import { SimState } from '../engine/simulation';
+import { SimState, createInitialSimState } from '../engine/simulation';
 import { getCircuitSummary, CadAction } from './cadCommands';
+import {
+  CadExecutionContext,
+  dispatchCadTool,
+  getGeminiToolsDeclaration,
+  getOpenAiToolsDeclaration,
+  CAD_TOOL_DEFINITIONS,
+} from './cadToolDispatcher';
 
 export type AiProvider = 'gemini' | 'ollama' | 'lmstudio' | 'custom';
 
@@ -18,7 +25,7 @@ export interface AiConfig {
 export const DEFAULT_AI_CONFIG: AiConfig = {
   provider: 'gemini',
   geminiApiKey: '',
-  geminiModel: 'gemini-3.8-flash',
+  geminiModel: 'gemini-2.5-flash',
   ollamaUrl: 'http://localhost:11434',
   ollamaModel: 'qwen2.5-coder:latest',
   customUrl: 'http://localhost:1234/v1',
@@ -34,9 +41,8 @@ export function loadAiConfig(): AiConfig {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_AI_CONFIG;
     const parsed = JSON.parse(raw);
-    // Migrazione automatica se l'utente aveva salvato vecchi modelli non più supportati
-    if (parsed.geminiModel === 'gemini-2.5-flash' || parsed.geminiModel === 'gemini-1.5-flash' || parsed.geminiModel === 'gemini-1.5-pro') {
-      parsed.geminiModel = 'gemini-3.8-flash';
+    if (parsed.geminiModel === 'gemini-1.5-flash' || parsed.geminiModel === 'gemini-1.5-pro') {
+      parsed.geminiModel = 'gemini-2.5-flash';
     }
     return { ...DEFAULT_AI_CONFIG, ...parsed };
   } catch {
@@ -53,6 +59,34 @@ export function saveAiConfig(cfg: AiConfig): void {
   }
 }
 
+export interface InteractionTraceStep {
+  step: number;
+  timestamp: number;
+  toolCall?: {
+    tool: string;
+    args: any;
+  };
+  toolResult?: {
+    success: boolean;
+    result?: any;
+    error?: string;
+    message?: string;
+  };
+  rawThought?: string;
+}
+
+export interface InteractionTrace {
+  id: string;
+  prompt: string;
+  provider: string;
+  model: string;
+  timestamp: number;
+  steps: InteractionTraceStep[];
+  finalAnswer: string;
+  durationMs: number;
+  error?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -61,68 +95,48 @@ export interface ChatMessage {
   proposedActions?: CadAction[];
   applied?: boolean;
   timestamp: number;
+  trace?: InteractionTrace;
 }
 
 /**
- * Builds the system prompt with component catalog and current circuit context
+ * Builds the comprehensive system prompt including tool capabilities and circuit state
  */
 export function buildSystemPrompt(doc: Doc, simState?: SimState): string {
   const summary = getCircuitSummary(doc, simState);
 
-  return `Sei "PowerCAD Copilot", un assistente esperto in ingegneria elettrotecnica, schemi di automazione industriale a norma CEI/IEC 60617, impianti civili/industriali e programmazione micro-PLC (come Arduino Opta in IEC 61131-3 Structured Text).
+  const toolsSummary = CAD_TOOL_DEFINITIONS.map(
+    (t) => `- **${t.name}**: ${t.description}`
+  ).join('\n');
 
-Lavori direttamente all'interno dell'applicazione web CAD/simulatore "PowerCAD Next-Gen".
+  return `Sei "CADe_SIMU Next Copilot", un assistente esperto in ingegneria elettrotecnica, schemi di potenza e comando a norma CEI/IEC 60617, impianti industriali e programmazione micro-PLC.
 
-### CONTESTO ATTUALE DELLO SCHEMA:
+Lavori direttamente all'interno dell'applicazione web CAD e simulatore interattivo.
+
+### STATO ATTUALE DEL CIRCUITO:
 ${JSON.stringify(summary, null, 2)}
 
-### CATALOGO DEI COMPONENTI PRINCIPALI DISPONIBILI (ID e Morsetti):
-- **Alimentazioni:**
-  - 'pwr_3p_n_pe' (L1, L2, L3, N, PE)
-  - 'pwr_3p_pe' (L1, L2, L3, PE)
-  - 'pwr_1p_n_pe' (L, N, PE)
-  - 'pwr_dc_24v' (+24V, 0V)
-- **Comando & Segnalazione:**
-  - 'pushbutton_no' (13, 14 - NO)
-  - 'pushbutton_nc' (11, 12 - NC)
-  - 'coil_standard' (A1, A2) - tag es. '-KM1'
-  - 'contact_no' (13, 14 o 3, 4) - tag es. '-KM1'
-  - 'contact_nc' (11, 12 o 1, 2) - tag es. '-KM1'
-  - 'pilot_lamp' (X1, X2 - props: { color: 'Verde'|'Rosso'|'Giallo'|'Blu'|'Bianco' })
-- **Potenza & Motori:**
-  - 'disconnector_3p' (1, 2, 3, 4, 5, 6)
-  - 'contactor_3p' (1, 2, 3, 4, 5, 6) - tag es. '-KM1'
-  - 'thermal_overload' (1, 2, 3, 4, 5, 6, 95, 96, 97, 98) - tag es. '-FR1'
-  - 'motor_3p_async' (U1, V1, W1, PE) - tag es. '-M1'
-- **Relè Elettronici & Protezione:**
-  - 'phase_sequence_relay' (L1, L2, L3, 11, 12, 14) - tag es. '-S1'
-  - 'phase_loss_relay' (L1, L2, L3, 11, 12, 14) - tag es. '-F1'
-  - 'ssr_1p_ac' (A1, A2, 1, 2)
-- **Controller PLC:**
-  - 'plc_arduino_opta' (VIN1, VIN2, GND1, GND2, I1..I8, 11-14, 21-24, 31-34, 41-44) - tag es. '-PLC1'
+### STRUMENTI DISPONIBILI (TOOLS):
+Puoi interagire direttamente con il CAD e con il simulatore invocando gli strumenti:
+${toolsSummary}
 
-### COME PROPORRE MODIFICHE O GENERARE SCHEMI:
-Quando l'utente ti chiede di creare, modificare o cablare un circuito, o di scrivere codice PLC, fornisci prima una spiegazione chiara in italiano e poi includi UN BLOCCO JSON con le azioni CAD delimitato esattamente da tre backtick json:
-\`\`\`json
-[
-  { "action": "remove_component", "id": "id_oppure_tag_da_rimuovere" },
-  { "action": "add_component", "def": "pwr_3p_pe", "x": 130, "y": 100, "tag": "LINEA" },
-  { "action": "connect_terminals", "from": "LINEA:L1", "to": "-Q1:1", "kind": "phase" },
-  { "action": "connect_terminals", "from": "-KM1:A1", "to": "-SB1:14", "kind": "aux" },
-  { "action": "set_plc_code", "id": "-PLC1", "code": "Q1 := (I1 OR Q1) AND NOT I2;" }
-]
+### LINEE GUIDA SULL'USO DEGLI STRUMENTI:
+1. **Controllo Simulazione**: Quando l'utente chiede di avviare, provare o fermare lo schema, usa \`cad_control_simulation(command="start")\` o \`command="stop"\`.
+2. **Interazione Componenti**: Per premere un pulsante (es. marcia -SB2, arresto -SB1) usa \`cad_interact_element(idOrTag="-SB2", action="press")\`. Per aprire/chiudere o commutare interruttori, usa action="toggle" o "open"/"close".
+3. **Verifica DRC**: Quando l'utente chiede se ci sono errori o di verificare il circuito, usa \`cad_validate_drc()\`.
+4. **Modifiche CAD**: Per inserire, rimuovere o cablare componenti usa \`cad_apply_actions(actions=[...])\`.
+   - Morsetti indicati sempre come "TAG:MORSETTO" (es. "-KM1:A1", "-SB1:14", "-Q1:1").
+   - Coordinate x e y sempre multipli di 10 (griglia a 10px).
+5. Se non disponi di function-calling nativo, puoi emettere un blocco \`\`\`tool_call contenente JSON:
+\`\`\`tool_call
+{ "tool": "cad_control_simulation", "args": { "command": "start" } }
 \`\`\`
-Regole importanti:
-- Per eliminare un componente usa: \`{ "action": "remove_component", "id": "ID_o_TAG" }\`
-- I morsetti si indicano sempre come "TAG:MORSETTO" (es. "-KM1:A1", "LINEA:L1", "-Q1:1", "-M1:PE").
-- Tipi di conduttore per "kind": 'phase', 'phase_l2', 'phase_l3', 'neutral', 'pe', 'aux', 'pos', 'neg'.
-- Tutti i valori x e y devono essere multipli di 10 (griglia a 10px).
-- I conduttori creati con "connect_terminals" vengono tracciati automaticamente ad angolo retto (Manhattan).
-- Sii incoraggiante, rigoroso nelle normative CEI e chiaro per un uso didattico.`;
+oppure per modifiche grafiche il blocco \`\`\`json con la lista di azioni CAD.
+
+Fornisci sempre risposte in italiano, chiare, tecniche e orientate alla sicurezza elettrotecnica CEI.`;
 }
 
 /**
- * Extracts proposed CAD actions from the model's text response
+ * Extracts proposed CAD actions from the model's text response (fallback)
  */
 export function extractCadActions(text: string): CadAction[] | undefined {
   const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
@@ -139,30 +153,116 @@ export function extractCadActions(text: string): CadAction[] | undefined {
 }
 
 /**
- * Sends a chat prompt to the configured AI provider
+ * Extracts text-based tool call fallback from text (e.g. ```tool_call { "tool": "...", "args": ... } ```)
+ */
+export function extractFallbackToolCall(text: string): { tool: string; args: any } | null {
+  const match = text.match(/```(?:tool_call|tool)\s*([\s\S]*?)\s*```/);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed.tool) {
+        return { tool: parsed.tool, args: parsed.args || {} };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Also check if text contains direct json with action === 'control_simulation' or 'cad_control_simulation'
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[1]);
+      if (parsed.tool) {
+        return { tool: parsed.tool, args: parsed.args || {} };
+      }
+      if (parsed.action === 'cad_control_simulation' || parsed.action === 'control_simulation') {
+        return { tool: 'cad_control_simulation', args: { command: parsed.command || 'start' } };
+      }
+      if (parsed.action === 'cad_interact_element' || parsed.action === 'interact_element') {
+        return { tool: 'cad_interact_element', args: parsed };
+      }
+      if (parsed.action === 'cad_validate_drc' || parsed.action === 'validate_drc') {
+        return { tool: 'cad_validate_drc', args: {} };
+      }
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].action) {
+        // CAD actions
+        return { tool: 'cad_apply_actions', args: { actions: parsed } };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
+}
+
+export interface SendAiPromptResult {
+  text: string;
+  actions?: CadAction[];
+  trace: InteractionTrace;
+}
+
+/**
+ * Executes an Agentic ReAct Tool Loop with the configured LLM and CADe_SIMU Next environment
  */
 export async function sendAiPrompt(
   prompt: string,
-  doc: Doc,
+  docOrCtx: Doc | CadExecutionContext,
   config: AiConfig,
   history: ChatMessage[] = [],
   imageB64?: string,
-  simState?: SimState
-): Promise<{ text: string; actions?: CadAction[] }> {
-  const systemPrompt = buildSystemPrompt(doc, simState);
+  simState?: SimState,
+  onTraceStep?: (step: InteractionTraceStep) => void
+): Promise<SendAiPromptResult> {
+  const startTime = Date.now();
 
-  // 1. Google Gemini Provider
+  // Normalize execution context
+  const ctx: CadExecutionContext =
+    'onDocChange' in docOrCtx
+      ? (docOrCtx as CadExecutionContext)
+      : {
+          doc: docOrCtx as Doc,
+          onDocChange: () => {},
+          simState: simState || createInitialSimState(),
+        };
+
+  const trace: InteractionTrace = {
+    id: `trace_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    prompt,
+    provider: config.provider,
+    model:
+      config.provider === 'gemini'
+        ? config.geminiModel || 'gemini-2.5-flash'
+        : config.provider === 'ollama'
+        ? config.ollamaModel || 'qwen2.5-coder'
+        : config.customModel || 'custom',
+    timestamp: startTime,
+    steps: [],
+    finalAnswer: '',
+    durationMs: 0,
+  };
+
+  const maxIterations = 5;
+  let currentIteration = 0;
+  let finalResponseText = '';
+  let extractedActions: CadAction[] | undefined;
+
+  // ==========================================
+  // 1. Google Gemini Provider (Native Tools)
+  // ==========================================
   if (config.provider === 'gemini') {
-    if (!config.geminiApiKey) {
+    if (!config.geminiApiKey || !config.geminiApiKey.trim()) {
       throw new Error('Chiave API Google Gemini non configurata. Inseriscila nelle impostazioni del Copilot.');
     }
 
     const model = config.geminiModel || 'gemini-2.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.geminiApiKey.trim()}`;
 
+    // Initialize conversation contents
     const contents: any[] = [];
 
-    // History (last 6 messages)
+    // Prior chat history (last 6 messages)
     for (const msg of history.slice(-6)) {
       if (msg.role === 'user' || msg.role === 'assistant') {
         contents.push({
@@ -172,9 +272,8 @@ export async function sendAiPrompt(
       }
     }
 
-    // Current user message parts
+    // User prompt parts
     const currentParts: any[] = [{ text: prompt }];
-
     if (imageB64) {
       const match = imageB64.match(/^data:(.+?);base64,(.+)$/);
       if (match) {
@@ -186,116 +285,318 @@ export async function sendAiPrompt(
         });
       }
     }
+    contents.push({ role: 'user', parts: currentParts });
 
-    contents.push({
-      role: 'user',
-      parts: currentParts,
-    });
+    while (currentIteration < maxIterations) {
+      currentIteration++;
+      const systemPrompt = buildSystemPrompt(ctx.doc, ctx.simState);
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      const reqBody: any = {
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents,
+        tools: getGeminiToolsDeclaration(),
         generationConfig: {
           temperature: 0.2,
           maxOutputTokens: 2048,
         },
-      }),
-    });
+      };
 
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      throw new Error(errJson.error?.message || `Errore Gemini API (${res.status} ${res.statusText})`);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqBody),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const msg = errJson.error?.message || `Errore Gemini API (${res.status} ${res.statusText})`;
+        trace.error = msg;
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      const candidate = data.candidates?.[0];
+      const parts = candidate?.content?.parts || [];
+
+      // Check for function calls
+      const functionCalls = parts.filter((p: any) => p.functionCall);
+
+      if (functionCalls.length > 0) {
+        // Record model's call in conversation
+        contents.push({
+          role: 'model',
+          parts,
+        });
+
+        const responseParts: any[] = [];
+
+        for (const fc of functionCalls) {
+          const callName = fc.functionCall.name;
+          const callArgs = fc.functionCall.args || {};
+
+          // Execute tool via dispatcher
+          const outcome = await dispatchCadTool(ctx, callName, callArgs);
+
+          const traceStep: InteractionTraceStep = {
+            step: currentIteration,
+            timestamp: Date.now(),
+            toolCall: { tool: callName, args: callArgs },
+            toolResult: outcome,
+          };
+          trace.steps.push(traceStep);
+          onTraceStep?.(traceStep);
+
+          responseParts.push({
+            functionResponse: {
+              name: callName,
+              response: {
+                success: outcome.success,
+                result: outcome.result ?? outcome.message ?? outcome.error,
+              },
+            },
+          });
+        }
+
+        // Send function responses back to Gemini
+        contents.push({
+          role: 'user',
+          parts: responseParts,
+        });
+
+        // Continue agent loop
+        continue;
+      }
+
+      // No function calls: model produced final text answer
+      const textPart = parts.find((p: any) => p.text)?.text || '';
+      finalResponseText = textPart;
+
+      // Check for fallback text actions
+      const fallback = extractFallbackToolCall(textPart);
+      if (fallback) {
+        const outcome = await dispatchCadTool(ctx, fallback.tool, fallback.args);
+        const traceStep: InteractionTraceStep = {
+          step: currentIteration,
+          timestamp: Date.now(),
+          toolCall: fallback,
+          toolResult: outcome,
+        };
+        trace.steps.push(traceStep);
+        onTraceStep?.(traceStep);
+      }
+
+      extractedActions = extractCadActions(textPart);
+      break;
     }
-
-    const data = await res.json();
-    const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nessuna risposta generata dal modello.';
-    const actions = extractCadActions(replyText);
-    return { text: replyText, actions };
   }
 
-  // 2. Ollama (Local)
-  if (config.provider === 'ollama') {
-    const baseUrl = config.ollamaUrl || 'http://localhost:11434';
+  // ==========================================
+  // 2. Ollama Provider (Local)
+  // ==========================================
+  else if (config.provider === 'ollama') {
+    const baseUrl = (config.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '');
     const model = config.ollamaModel || 'qwen2.5-coder:latest';
 
-    const messages = [
-      { role: 'system', content: systemPrompt },
+    const messages: any[] = [
       ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
       { role: 'user', content: prompt },
     ];
 
-    try {
-      const res = await fetch(`${baseUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          messages,
-          stream: false,
-          options: { temperature: 0.2 },
-        }),
-      });
+    while (currentIteration < maxIterations) {
+      currentIteration++;
+      const systemPrompt = buildSystemPrompt(ctx.doc, ctx.simState);
 
-      if (!res.ok) {
-        throw new Error(`Errore Ollama (${res.status}): assicurati che Ollama sia in esecuzione su ${baseUrl}`);
-      }
-
-      const data = await res.json();
-      const replyText = data.message?.content || '';
-      const actions = extractCadActions(replyText);
-      return { text: replyText, actions };
-    } catch (err: any) {
-      if (err.message?.includes('Failed to fetch')) {
-        throw new Error(
-          `Impossibile connettersi ad Ollama su ${baseUrl}. Assicurati di aver impostato OLLAMA_ORIGINS="*" e che Ollama sia attivo.`
-        );
-      }
-      throw err;
-    }
-  }
-
-  // 3. LM Studio / Custom OpenAI Compatible
-  const baseUrl = (config.customUrl || 'http://localhost:1234/v1').replace(/\/+$/, '');
-  const model = config.customModel || 'local-model';
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (config.customApiKey) {
-    headers['Authorization'] = `Bearer ${config.customApiKey.trim()}`;
-  }
-
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
-    { role: 'user', content: prompt },
-  ];
-
-  try {
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
+      const reqBody: any = {
         model,
-        messages,
-        temperature: 0.2,
-      }),
-    });
+        messages: [{ role: 'system', content: systemPrompt }, ...messages],
+        stream: false,
+        options: { temperature: 0.2 },
+        tools: getOpenAiToolsDeclaration(),
+      };
 
-    if (!res.ok) {
-      throw new Error(`Errore API (${res.status} ${res.statusText}) su ${baseUrl}`);
-    }
+      try {
+        const res = await fetch(`${baseUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody),
+        });
 
-    const data = await res.json();
-    const replyText = data.choices?.[0]?.message?.content || '';
-    const actions = extractCadActions(replyText);
-    return { text: replyText, actions };
-  } catch (err: any) {
-    if (err.message?.includes('Failed to fetch')) {
-      throw new Error(`Impossibile connettersi all'endpoint ${baseUrl}. Verifica che il server sia attivo e con CORS abilitato.`);
+        if (!res.ok) {
+          throw new Error(`Errore Ollama (${res.status}): assicurati che Ollama sia in esecuzione su ${baseUrl}`);
+        }
+
+        const data = await res.json();
+        const msg = data.message;
+
+        // Check for native tool calls from Ollama
+        if (msg?.tool_calls && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) {
+          messages.push(msg);
+
+          for (const tc of msg.tool_calls) {
+            const toolName = tc.function?.name;
+            const toolArgs = typeof tc.function?.arguments === 'string'
+              ? JSON.parse(tc.function.arguments)
+              : tc.function?.arguments || {};
+
+            const outcome = await dispatchCadTool(ctx, toolName, toolArgs);
+
+            const traceStep: InteractionTraceStep = {
+              step: currentIteration,
+              timestamp: Date.now(),
+              toolCall: { tool: toolName, args: toolArgs },
+              toolResult: outcome,
+            };
+            trace.steps.push(traceStep);
+            onTraceStep?.(traceStep);
+
+            messages.push({
+              role: 'tool',
+              name: toolName,
+              content: JSON.stringify(outcome),
+            });
+          }
+
+          continue;
+        }
+
+        // Plain text response
+        finalResponseText = msg?.content || '';
+
+        // Check fallback tool calls in text
+        const fallback = extractFallbackToolCall(finalResponseText);
+        if (fallback) {
+          const outcome = await dispatchCadTool(ctx, fallback.tool, fallback.args);
+          const traceStep: InteractionTraceStep = {
+            step: currentIteration,
+            timestamp: Date.now(),
+            toolCall: fallback,
+            toolResult: outcome,
+          };
+          trace.steps.push(traceStep);
+          onTraceStep?.(traceStep);
+        }
+
+        extractedActions = extractCadActions(finalResponseText);
+        break;
+      } catch (err: any) {
+        if (err.message?.includes('Failed to fetch')) {
+          throw new Error(
+            `Impossibile connettersi ad Ollama su ${baseUrl}. Assicurati di aver impostato OLLAMA_ORIGINS="*" e che Ollama sia attivo.`
+          );
+        }
+        trace.error = err?.message || String(err);
+        throw err;
+      }
     }
-    throw err;
   }
+
+  // ==========================================
+  // 3. Custom / LM Studio (OpenAI Compatible)
+  // ==========================================
+  else {
+    const baseUrl = (config.customUrl || 'http://localhost:1234/v1').replace(/\/+$/, '');
+    const model = config.customModel || 'local-model';
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (config.customApiKey) {
+      headers['Authorization'] = `Bearer ${config.customApiKey.trim()}`;
+    }
+
+    const messages: any[] = [
+      ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
+      { role: 'user', content: prompt },
+    ];
+
+    while (currentIteration < maxIterations) {
+      currentIteration++;
+      const systemPrompt = buildSystemPrompt(ctx.doc, ctx.simState);
+
+      const reqBody: any = {
+        model,
+        messages: [{ role: 'system', content: systemPrompt }, ...messages],
+        temperature: 0.2,
+        tools: getOpenAiToolsDeclaration(),
+      };
+
+      try {
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(reqBody),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Errore API (${res.status} ${res.statusText}) su ${baseUrl}`);
+        }
+
+        const data = await res.json();
+        const choice = data.choices?.[0];
+        const msg = choice?.message;
+
+        if (msg?.tool_calls && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) {
+          messages.push(msg);
+
+          for (const tc of msg.tool_calls) {
+            const toolName = tc.function?.name;
+            const toolArgs = typeof tc.function?.arguments === 'string'
+              ? JSON.parse(tc.function.arguments)
+              : tc.function?.arguments || {};
+
+            const outcome = await dispatchCadTool(ctx, toolName, toolArgs);
+
+            const traceStep: InteractionTraceStep = {
+              step: currentIteration,
+              timestamp: Date.now(),
+              toolCall: { tool: toolName, args: toolArgs },
+              toolResult: outcome,
+            };
+            trace.steps.push(traceStep);
+            onTraceStep?.(traceStep);
+
+            messages.push({
+              role: 'tool',
+              tool_call_id: tc.id,
+              content: JSON.stringify(outcome),
+            });
+          }
+
+          continue;
+        }
+
+        finalResponseText = msg?.content || '';
+
+        const fallback = extractFallbackToolCall(finalResponseText);
+        if (fallback) {
+          const outcome = await dispatchCadTool(ctx, fallback.tool, fallback.args);
+          const traceStep: InteractionTraceStep = {
+            step: currentIteration,
+            timestamp: Date.now(),
+            toolCall: fallback,
+            toolResult: outcome,
+          };
+          trace.steps.push(traceStep);
+          onTraceStep?.(traceStep);
+        }
+
+        extractedActions = extractCadActions(finalResponseText);
+        break;
+      } catch (err: any) {
+        if (err.message?.includes('Failed to fetch')) {
+          throw new Error(`Impossibile connettersi all'endpoint ${baseUrl}. Verifica che il server sia attivo e con CORS abilitato.`);
+        }
+        trace.error = err?.message || String(err);
+        throw err;
+      }
+    }
+  }
+
+  trace.finalAnswer = finalResponseText;
+  trace.durationMs = Date.now() - startTime;
+
+  return {
+    text: finalResponseText,
+    actions: extractedActions,
+    trace,
+  };
 }
 
 /**

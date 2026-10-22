@@ -24,7 +24,7 @@ export const SAMPLE_UNDERVOLTAGE_RELEASE: Doc = {
       "props": {
         "text": "1) RELE' DI CONTROLLO DELLA TENSIONE IN UN SISTEMA MONOFASE",
         "size": 14,
-        "bold": true
+        "bold": "true"
       }
     },
     {
@@ -292,7 +292,7 @@ export const SAMPLE_UNDERVOLTAGE_RELEASE: Doc = {
           "props": {
             "text": "1) RELE' DI CONTROLLO DELLA TENSIONE IN UN SISTEMA MONOFASE",
             "size": 14,
-            "bold": true
+            "bold": "true"
           }
         },
         {
@@ -560,7 +560,7 @@ export const SAMPLE_UNDERVOLTAGE_RELEASE: Doc = {
           "props": {
             "text": "2) RELE' DI CONTROLLO DELLA TENSIONE IN UN SISTEMA TRIFASE",
             "size": 14,
-            "bold": true
+            "bold": "true"
           }
         },
         {
