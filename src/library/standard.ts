@@ -4098,6 +4098,26 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
   {
+    id: 'coil_step',
+    name: 'Relè a Impulsi (Passo-Passo)',
+    category: 'Bobine e Segnali',
+    description: 'Bobina relè a impulsi passo-passo (interruttore a relè con memoria bi-stabile a comando impulsivo).',
+    tagPrefix: '-K',
+    terminals: [
+      { id: 'A1', x: 0, y: -20, label: 'A1' },
+      { id: 'A2', x: 0, y: 20, label: 'A2' },
+    ],
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'step' },
+    symbol: [
+      { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
+      { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#93c5fd', when: 'on' },
+      // Step / impulse relay diagonal divider
+      { t: 'line', x1: -14, y1: 7, x2: 14, y2: -7 },
+      { t: 'line', x1: 0, y1: 7, x2: 0, y2: 20 },
+    ],
+  },
+  {
     id: 'coil_teleruttore',
     name: 'Teleruttore',
     category: 'Bobine e Segnali',

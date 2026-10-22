@@ -541,4 +541,73 @@ describe('Simulation Engine', () => {
     expect(sim2.activeOutputs['lamp_p2']).toBeFalsy();
     expect(sim2.activeOutputs['lamp_p3']).toBe(true);
   });
+
+  it('correctly simulates impulse / step relay coil_step (toggles state on each pulse)', () => {
+    // Button NO and step relay coil -K1, controlling contact NO -K1 and lamp -H1
+    const doc: Doc = {
+      app: 'powercad-nextgen',
+      version: 1,
+      sheet: {
+        format: 'A4',
+        orientation: 'landscape',
+        project: 'Step Relay Test',
+        title: 'Step Relay',
+        author: 'Test',
+        date: '2026-10-22',
+        revision: '1',
+        sheetNo: '1',
+      },
+      elements: [
+        { id: 'src_l', def: 'pwr_l', x: 100, y: 100, rot: 0 as const, tag: 'L', props: {} },
+        { id: 'btn_s', def: 'btn_no', x: 100, y: 160, rot: 0 as const, tag: '-S', props: {} },
+        { id: 'coil_k1', def: 'coil_step', x: 100, y: 240, rot: 0 as const, tag: '-K1', props: {} },
+        { id: 'contact_k1', def: 'contact_no', x: 160, y: 160, rot: 0 as const, tag: '-K1', props: {} },
+        { id: 'lamp_h1', def: 'pilot_lamp', x: 160, y: 240, rot: 0 as const, tag: '-H1', props: {} },
+        { id: 'src_n', def: 'pwr_n', x: 100, y: 320, rot: 180 as const, tag: 'N', props: {} },
+      ],
+      wires: [
+        // L to btn (13) and contact (13)
+        { id: 'w1', pts: [{ x: 100, y: 110 }, { x: 100, y: 140 }] },
+        { id: 'w2', pts: [{ x: 100, y: 110 }, { x: 160, y: 110 }, { x: 160, y: 140 }] },
+        // btn (14) to coil (A1)
+        { id: 'w3', pts: [{ x: 100, y: 180 }, { x: 100, y: 220 }] },
+        // contact (14) to lamp (X1)
+        { id: 'w4', pts: [{ x: 160, y: 180 }, { x: 160, y: 220 }] },
+        // coil (A2) and lamp (X2) to N
+        { id: 'w5', pts: [{ x: 100, y: 260 }, { x: 100, y: 310 }] },
+        { id: 'w6', pts: [{ x: 160, y: 260 }, { x: 160, y: 310 }, { x: 100, y: 310 }] },
+      ],
+    };
+
+    let state = { ...createInitialSimState(), running: true };
+
+    // Initially: button not pressed -> coil off, contact open, lamp off
+    state = stepSimulation(doc, state, 0.05);
+    expect(state.activeOutputs['-K1']).toBeFalsy();
+    expect(state.activeOutputs['lamp_h1']).toBeFalsy();
+
+    // 1st pulse: press button -> coil energizes, toggles state to ON, contact closes, lamp lights up!
+    state.elementStates['btn_s'] = true;
+    state = stepSimulation(doc, state, 0.05);
+    expect(state.activeOutputs['-K1']).toBe(true);
+    expect(state.activeOutputs['lamp_h1']).toBe(true);
+
+    // Release button: coil de-energizes, but latched state remains ON! Lamp stays ON!
+    state.elementStates['btn_s'] = false;
+    state = stepSimulation(doc, state, 0.05);
+    expect(state.activeOutputs['-K1']).toBe(true);
+    expect(state.activeOutputs['lamp_h1']).toBe(true);
+
+    // 2nd pulse: press button again -> coil energizes, toggles state to OFF!
+    state.elementStates['btn_s'] = true;
+    state = stepSimulation(doc, state, 0.05);
+    expect(state.activeOutputs['-K1']).toBeFalsy();
+    expect(state.activeOutputs['lamp_h1']).toBeFalsy();
+
+    // Release button: stays OFF!
+    state.elementStates['btn_s'] = false;
+    state = stepSimulation(doc, state, 0.05);
+    expect(state.activeOutputs['-K1']).toBeFalsy();
+    expect(state.activeOutputs['lamp_h1']).toBeFalsy();
+  });
 });

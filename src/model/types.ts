@@ -44,7 +44,7 @@ export interface PropDef {
   default: string | number;
 }
 
-export type CoilMode = 'mono' | 'ton' | 'tof' | 'blink' | 'latch';
+export type CoilMode = 'mono' | 'ton' | 'tof' | 'blink' | 'latch' | 'step';
 
 export type Behavior =
   /** Fixed potentials on terminals. Value "$prop" reads the potential from an element property. */

@@ -806,6 +806,25 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
 
           state.elementStates[elem.id] = nextLatched;
           if (nextLatched) newActiveOutputs[elem.tag] = true;
+        } else if (beh.mode === 'step') {
+          const isEnergized = isVoltageDifference(potA, potB);
+          const prevKey = elem.id + '_step_prev';
+          const prevEnergized = Boolean(elementStates[prevKey]);
+          let latched = Boolean(elementStates[elem.id] ?? false);
+          if (iter === 0) {
+            if (isEnergized && !prevEnergized) {
+              latched = !latched;
+            }
+            elementStates[prevKey] = isEnergized;
+            elementStates[elem.id] = latched;
+          }
+          if (latched) {
+            if (elem.tag) newActiveOutputs[elem.tag] = true;
+            newActiveOutputs[elem.id] = true;
+          }
+          if (isEnergized) {
+            newActiveOutputs[elem.id + '_pulse'] = true;
+          }
         }
       } else if (beh.type === 'load') {
         const ka = terms.get(beh.a);

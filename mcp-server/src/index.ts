@@ -8,9 +8,11 @@ import {
 import { WebSocketServer, WebSocket } from 'ws';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as http from 'http';
 
 // Port for browser connection
 const WS_PORT = parseInt(process.env.POWERCAD_WS_PORT || '4321', 10);
+const HTTP_PORT = parseInt(process.env.POWERCAD_HTTP_PORT || '4322', 10);
 
 // Connected browser client state
 let activeBrowserWs: WebSocket | null = null;
@@ -115,6 +117,51 @@ function sendBrowserRpc(method: string, params: any = {}, timeoutMs = 10000): Pr
     );
   });
 }
+
+// HTTP RPC bridge for direct local control
+const httpServer = http.createServer(async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
+  if (req.method === 'GET' && req.url === '/status') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(lastKnownStatus));
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/rpc') {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
+    req.on('end', async () => {
+      try {
+        const { method, params } = JSON.parse(body);
+        const result = await sendBrowserRpc(method, params);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, result }));
+      } catch (err: any) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  res.writeHead(404);
+  res.end('Not found');
+});
+
+httpServer.listen(HTTP_PORT, () => {
+  console.error(`[PowerCAD-MCP] HTTP RPC bridge attivo su http://localhost:${HTTP_PORT}`);
+});
 
 // Setup MCP Server
 const mcpServer = new Server(
