@@ -92,6 +92,9 @@ export type CadAction =
       date?: string;
       revision?: string;
       sheetNo?: string;
+    }
+  | {
+      action: 'clear_sheet';
     };
 
 export interface ExecutionResult {
@@ -274,6 +277,13 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
   for (const act of actions) {
     try {
       switch (act.action) {
+        case 'clear_sheet': {
+          updatedElements = [];
+          updatedWires = [];
+          successCount++;
+          break;
+        }
+
         case 'add_component': {
           const def = registry.get(act.def);
           if (!def) {

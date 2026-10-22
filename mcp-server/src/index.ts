@@ -180,6 +180,7 @@ const TOOLS: Tool[] = [
                   'set_plc_code',
                   'update_props',
                   'set_sheet_info',
+                  'clear_sheet',
                 ],
               },
               title: { type: 'string', description: 'Titolo dello schema per set_sheet_info' },
