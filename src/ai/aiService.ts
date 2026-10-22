@@ -18,7 +18,7 @@ export interface AiConfig {
 export const DEFAULT_AI_CONFIG: AiConfig = {
   provider: 'gemini',
   geminiApiKey: '',
-  geminiModel: 'gemini-2.5-flash',
+  geminiModel: 'gemini-3.8-flash',
   ollamaUrl: 'http://localhost:11434',
   ollamaModel: 'qwen2.5-coder:latest',
   customUrl: 'http://localhost:1234/v1',
@@ -32,7 +32,13 @@ export function loadAiConfig(): AiConfig {
   if (typeof window === 'undefined') return DEFAULT_AI_CONFIG;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULT_AI_CONFIG, ...JSON.parse(raw) } : DEFAULT_AI_CONFIG;
+    if (!raw) return DEFAULT_AI_CONFIG;
+    const parsed = JSON.parse(raw);
+    // Migrazione automatica se l'utente aveva salvato vecchi modelli non più supportati
+    if (parsed.geminiModel === 'gemini-2.5-flash' || parsed.geminiModel === 'gemini-1.5-flash' || parsed.geminiModel === 'gemini-1.5-pro') {
+      parsed.geminiModel = 'gemini-3.8-flash';
+    }
+    return { ...DEFAULT_AI_CONFIG, ...parsed };
   } catch {
     return DEFAULT_AI_CONFIG;
   }
@@ -296,6 +302,27 @@ export async function fetchOllamaModels(baseUrl: string = 'http://localhost:1143
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data.models) ? data.models.map((m: any) => m.name) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Queries Google Gemini API to discover active models for this API key
+ */
+export async function fetchGeminiModels(apiKey: string): Promise<string[]> {
+  if (!apiKey || !apiKey.trim()) return [];
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data.models)) return [];
+    return data.models
+      .filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
+      .map((m: any) => m.name.replace(/^models\//, ''))
+      .filter((name: string) => !name.includes('embedding') && !name.includes('aqa'));
   } catch {
     return [];
   }

@@ -8,6 +8,7 @@ import {
   saveAiConfig,
   sendAiPrompt,
   fetchOllamaModels,
+  fetchGeminiModels,
 } from '../ai/aiService';
 import { executeCadActions, CadAction } from '../ai/cadCommands';
 import {
@@ -54,6 +55,8 @@ export const AiCopilotDrawer: React.FC<Props> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [ollamaModelsList, setOllamaModelsList] = useState<string[]>([]);
   const [isDetectingOllama, setIsDetectingOllama] = useState<boolean>(false);
+  const [geminiModelsList, setGeminiModelsList] = useState<string[]>([]);
+  const [isDetectingGemini, setIsDetectingGemini] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +83,34 @@ export const AiCopilotDrawer: React.FC<Props> = ({
       // silent
     } finally {
       setIsDetectingOllama(false);
+    }
+  };
+
+  const handleDetectGemini = async () => {
+    if (!config.geminiApiKey || !config.geminiApiKey.trim()) {
+      alert('Inserisci prima la tua chiave API Google per interrogare i modelli disponibili.');
+      return;
+    }
+    setIsDetectingGemini(true);
+    try {
+      const models = await fetchGeminiModels(config.geminiApiKey);
+      if (models.length > 0) {
+        setGeminiModelsList(models);
+        if (!models.includes(config.geminiModel)) {
+          const preferred =
+            models.find((m) => m === 'gemini-3.8-flash') ||
+            models.find((m) => m.includes('3.8-flash')) ||
+            models.find((m) => m.includes('flash')) ||
+            models[0];
+          handleConfigChange('geminiModel', preferred);
+        }
+      } else {
+        alert('Nessun modello di generazione testo trovato per questa chiave o chiave non valida.');
+      }
+    } catch (err: any) {
+      alert(`Errore nel rilevamento modelli: ${err?.message || err}`);
+    } finally {
+      setIsDetectingGemini(false);
     }
   };
 
@@ -407,25 +438,93 @@ export const AiCopilotDrawer: React.FC<Props> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
-                  Modello
-                </label>
-                <select
-                  value={config.geminiModel}
-                  onChange={(e) => handleConfigChange('geminiModel', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '6px 10px',
-                    borderRadius: 6,
-                    border: '1px solid #cbd5e1',
-                    fontSize: 12,
-                    backgroundColor: '#ffffff',
-                  }}
-                >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Velocissimo e recente)</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (Stabile)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Massimo ragionamento)</option>
-                </select>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#475569' }}>
+                    Modello Google Gemini
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleDetectGemini}
+                    disabled={isDetectingGemini}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      fontSize: 10.5,
+                      color: '#2563eb',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      fontWeight: 600,
+                    }}
+                    title="Interroga Google AI Studio per l'elenco dei modelli abilitati sulla tua chiave"
+                  >
+                    <RefreshCw size={11} className={isDetectingGemini ? 'animate-spin' : ''} />
+                    <span>{isDetectingGemini ? 'Rilevamento...' : 'Rileva Modelli'}</span>
+                  </button>
+                </div>
+
+                {geminiModelsList.length > 0 ? (
+                  <select
+                    value={config.geminiModel}
+                    onChange={(e) => handleConfigChange('geminiModel', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '7px 10px',
+                      borderRadius: 6,
+                      border: '1px solid #cbd5e1',
+                      fontSize: 12,
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    {geminiModelsList.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <select
+                      value={config.geminiModel}
+                      onChange={(e) => handleConfigChange('geminiModel', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '6px 10px',
+                        borderRadius: 6,
+                        border: '1px solid #cbd5e1',
+                        fontSize: 12,
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <option value="gemini-3.8-flash">gemini-3.8-flash (Attivo su nuovi account - Consigliato)</option>
+                      <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Veloce e leggero)</option>
+                      <option value="gemini-3.8-pro">gemini-3.8-pro (Ragionamento avanzato)</option>
+                      {!['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-pro'].includes(config.geminiModel) && (
+                        <option value={config.geminiModel}>{config.geminiModel} (Personalizzato)</option>
+                      )}
+                    </select>
+                    <input
+                      type="text"
+                      value={config.geminiModel}
+                      onChange={(e) => handleConfigChange('geminiModel', e.target.value)}
+                      placeholder="Oppure inserisci il nome del modello esatto"
+                      style={{
+                        width: '100%',
+                        padding: '6px 10px',
+                        borderRadius: 6,
+                        border: '1px solid #e2e8f0',
+                        fontSize: 11,
+                        boxSizing: 'border-box',
+                        color: '#64748b',
+                      }}
+                    />
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+                  I nuovi account Google AI Studio richiedono modelli serie 3.x (es. gemini-3.8-flash).
+                </div>
               </div>
             </div>
           )}
