@@ -1,0 +1,996 @@
+{
+  "app": "powercad-nextgen",
+  "version": 1,
+  "sheet": {
+    "format": "A3",
+    "orientation": "landscape",
+    "project": "CADe_SIMU Benchmark",
+    "title": "Temporizzatori e Contatore Impulsi (IEC/CEI)",
+    "author": "Ing. Di Filippo",
+    "date": "2026-10-23",
+    "revision": "Rev. 1.0",
+    "sheetNo": "1/1"
+  },
+  "elements": [
+    {
+      "id": "pwr_pos",
+      "def": "pwr_dc_plus",
+      "x": 40,
+      "y": 50,
+      "rot": 0,
+      "tag": "+",
+      "props": {}
+    },
+    {
+      "id": "pwr_neg",
+      "def": "pwr_dc_minus",
+      "x": 40,
+      "y": 350,
+      "rot": 0,
+      "tag": "-",
+      "props": {}
+    },
+    {
+      "id": "sb1",
+      "def": "btn_no",
+      "x": 100,
+      "y": 120,
+      "rot": 0,
+      "tag": "SB1",
+      "props": {}
+    },
+    {
+      "id": "kt1",
+      "def": "coil_timer_on",
+      "x": 100,
+      "y": 300,
+      "rot": 0,
+      "tag": "KT1",
+      "props": {
+        "delay": 3
+      }
+    },
+    {
+      "id": "kt1_c",
+      "def": "contact_timer_on_no",
+      "x": 160,
+      "y": 120,
+      "rot": 0,
+      "tag": "KT1",
+      "props": {}
+    },
+    {
+      "id": "h1",
+      "def": "pilot_lamp",
+      "x": 160,
+      "y": 300,
+      "rot": 0,
+      "tag": "H1",
+      "props": {
+        "color": "green"
+      }
+    },
+    {
+      "id": "txt_b1",
+      "def": "text_label",
+      "x": 130,
+      "y": 410,
+      "rot": 0,
+      "tag": "Ritardo eccitazione",
+      "props": {
+        "text": "Ritardo eccitazione",
+        "size": "12",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "sb2",
+      "def": "btn_no",
+      "x": 240,
+      "y": 120,
+      "rot": 0,
+      "tag": "SB2",
+      "props": {}
+    },
+    {
+      "id": "kt2",
+      "def": "coil_timer_off",
+      "x": 240,
+      "y": 300,
+      "rot": 0,
+      "tag": "KT2",
+      "props": {
+        "delay": 3
+      }
+    },
+    {
+      "id": "kt2_c",
+      "def": "contact_timer_off_no",
+      "x": 300,
+      "y": 120,
+      "rot": 0,
+      "tag": "KT2",
+      "props": {}
+    },
+    {
+      "id": "h2",
+      "def": "pilot_lamp",
+      "x": 300,
+      "y": 300,
+      "rot": 0,
+      "tag": "H2",
+      "props": {
+        "color": "green"
+      }
+    },
+    {
+      "id": "txt_b2",
+      "def": "text_label",
+      "x": 270,
+      "y": 410,
+      "rot": 0,
+      "tag": "Ritardo diseccitazione",
+      "props": {
+        "text": "Ritardo diseccitazione",
+        "size": "12",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "sb3",
+      "def": "btn_no",
+      "x": 380,
+      "y": 120,
+      "rot": 0,
+      "tag": "SB3",
+      "props": {}
+    },
+    {
+      "id": "kt3",
+      "def": "coil_timer_on_off",
+      "x": 380,
+      "y": 300,
+      "rot": 0,
+      "tag": "KT3",
+      "props": {
+        "delay": 3,
+        "delayOn": 3,
+        "delayOff": 3
+      }
+    },
+    {
+      "id": "kt3_c",
+      "def": "contact_timer_onoff_no",
+      "x": 440,
+      "y": 120,
+      "rot": 0,
+      "tag": "KT3",
+      "props": {}
+    },
+    {
+      "id": "h3",
+      "def": "pilot_lamp",
+      "x": 440,
+      "y": 300,
+      "rot": 0,
+      "tag": "H3",
+      "props": {
+        "color": "green"
+      }
+    },
+    {
+      "id": "txt_b3",
+      "def": "text_label",
+      "x": 410,
+      "y": 410,
+      "rot": 0,
+      "tag": "Ritardo eccitazione e diseccitazione",
+      "props": {
+        "text": "Ritardo eccitazione e diseccitazione",
+        "size": "12",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "sa1",
+      "def": "switch_no",
+      "x": 520,
+      "y": 120,
+      "rot": 0,
+      "tag": "SA1",
+      "props": {}
+    },
+    {
+      "id": "kt4",
+      "def": "coil_relay_flasher",
+      "x": 520,
+      "y": 300,
+      "rot": 0,
+      "tag": "KT4",
+      "props": {
+        "delay": 1
+      }
+    },
+    {
+      "id": "kt4_c",
+      "def": "contact_no",
+      "x": 580,
+      "y": 120,
+      "rot": 0,
+      "tag": "KT4",
+      "props": {}
+    },
+    {
+      "id": "h4",
+      "def": "pilot_lamp",
+      "x": 580,
+      "y": 300,
+      "rot": 0,
+      "tag": "H4",
+      "props": {
+        "color": "yellow"
+      }
+    },
+    {
+      "id": "txt_b4",
+      "def": "text_label",
+      "x": 550,
+      "y": 410,
+      "rot": 0,
+      "tag": "Relè intermittente",
+      "props": {
+        "text": "Relè intermittente",
+        "size": "12",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "sa2",
+      "def": "switch_no",
+      "x": 660,
+      "y": 120,
+      "rot": 0,
+      "tag": "SA2",
+      "props": {}
+    },
+    {
+      "id": "kt5",
+      "def": "coil_pulse_generator",
+      "x": 660,
+      "y": 300,
+      "rot": 0,
+      "tag": "KT5",
+      "props": {
+        "delay": 0.5
+      }
+    },
+    {
+      "id": "kt5_c",
+      "def": "contact_no",
+      "x": 720,
+      "y": 120,
+      "rot": 0,
+      "tag": "KT5",
+      "props": {}
+    },
+    {
+      "id": "h5",
+      "def": "pilot_lamp",
+      "x": 720,
+      "y": 300,
+      "rot": 0,
+      "tag": "H5",
+      "props": {
+        "color": "yellow"
+      }
+    },
+    {
+      "id": "txt_b5",
+      "def": "text_label",
+      "x": 690,
+      "y": 410,
+      "rot": 0,
+      "tag": "Generatore di impulsi",
+      "props": {
+        "text": "Generatore di impulsi",
+        "size": "12",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "d1",
+      "def": "counter_impulse",
+      "x": 830,
+      "y": 300,
+      "rot": 0,
+      "tag": "D1",
+      "props": {
+        "preset": 5
+      }
+    },
+    {
+      "id": "sb4",
+      "def": "btn_no",
+      "x": 850,
+      "y": 120,
+      "rot": 0,
+      "tag": "SB4",
+      "props": {}
+    },
+    {
+      "id": "txt_sb4",
+      "def": "text_label",
+      "x": 825,
+      "y": 120,
+      "rot": 0,
+      "tag": "Count",
+      "props": {
+        "text": "Count",
+        "size": "10",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "sa3",
+      "def": "switch_no",
+      "x": 890,
+      "y": 160,
+      "rot": 0,
+      "tag": "SA3",
+      "props": {}
+    },
+    {
+      "id": "txt_sa3",
+      "def": "text_label",
+      "x": 865,
+      "y": 160,
+      "rot": 0,
+      "tag": "Down",
+      "props": {
+        "text": "Down",
+        "size": "10",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "sb5",
+      "def": "btn_no",
+      "x": 930,
+      "y": 200,
+      "rot": 0,
+      "tag": "SB5",
+      "props": {}
+    },
+    {
+      "id": "txt_sb5",
+      "def": "text_label",
+      "x": 905,
+      "y": 200,
+      "rot": 0,
+      "tag": "Reset",
+      "props": {
+        "text": "Reset",
+        "size": "10",
+        "frame": "none"
+      }
+    },
+    {
+      "id": "d1_c",
+      "def": "contact_no",
+      "x": 990,
+      "y": 120,
+      "rot": 0,
+      "tag": "D1",
+      "props": {}
+    },
+    {
+      "id": "h6",
+      "def": "pilot_lamp",
+      "x": 990,
+      "y": 300,
+      "rot": 0,
+      "tag": "H6",
+      "props": {
+        "color": "green"
+      }
+    },
+    {
+      "id": "txt_b6",
+      "def": "text_label",
+      "x": 895,
+      "y": 410,
+      "rot": 0,
+      "tag": "Contatore impulsi",
+      "props": {
+        "text": "Contatore impulsi",
+        "size": "12",
+        "frame": "none"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "w_bus_pos",
+      "pts": [
+        {
+          "x": 40,
+          "y": 60
+        },
+        {
+          "x": 1020,
+          "y": 60
+        }
+      ]
+    },
+    {
+      "id": "w_bus_neg",
+      "pts": [
+        {
+          "x": 40,
+          "y": 360
+        },
+        {
+          "x": 1020,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b1_1",
+      "pts": [
+        {
+          "x": 100,
+          "y": 60
+        },
+        {
+          "x": 100,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b1_2",
+      "pts": [
+        {
+          "x": 100,
+          "y": 140
+        },
+        {
+          "x": 100,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b1_3",
+      "pts": [
+        {
+          "x": 100,
+          "y": 320
+        },
+        {
+          "x": 100,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b1_4",
+      "pts": [
+        {
+          "x": 160,
+          "y": 60
+        },
+        {
+          "x": 160,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b1_5",
+      "pts": [
+        {
+          "x": 160,
+          "y": 140
+        },
+        {
+          "x": 160,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b1_6",
+      "pts": [
+        {
+          "x": 160,
+          "y": 320
+        },
+        {
+          "x": 160,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b2_1",
+      "pts": [
+        {
+          "x": 240,
+          "y": 60
+        },
+        {
+          "x": 240,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b2_2",
+      "pts": [
+        {
+          "x": 240,
+          "y": 140
+        },
+        {
+          "x": 240,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b2_3",
+      "pts": [
+        {
+          "x": 240,
+          "y": 320
+        },
+        {
+          "x": 240,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b2_4",
+      "pts": [
+        {
+          "x": 300,
+          "y": 60
+        },
+        {
+          "x": 300,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b2_5",
+      "pts": [
+        {
+          "x": 300,
+          "y": 140
+        },
+        {
+          "x": 300,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b2_6",
+      "pts": [
+        {
+          "x": 300,
+          "y": 320
+        },
+        {
+          "x": 300,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b3_1",
+      "pts": [
+        {
+          "x": 380,
+          "y": 60
+        },
+        {
+          "x": 380,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b3_2",
+      "pts": [
+        {
+          "x": 380,
+          "y": 140
+        },
+        {
+          "x": 380,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b3_3",
+      "pts": [
+        {
+          "x": 380,
+          "y": 320
+        },
+        {
+          "x": 380,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b3_4",
+      "pts": [
+        {
+          "x": 440,
+          "y": 60
+        },
+        {
+          "x": 440,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b3_5",
+      "pts": [
+        {
+          "x": 440,
+          "y": 140
+        },
+        {
+          "x": 440,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b3_6",
+      "pts": [
+        {
+          "x": 440,
+          "y": 320
+        },
+        {
+          "x": 440,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b4_1",
+      "pts": [
+        {
+          "x": 520,
+          "y": 60
+        },
+        {
+          "x": 520,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b4_2",
+      "pts": [
+        {
+          "x": 520,
+          "y": 140
+        },
+        {
+          "x": 520,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b4_3",
+      "pts": [
+        {
+          "x": 520,
+          "y": 320
+        },
+        {
+          "x": 520,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b4_4",
+      "pts": [
+        {
+          "x": 580,
+          "y": 60
+        },
+        {
+          "x": 580,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b4_5",
+      "pts": [
+        {
+          "x": 580,
+          "y": 140
+        },
+        {
+          "x": 580,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b4_6",
+      "pts": [
+        {
+          "x": 580,
+          "y": 320
+        },
+        {
+          "x": 580,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b5_1",
+      "pts": [
+        {
+          "x": 660,
+          "y": 60
+        },
+        {
+          "x": 660,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b5_2",
+      "pts": [
+        {
+          "x": 660,
+          "y": 140
+        },
+        {
+          "x": 660,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b5_3",
+      "pts": [
+        {
+          "x": 660,
+          "y": 320
+        },
+        {
+          "x": 660,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b5_4",
+      "pts": [
+        {
+          "x": 720,
+          "y": 60
+        },
+        {
+          "x": 720,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b5_5",
+      "pts": [
+        {
+          "x": 720,
+          "y": 140
+        },
+        {
+          "x": 720,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b5_6",
+      "pts": [
+        {
+          "x": 720,
+          "y": 320
+        },
+        {
+          "x": 720,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b6_a1",
+      "pts": [
+        {
+          "x": 800,
+          "y": 60
+        },
+        {
+          "x": 800,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b6_a2",
+      "pts": [
+        {
+          "x": 830,
+          "y": 320
+        },
+        {
+          "x": 830,
+          "y": 360
+        }
+      ]
+    },
+    {
+      "id": "w_b6_c1",
+      "pts": [
+        {
+          "x": 850,
+          "y": 60
+        },
+        {
+          "x": 850,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b6_c2",
+      "pts": [
+        {
+          "x": 850,
+          "y": 140
+        },
+        {
+          "x": 850,
+          "y": 230
+        },
+        {
+          "x": 820,
+          "y": 230
+        },
+        {
+          "x": 820,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b6_d1",
+      "pts": [
+        {
+          "x": 890,
+          "y": 60
+        },
+        {
+          "x": 890,
+          "y": 140
+        }
+      ]
+    },
+    {
+      "id": "w_b6_d2",
+      "pts": [
+        {
+          "x": 890,
+          "y": 180
+        },
+        {
+          "x": 890,
+          "y": 240
+        },
+        {
+          "x": 840,
+          "y": 240
+        },
+        {
+          "x": 840,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b6_r1",
+      "pts": [
+        {
+          "x": 930,
+          "y": 60
+        },
+        {
+          "x": 930,
+          "y": 180
+        }
+      ]
+    },
+    {
+      "id": "w_b6_r2",
+      "pts": [
+        {
+          "x": 930,
+          "y": 220
+        },
+        {
+          "x": 930,
+          "y": 250
+        },
+        {
+          "x": 860,
+          "y": 250
+        },
+        {
+          "x": 860,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b6_out1",
+      "pts": [
+        {
+          "x": 990,
+          "y": 60
+        },
+        {
+          "x": 990,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "id": "w_b6_out2",
+      "pts": [
+        {
+          "x": 990,
+          "y": 140
+        },
+        {
+          "x": 990,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "id": "w_b6_out3",
+      "pts": [
+        {
+          "x": 990,
+          "y": 320
+        },
+        {
+          "x": 990,
+          "y": 360
+        }
+      ]
+    }
+  ]
+}

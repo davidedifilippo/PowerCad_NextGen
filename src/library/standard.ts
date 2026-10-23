@@ -4380,8 +4380,10 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
     props: [
       { key: 'delay', label: 'Tempo (secondi)', type: 'number', default: 3 },
+      { key: 'delayOn', label: 'Ritardo eccitazione (s)', type: 'number', default: 3 },
+      { key: 'delayOff', label: 'Ritardo diseccitazione (s)', type: 'number', default: 3 },
     ],
-    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'ton' },
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'ton_tof' },
     symbol: [
       { t: 'line', x1: 0, y1: -20, x2: 0, y2: -7 },
       { t: 'rect', x: -14, y: -7, w: 28, h: 14, fill: '#ffffff', when: 'off' },
@@ -4479,7 +4481,7 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     props: [
       { key: 'preset', label: 'Conteggio impostato', type: 'number', default: 5 },
     ],
-    behavior: { type: 'coil', a: 'C', b: 'A2', mode: 'mono' },
+    behavior: { type: 'coil', a: 'A1', b: 'A2', mode: 'counter' },
     symbol: [
       // Main rectangle
       { t: 'rect', x: -36, y: -7, w: 72, h: 14, fill: '#ffffff', when: 'off' },

@@ -807,22 +807,25 @@ const ElementItem: React.FC<{
             key={term.id}
             transform={`translate(${term.x}, ${term.y})`}
             onMouseDown={(e) => {
+              if (simState.running) return;
               e.stopPropagation();
               if (e.button === 0) {
                 onTerminalMouseDown?.(term.id, worldPos, e);
               }
             }}
             onMouseUp={(e) => {
+              if (simState.running) return;
               if (e.button === 0) {
                 onTerminalMouseUp?.(term.id, worldPos, e);
               }
             }}
             onClick={(e) => {
+              if (simState.running) return;
               e.stopPropagation();
               onTerminalClick(term.id, worldPos);
             }}
             className="terminal-group"
-            style={{ cursor: 'crosshair' }}
+            style={{ cursor: simState.running ? 'pointer' : 'crosshair' }}
           >
             {/* Generous invisible hit circle for effortless drag-to-wire / click-to-wire */}
             <circle cx={0} cy={0} r={7.5} fill="transparent" pointerEvents="all" />

@@ -667,13 +667,25 @@ export const AiCopilotDrawer: React.FC<Props> = ({
                   borderRadius: 6,
                   padding: 8,
                   fontSize: 11,
-                  color: '#64748b',
-                  lineHeight: '15px',
+                  color: '#475569',
+                  lineHeight: '16px',
                 }}
               >
-                💡 Per consentire le chiamate dal browser, avvia Ollama con:
-                <br />
-                <code>OLLAMA_ORIGINS="*" ollama serve</code>
+                🔒 <strong>Sicurezza CORS:</strong> Per consentire la connessione dal browser in sicurezza (senza usare la wildcard aperta <code>*</code>), autorizza solo l'origine locale:
+                <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'monospace', fontSize: 10, color: '#0f172a' }}>
+                  <div>
+                    <span style={{ color: '#64748b' }}>macOS (permanente):</span><br />
+                    <code>launchctl setenv OLLAMA_ORIGINS "{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'}"</code>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b' }}>Linux / macOS (terminale):</span><br />
+                    <code>OLLAMA_ORIGINS="{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'}" ollama serve</code>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b' }}>Windows (PowerShell):</span><br />
+                    <code>$env:OLLAMA_ORIGINS="{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'}"; ollama serve</code>
+                  </div>
+                </div>
               </div>
             </div>
           )}

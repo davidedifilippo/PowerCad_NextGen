@@ -782,16 +782,98 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
               timerProgress[elem.tag] = 0;
             }
           }
-        } else if (beh.mode === 'blink') {
-          const delaySec = Number(elem.props?.delay ?? 1);
+        } else if (beh.mode === 'ton_tof') {
+          const delayOn = Number(elem.props?.delayOn ?? elem.props?.delay ?? 3);
+          const delayOff = Number(elem.props?.delayOff ?? elem.props?.delay ?? 3);
+          const key = elem.tag || elem.id;
+          const wasActive = Boolean((elem.tag && state.activeOutputs[elem.tag]) || state.activeOutputs[elem.id]);
+          const onKey = key + '_ton';
+          const offKey = key + '_tof';
+
           if (energized) {
-            const current = ((timerProgress[elem.tag] ?? 0) + (iter === 0 ? dtSec : 0)) % (delaySec * 2);
-            timerProgress[elem.tag] = current;
-            if (current < delaySec) {
-              newActiveOutputs[elem.tag] = true;
+            timerProgress[offKey] = delayOff;
+            if (wasActive) {
+              if (elem.tag) newActiveOutputs[elem.tag] = true;
+              newActiveOutputs[elem.id] = true;
+            } else {
+              const current = (timerProgress[onKey] ?? 0) + (iter === 0 ? dtSec : 0);
+              timerProgress[onKey] = current;
+              if (current >= delayOn) {
+                if (elem.tag) newActiveOutputs[elem.tag] = true;
+                newActiveOutputs[elem.id] = true;
+              }
             }
           } else {
-            timerProgress[elem.tag] = 0;
+            timerProgress[onKey] = 0;
+            if (wasActive) {
+              const current = (timerProgress[offKey] ?? delayOff) - (iter === 0 ? dtSec : 0);
+              if (current > 0) {
+                timerProgress[offKey] = current;
+                if (elem.tag) newActiveOutputs[elem.tag] = true;
+                newActiveOutputs[elem.id] = true;
+              } else {
+                timerProgress[offKey] = 0;
+              }
+            } else {
+              timerProgress[offKey] = 0;
+            }
+          }
+        } else if (beh.mode === 'blink') {
+          const tOn = Number(elem.props?.delayOn ?? elem.props?.delay_on ?? elem.props?.delay ?? 1);
+          const tOff = Number(elem.props?.delayOff ?? elem.props?.delay_off ?? elem.props?.delay ?? 1);
+          const period = Math.max(0.01, tOn + tOff);
+          const key = elem.tag || elem.id;
+          if (energized) {
+            const current = ((timerProgress[key] ?? 0) + (iter === 0 ? dtSec : 0)) % period;
+            timerProgress[key] = current;
+            if (current < tOn) {
+              if (elem.tag) newActiveOutputs[elem.tag] = true;
+              newActiveOutputs[elem.id] = true;
+            }
+          } else {
+            timerProgress[key] = 0;
+          }
+        } else if (beh.mode === 'counter') {
+          // Counter impulse block: A1/A2 provide control supply; C is pulse input, D is direction, R is reset.
+          const powered = isVoltageDifference(potA, potB);
+          const kC = terms.get('C');
+          const kD = terms.get('D');
+          const kR = terms.get('R');
+          const potC = kC ? netPotentials[kC] : undefined;
+          const potD = kD ? netPotentials[kD] : undefined;
+          const potR = kR ? netPotentials[kR] : undefined;
+          const potRef = potB ?? potA;
+
+          const cEnergized = isVoltageDifference(potC, potRef);
+          const dEnergized = isVoltageDifference(potD, potRef);
+          const rEnergized = isVoltageDifference(potR, potRef);
+
+          const preset = Math.max(1, Number(elem.props?.preset ?? 5));
+          const cntKey = elem.id + '_cnt';
+          const prevCKey = elem.id + '_c_prev';
+          let count = Number(elementStates[cntKey] ?? 0);
+          const prevC = Boolean(elementStates[prevCKey] ?? false);
+
+          if (powered) {
+            if (iter === 0) {
+              if (rEnergized) {
+                count = 0;
+              } else if (cEnergized && !prevC) {
+                // Rising edge on C
+                if (dEnergized) {
+                  count = Math.max(0, count - 1);
+                } else {
+                  count = count + 1;
+                }
+              }
+              elementStates[cntKey] = count;
+              elementStates[prevCKey] = cEnergized;
+            }
+
+            if (count >= preset) {
+              if (elem.tag) newActiveOutputs[elem.tag] = true;
+              newActiveOutputs[elem.id] = true;
+            }
           }
         } else if (beh.mode === 'latch') {
           const kb1 = terms.get('B1');

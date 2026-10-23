@@ -480,8 +480,9 @@ export async function sendAiPrompt(
         break;
       } catch (err: any) {
         if (err.message?.includes('Failed to fetch')) {
+          const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
           throw new Error(
-            `Impossibile connettersi ad Ollama su ${baseUrl}. Assicurati di aver impostato OLLAMA_ORIGINS="*" e che Ollama sia attivo.`
+            `Impossibile connettersi ad Ollama su ${baseUrl}. Assicurati che Ollama sia attivo e autorizzi l'origine locale (es. OLLAMA_ORIGINS="${origin}").`
           );
         }
         trace.error = err?.message || String(err);

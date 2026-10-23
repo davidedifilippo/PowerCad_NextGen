@@ -139,6 +139,10 @@ export const SchematicCanvas: React.FC<Props> = ({
 
   const dragRef = useRef<DragState | null>(null);
 
+  // Active momentary push-buttons held down during simulation: elemId -> pressStartTime
+  const activeMomentaryPressRef = useRef<Map<string, number>>(new Map());
+  const lastMomentaryHandledTimeRef = useRef<Map<string, number>>(new Map());
+
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -722,17 +726,44 @@ export const SchematicCanvas: React.FC<Props> = ({
     onSelectWireTool,
   ]);
 
-  // Global mouseup safeguard so dragging NEVER gets stuck to the cursor
+  // Global mouseup safeguard so dragging NEVER gets stuck to the cursor & momentary buttons release properly
   useEffect(() => {
     const handleGlobalMouseUp = () => {
       setIsPanning(false);
       setSelectionBox(null);
       dragRef.current = null;
+
+      // Release any momentary push-buttons held down during simulation
+      if (activeMomentaryPressRef.current.size > 0) {
+        const entries = Array.from(activeMomentaryPressRef.current.entries());
+        activeMomentaryPressRef.current.clear();
+        for (const [elemId, pressedAt] of entries) {
+          const elapsed = Date.now() - pressedAt;
+          const minHoldTime = 120; // Ensure quick clicks produce at least a 120ms pulse for engine detection
+          if (elapsed < minHoldTime) {
+            setTimeout(() => {
+              onSimStateChange((prev) => ({
+                ...prev,
+                elementStates: { ...prev.elementStates, [elemId]: false },
+              }));
+            }, minHoldTime - elapsed);
+          } else {
+            onSimStateChange((prev) => ({
+              ...prev,
+              elementStates: { ...prev.elementStates, [elemId]: false },
+            }));
+          }
+        }
+      }
     };
 
     window.addEventListener('mouseup', handleGlobalMouseUp);
-    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
-  }, []);
+    window.addEventListener('blur', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('blur', handleGlobalMouseUp);
+    };
+  }, [onSimStateChange]);
 
   // Wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
@@ -1099,7 +1130,20 @@ export const SchematicCanvas: React.FC<Props> = ({
       return;
     }
 
-    if (simState.running) return;
+    if (simState.running) {
+      if (e.button === 0) {
+        const def = registry.get(elem.def);
+        if (def && def.behavior.type === 'contact' && def.behavior.actuation === 'momentary') {
+          activeMomentaryPressRef.current.set(elem.id, Date.now());
+          lastMomentaryHandledTimeRef.current.set(elem.id, Date.now());
+          onSimStateChange((prev) => ({
+            ...prev,
+            elementStates: { ...prev.elementStates, [elem.id]: true },
+          }));
+        }
+      }
+      return;
+    }
 
     // If user clicked near a terminal on the element, start or finish wire directly!
     const world = screenToWorld(e.clientX, e.clientY);
@@ -1353,6 +1397,12 @@ export const SchematicCanvas: React.FC<Props> = ({
 
       if (def.behavior.type === 'contact') {
         if (def.behavior.actuation === 'momentary') {
+          // If already handled by mousedown, ignore click so we don't prematurely release or double-trigger
+          const lastHandled = lastMomentaryHandledTimeRef.current.get(elem.id) ?? 0;
+          if (Date.now() - lastHandled < 800) {
+            return;
+          }
+          // Fallback if mousedown was bypassed (e.g. keyboard navigation)
           onSimStateChange((prev) => ({
             ...prev,
             elementStates: { ...prev.elementStates, [elem.id]: true },
@@ -1362,7 +1412,7 @@ export const SchematicCanvas: React.FC<Props> = ({
               ...prev,
               elementStates: { ...prev.elementStates, [elem.id]: false },
             }));
-          }, 400);
+          }, 300);
         } else if (def.behavior.actuation === 'latching') {
           if (def.behavior.selectorPositions && def.behavior.selectorPositions.length > 0) {
             const numPositions = def.behavior.selectorPositions.length;

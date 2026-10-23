@@ -129,6 +129,10 @@ Non è obbligatorio disporre di client desktop esterni per utilizzare l'AI:
 - Clicca sull'icona a forma di scintilla (🪄) in alto a destra nell'applicazione web per aprire il cassetto laterale del Copilot.
 - Nelle **Impostazioni**, seleziona **Google Gemini (gratuito, consigliato per non esperti)** ed inserisci la tua chiave API gratuita ottenibile da [Google AI Studio](https://aistudio.google.com/).
 - In alternativa, puoi selezionare modelli locali tramite **Ollama** (es. `qwen2.5-coder`) o **LM Studio**.
+  > **Nota di sicurezza CORS per Ollama:** per consentire le chiamate dal browser restringendo l'accesso unicamente alla tua pagina locale (senza esporre il demone a siti terzi non autorizzati con `*`), imposta:
+  > - **macOS (permanente):** `launchctl setenv OLLAMA_ORIGINS "http://localhost:5173"` (oppure da terminale: `OLLAMA_ORIGINS="http://localhost:5173" ollama serve`)
+  > - **Windows (PowerShell):** `$env:OLLAMA_ORIGINS="http://localhost:5173"; ollama serve`
+  > - **Linux (systemd):** `Environment="OLLAMA_ORIGINS=http://localhost:5173"` in `/etc/systemd/system/ollama.service`
 - Il Copilot integrato dispone degli stessi identici strumenti dell'MCP, con esecuzione multi-step (ReAct) e tracciamento completo delle azioni (con pulsante per copiare il log JSON).
 
 ### 4. Esecuzione Test Unitari e Compilazione
