@@ -402,9 +402,9 @@ export const AiCopilotDrawer: React.FC<Props> = ({
                 outline: 'none',
               }}
             >
-              <option value="gemini">1. Google Gemini (Gratuito, consigliato per studenti)</option>
-              <option value="ollama">2. Ollama (Locale su PC localhost:11434)</option>
-              <option value="lmstudio">3. LM Studio / Custom OpenAI (localhost:1234)</option>
+              <option value="gemini">Google Gemini (gratuito, consigliato per non esperti)</option>
+              <option value="ollama">Ollama (Locale su PC localhost:11434)</option>
+              <option value="lmstudio">LM Studio / Custom OpenAI (localhost:1234)</option>
             </select>
           </div>
 

@@ -19,11 +19,11 @@ export const SAMPLE_DIRECT_START: Doc = {
   },
   elements: [
     // --- CIRCUITO DI POTENZA ---
-    // 1. Sorgente Trifase L1-L2-L3-N-PE
+    // 1. Sorgente Trifase L1-L2-L3-PE (4 poli)
     {
       id: 'src_pwr',
-      def: 'pwr_3p_n_pe',
-      x: 140,
+      def: 'pwr_3p_pe',
+      x: 130,
       y: 100,
       rot: 0,
       tag: 'LINEA',
@@ -192,10 +192,8 @@ export const SAMPLE_DIRECT_START: Doc = {
     { id: 'w10', kind: 'phase', pts: [{ x: 100, y: 430 }, { x: 100, y: 490 }] },
     { id: 'w11', kind: 'phase_l2', pts: [{ x: 120, y: 430 }, { x: 120, y: 490 }] },
     { id: 'w12', kind: 'phase_l3', pts: [{ x: 140, y: 430 }, { x: 140, y: 490 }] },
-    // Terra motore
-    { id: 'w_pe_a', kind: 'pe', pts: [{ x: 180, y: 110 }, { x: 180, y: 470 }] },
-    { id: 'w_pe_b', kind: 'pe', pts: [{ x: 180, y: 470 }, { x: 160, y: 470 }] },
-    { id: 'w_pe_c', kind: 'pe', pts: [{ x: 160, y: 470 }, { x: 160, y: 490 }] },
+    // Terra motore: conduttore PE diretto
+    { id: 'w_pe', kind: 'pe', pts: [{ x: 160, y: 110 }, { x: 160, y: 490 }] },
 
     // Comando: L -> Fusibile -> Stop NC
     { id: 'wc1', kind: 'phase', pts: [{ x: 400, y: 100 }, { x: 400, y: 130 }] },

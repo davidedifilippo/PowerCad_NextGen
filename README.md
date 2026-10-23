@@ -58,38 +58,88 @@ Un simulatore ed editor CAD di schemi elettrici industriali e didattici moderno,
 
 ---
 
+## 📦 Requisiti Preliminari: Node.js
+
+### Cos'è Node.js e perché serve?
+**Node.js** è un ambiente di esecuzione leggero, sicuro e gratuito (basato sul motore JavaScript V8) che consente al computer di eseguire applicazioni web moderne e strumenti di sviluppo direttamente in locale su Windows, macOS e Linux.
+
+In **PowerCad_NextGen / CADe_SIMU Next**, Node.js è necessario per:
+1. **Scaricare e avviare l'applicazione:** tramite il gestore di pacchetti integrato (`npm`), installa le librerie dell'interfaccia grafica e del simulatore, avviando il server web locale ad alte prestazioni.
+2. **Eseguire il Server MCP (Model Context Protocol):** permette agli agenti di intelligenza artificiale desktop (come **Antigravity**, **Claude Desktop** o **Cursor**) di interagire in tempo reale con lo schema elettrico (avviare/fermare la simulazione, premere pulsanti, cablare conduttori e verificare errori circuitali).
+
+### Come installarlo in un click (Windows / Mac / Linux)
+1. Vai sul sito ufficiale: [https://nodejs.org/](https://nodejs.org/)
+2. Scarica la versione indicata come **LTS (Long Term Support)**, raccomandata per la stabilità e compatibilità.
+3. Esegui il programma di installazione scaricato seguendo la procedura guidata (è sufficiente premere sempre *"Avanti"* / *"Next"* con le opzioni predefinite).
+4. Verifica l'installazione aprendo il terminale (o Prompt dei comandi / PowerShell su Windows) e digitando:
+   ```bash
+   node -v
+   npm -v
+   ```
+   Se compaiono i numeri di versione (es. `v20.x.x` o superiore), Node.js è installato e pronto all'uso!
+
+---
+
 ## 🛠️ Come Avviare l'Applicazione
 
-### Su macOS e Linux
-1. Clona il repository:
-   ```bash
-   git clone <URL_REPOSITORY>
-   cd PowerCad_NextGen
-   ```
-2. Installa le dipendenze ed avvia il server di sviluppo:
+### 1. Avvio dell'Editor CAD e Simulatore Web
+1. Apri il terminale nella cartella del progetto:
    ```bash
    npm install
    npm run dev
    ```
-3. Apri il browser all'indirizzo `http://localhost:5173/`.
+2. Apri il browser web all'indirizzo `http://localhost:5173/`.
+   - *Su Windows è disponibile anche il file batch rapido `avvia_powercad.bat` avviabile con un doppio click.*
 
-### Su Windows
-- **Metodo rapido:** Doppio click sul file `avvia_powercad.bat`.
-- **Oppure da terminale PowerShell / Prompt:**
+### 2. Avvio del Server MCP (per Agenti AI Desktop)
+Il progetto include un server nativo conforme allo standard **Model Context Protocol (MCP)** che espone strumenti di controllo bidirezionale con il simulatore su WebSocket (`ws://localhost:4321`) e HTTP RPC (`http://localhost:4322`).
+
+Per avviare il server MCP:
+```bash
+npm run mcp
+```
+*(oppure da `mcp-server`: `cd mcp-server && npm install && npm run build && npm start`)*
+
+#### Configurazione nei Client AI Desktop (Antigravity, Claude Desktop, Cursor)
+Per collegare un assistente AI esterno a CADe_SIMU Next, aggiungi la seguente voce nel file di configurazione MCP del tuo client (es. `claude_desktop_config.json` o nella configurazione MCP di Antigravity / Cursor):
+
+```json
+{
+  "mcpServers": {
+    "powercad": {
+      "command": "node",
+      "args": [
+        "<PERCORSO_ASSOLUTO_PROGETTO>/mcp-server/dist/index.js"
+      ]
+    }
+  }
+}
+```
+
+#### Strumenti (Tools) messi a disposizione dell'AI:
+- `cad_control_simulation`: avvio (`start`), stop o avanzamento a passi della simulazione.
+- `cad_interact_element`: pressione di pulsanti (`-SB2`, `-SB1`), toggle selettori e apertura/chiusura salvamotori.
+- `cad_validate_drc`: verifica automatica Design Rule Check per contatti orfani e anomalie circuitali.
+- `cad_apply_actions`: inserimento, rimozione e cablaggio automatico Manhattan a 90° dei componenti.
+- `cad_get_schematic`: ispezione dei morsetti, dei componenti e dei potenziali attivi del circuito.
+- `cad_switch_page`: navigazione e commutazione tra i fogli in progetti multifoglio.
+
+### 3. Copilot AI Integrato nel Browser
+Non è obbligatorio disporre di client desktop esterni per utilizzare l'AI:
+- Clicca sull'icona a forma di scintilla (🪄) in alto a destra nell'applicazione web per aprire il cassetto laterale del Copilot.
+- Nelle **Impostazioni**, seleziona **Google Gemini (gratuito, consigliato per non esperti)** ed inserisci la tua chiave API gratuita ottenibile da [Google AI Studio](https://aistudio.google.com/).
+- In alternativa, puoi selezionare modelli locali tramite **Ollama** (es. `qwen2.5-coder`) o **LM Studio**.
+- Il Copilot integrato dispone degli stessi identici strumenti dell'MCP, con esecuzione multi-step (ReAct) e tracciamento completo delle azioni (con pulsante per copiare il log JSON).
+
+### 4. Esecuzione Test Unitari e Compilazione
+- **Esecuzione test (80 test automatici passati con Vitest):**
   ```bash
-  npm install
-  npm run dev
+  npm test
   ```
-
-### Esecuzione Test Unitari
-```bash
-npm test
-```
-
-### Compilazione di Produzione
-```bash
-npm run build
-```
+- **Compilazione per produzione:**
+  ```bash
+  npm run build
+  ```
 
 ---
 
