@@ -775,6 +775,218 @@ const ElementItem: React.FC<{
         />
       ))}
 
+      {/* Live Simulation Indicators for Timers, Flashers and Counters */}
+      {(() => {
+        const tagKey = elem.tag || elem.id;
+
+        // 1. Contatore di impulsi (counter_impulse): display LCD integrato non editabile
+        if (def.id === 'counter_impulse') {
+          const count = simState.running ? Number(simState.elementStates[elem.id + '_cnt'] ?? 0) : 0;
+          const preset = Number(elem.props?.preset ?? 5);
+          const reached = count >= preset;
+          return (
+            <g className="counter-live-display" pointerEvents="none">
+              {/* LCD Display bezel inside right compartment */}
+              <rect
+                x={-15}
+                y={-5.5}
+                width={48}
+                height={11}
+                rx={2}
+                fill="#0f172a"
+                stroke={reached ? '#22c55e' : '#334155'}
+                strokeWidth={reached ? 1.2 : 0.8}
+              />
+              <text
+                x={9}
+                y={2.8}
+                fontSize={8}
+                fontFamily="monospace"
+                fontWeight="bold"
+                fill={reached ? '#4ade80' : '#38bdf8'}
+                textAnchor="middle"
+              >
+                {count} / {preset}
+              </text>
+            </g>
+          );
+        }
+
+        // 2. Relè intermittente (coil_relay_flasher): indicatore dinamico 1 / 0
+        if (def.id === 'coil_relay_flasher') {
+          const stateBit = isOutputActive ? '1' : '0';
+          return (
+            <g className="flasher-live-display" pointerEvents="none">
+              {isOutputActive && (
+                <rect
+                  x={-14}
+                  y={-7}
+                  width={28}
+                  height={14}
+                  fill="rgba(34, 197, 94, 0.18)"
+                  stroke="#22c55e"
+                  strokeWidth={1.2}
+                />
+              )}
+              <rect
+                x={-2}
+                y={-6}
+                width={15}
+                height={12}
+                rx={2}
+                fill={isOutputActive ? '#15803d' : '#1e293b'}
+                stroke={isOutputActive ? '#22c55e' : '#475569'}
+                strokeWidth={0.8}
+              />
+              <text
+                x={5.5}
+                y={3}
+                fontSize={9}
+                fontFamily="monospace"
+                fontWeight="900"
+                fill={isOutputActive ? '#4ade80' : '#94a3b8'}
+                textAnchor="middle"
+              >
+                {stateBit}
+              </text>
+            </g>
+          );
+        }
+
+        // 3. Generatore di impulsi (coil_pulse_generator): stato attivo evidenziato in colore arancione
+        if (def.id === 'coil_pulse_generator') {
+          return (
+            <g className="pulse-gen-live-display" pointerEvents="none">
+              {isOutputActive && (
+                <rect
+                  x={-14}
+                  y={-7}
+                  width={28}
+                  height={14}
+                  fill="rgba(249, 115, 22, 0.28)"
+                  stroke="#f97316"
+                  strokeWidth={1.5}
+                />
+              )}
+              <rect
+                x={-2}
+                y={-6}
+                width={15}
+                height={12}
+                rx={2}
+                fill={isOutputActive ? '#ea580c' : '#1e293b'}
+                stroke={isOutputActive ? '#fb923c' : '#475569'}
+                strokeWidth={0.8}
+              />
+              <text
+                x={5.5}
+                y={2.5}
+                fontSize={7}
+                fontFamily="monospace"
+                fontWeight="bold"
+                fill={isOutputActive ? '#ffffff' : '#94a3b8'}
+                textAnchor="middle"
+              >
+                {isOutputActive ? 'ON' : 'OFF'}
+              </text>
+            </g>
+          );
+        }
+
+        // 4. Temporizzatori con conto alla rovescia (TON, TOF, TON+TOF): tempo rimanente
+        if (def.id === 'coil_timer_on' || def.id === 'coil_timer_off' || def.id === 'coil_timer_on_off') {
+          let countdownText = '';
+          let isCounting = false;
+
+          if (def.id === 'coil_timer_on') {
+            const delay = Number(elem.props?.delay ?? 3);
+            const progress = simState.timerProgress[tagKey] ?? 0;
+            if (isOutputActive) {
+              countdownText = '0.0s';
+            } else if (progress > 0) {
+              countdownText = Math.max(0, delay - progress).toFixed(1) + 's';
+              isCounting = true;
+            } else {
+              countdownText = delay.toFixed(1) + 's';
+            }
+          } else if (def.id === 'coil_timer_off') {
+            const delay = Number(elem.props?.delay ?? 3);
+            const progress = simState.timerProgress[tagKey];
+            if (progress !== undefined && progress > 0) {
+              countdownText = progress.toFixed(1) + 's';
+              isCounting = true;
+            } else if (isOutputActive) {
+              countdownText = delay.toFixed(1) + 's';
+            } else {
+              countdownText = '0.0s';
+            }
+          } else if (def.id === 'coil_timer_on_off') {
+            const delayOn = Number(elem.props?.delayOn ?? elem.props?.delay ?? 3);
+            const delayOff = Number(elem.props?.delayOff ?? elem.props?.delay ?? 3);
+            const curOn = simState.timerProgress[tagKey + '_ton'] ?? 0;
+            const curOff = simState.timerProgress[tagKey + '_tof'];
+
+            if (!isOutputActive) {
+              if (curOn > 0) {
+                countdownText = Math.max(0, delayOn - curOn).toFixed(1) + 's';
+                isCounting = true;
+              } else {
+                countdownText = delayOn.toFixed(1) + 's';
+              }
+            } else {
+              if (curOff !== undefined && curOff < delayOff) {
+                countdownText = Math.max(0, curOff).toFixed(1) + 's';
+                isCounting = true;
+              } else {
+                countdownText = '0.0s';
+              }
+            }
+          }
+
+          const rightBoxX = def.id === 'coil_timer_on_off' ? -2 : -4;
+          const rightBoxW = 14 - rightBoxX;
+
+          return (
+            <g className="timer-countdown-live" pointerEvents="none">
+              {isCounting && (
+                <rect
+                  x={-14}
+                  y={-7}
+                  width={28}
+                  height={14}
+                  fill="rgba(56, 189, 248, 0.16)"
+                  stroke="#38bdf8"
+                  strokeWidth={1.2}
+                />
+              )}
+              <rect
+                x={rightBoxX + 0.5}
+                y={-6}
+                width={rightBoxW - 1}
+                height={12}
+                rx={2}
+                fill={isCounting ? '#1e293b' : isOutputActive ? '#15803d' : '#f8fafc'}
+                stroke={isCounting ? '#38bdf8' : isOutputActive ? '#22c55e' : '#94a3b8'}
+                strokeWidth={0.8}
+              />
+              <text
+                x={rightBoxX + rightBoxW / 2}
+                y={2.5}
+                fontSize={7}
+                fontFamily="monospace"
+                fontWeight="bold"
+                fill={isCounting ? '#38bdf8' : isOutputActive ? '#ffffff' : '#475569'}
+                textAnchor="middle"
+              >
+                {countdownText}
+              </text>
+            </g>
+          );
+        }
+
+        return null;
+      })()}
+
       {/* Tag Label - Offset cleanly to prevent collision with terminals or poles */}
       {elem.tag && def.id !== 'text_label' && (() => {
         const tagPos = getTagPosition(def);
