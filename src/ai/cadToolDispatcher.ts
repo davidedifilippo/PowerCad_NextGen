@@ -385,9 +385,17 @@ export async function dispatchCadTool(
         setSimState((prev) => {
           const currentVal = prev.elementStates[elem.id] ?? (def?.behavior as any)?.defaultOn ?? false;
           const nextVal = !currentVal;
+          const nextStates = { ...prev.elementStates, [elem.id]: nextVal };
+          if (elem.tag) {
+            ctx.doc.elements.forEach((o) => {
+              if (o.tag === elem.tag) {
+                nextStates[o.id] = nextVal;
+              }
+            });
+          }
           return {
             ...prev,
-            elementStates: { ...prev.elementStates, [elem.id]: nextVal },
+            elementStates: nextStates,
             activeOutputs: elem.tag ? { ...prev.activeOutputs, [elem.tag]: nextVal } : prev.activeOutputs,
           };
         });

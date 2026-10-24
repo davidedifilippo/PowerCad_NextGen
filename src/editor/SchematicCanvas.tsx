@@ -1435,9 +1435,19 @@ export const SchematicCanvas: React.FC<Props> = ({
           const defaultState = def.behavior.defaultOn ?? false;
           onSimStateChange((prev) => {
             const current = prev.elementStates[elem.id] ?? defaultState;
+            const nextVal = !current;
+            const nextStates = { ...prev.elementStates, [elem.id]: nextVal };
+            if (elem.tag) {
+              doc.elements.forEach((o) => {
+                if (o.tag === elem.tag) {
+                  nextStates[o.id] = nextVal;
+                }
+              });
+            }
             return {
               ...prev,
-              elementStates: { ...prev.elementStates, [elem.id]: !current },
+              elementStates: nextStates,
+              activeOutputs: elem.tag ? { ...prev.activeOutputs, [elem.tag]: nextVal } : prev.activeOutputs,
             };
           });
         } else if (def.behavior.actuation === 'linked') {

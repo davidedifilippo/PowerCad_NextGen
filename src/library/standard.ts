@@ -769,6 +769,31 @@ export const STANDARD_LIBRARY: ComponentDef[] = [
     ],
   },
   {
+    id: 'fuse_2p',
+    name: 'Fusibile 2P',
+    category: 'Protezioni',
+    tagPrefix: '-F',
+    terminals: [
+      { id: '1', x: -10, y: -20, label: '1' },
+      { id: '3', x: 10, y: -20, label: '3' },
+      { id: '2', x: -10, y: 20, label: '2' },
+      { id: '4', x: 10, y: 20, label: '4' },
+    ],
+    behavior: {
+      type: 'conductor',
+      pairs: [
+        ['1', '2'],
+        ['3', '4'],
+      ],
+    },
+    symbol: [
+      { t: 'rect', x: -14.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: -10, y1: -20, x2: -10, y2: 20 },
+      { t: 'rect', x: 5.5, y: -9, w: 9, h: 18, fill: '#ffffff' },
+      { t: 'line', x1: 10, y1: -20, x2: 10, y2: 20 },
+    ],
+  },
+  {
     id: 'fuse_3p',
     name: 'Fusibile 3P',
     category: 'Protezioni',

@@ -191,7 +191,7 @@ export function validateDRC(doc: Doc): string[] {
     const def = registry.get(elem.def);
     if (!def) continue;
 
-    if (def.behavior.type === 'coil') {
+    if (def.behavior.type === 'coil' || def.behavior.type === 'thermal') {
       if (elem.tag) coils.add(elem.tag);
     } else if (def.behavior.type === 'contact' && def.behavior.actuation === 'linked') {
       if (elem.tag) contacts.add(elem.tag);

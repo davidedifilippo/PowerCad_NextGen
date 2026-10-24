@@ -174,7 +174,7 @@ function buildConductivityGraph(
           isClosedNC = !pressed;
         } else if (beh.actuation === 'latching') {
           const toggled = Boolean(
-            elementStates[elem.id] ?? (beh.defaultOn ?? false)
+            elementStates[elem.id] ?? (elem.tag ? (elementStates[elem.tag] ?? activeOutputs[elem.tag]) : undefined) ?? (beh.defaultOn ?? false)
           );
           isClosedNO = toggled;
           isClosedNC = !toggled;
@@ -963,7 +963,7 @@ export function stepSimulation(doc: Doc, state: SimState, dtSec: number = 0.05):
           newActiveOutputs[elem.id] = true;
         }
       } else if (beh.type === 'contact') {
-        if ((beh.actuation === 'momentary' || beh.actuation === 'latching') && state.elementStates[elem.id] && elem.tag) {
+        if ((beh.actuation === 'momentary' || beh.actuation === 'latching') && (state.elementStates[elem.id] || (elem.tag && state.elementStates[elem.tag])) && elem.tag) {
           newActiveOutputs[elem.tag] = true;
         }
         if (beh.coil) {
