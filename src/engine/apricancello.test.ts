@@ -1,4 +1,3 @@
-import fs from "fs";
 import { describe, it, expect } from "vitest";
 import { SAMPLE_APRICANCELLO_ELETTRICO } from "../samples/apricancelloElettrico";
 import { stepSimulation, createInitialSimState } from "./simulation";
@@ -8,9 +7,7 @@ describe("Apricancello Elettrico - Complete Simulation Verification", () => {
   it("passes DRC validation with 0 issues", () => {
     const issues = validateDRC(SAMPLE_APRICANCELLO_ELETTRICO);
     expect(issues).toEqual([]);
-  
-
-});
+  });
 
   it("executes the full cycle: Apertura manuale -> S3 -> Pausa 5s -> Chiusura automatica -> S4", () => {
     const doc = SAMPLE_APRICANCELLO_ELETTRICO;
@@ -121,12 +118,6 @@ describe("Apricancello Elettrico - Complete Simulation Verification", () => {
     // K1 drops, motor immediately stops
     expect(state.activeOutputs["K1"]).toBeFalsy();
     expect(state.activeOutputs["m1"]).toBeFalsy();
-  });
-  it("exports Apricancello_Elettrico.json to disk", () => {
-    const jsonStr = JSON.stringify(SAMPLE_APRICANCELLO_ELETTRICO, null, 2).replace(/\n/g, "\r\n");
-    fs.writeFileSync("Apricancello_Elettrico.json", jsonStr, "utf8");
-    fs.writeFileSync("../Apricancello_Elettrico.json", jsonStr, "utf8");
-    expect(fs.existsSync("Apricancello_Elettrico.json")).toBe(true);
   });
 });
 
