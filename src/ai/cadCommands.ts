@@ -163,6 +163,63 @@ export function resolveTerminal(
 /**
  * Generates an orthogonal (Manhattan) route between two points on the 10px grid.
  */
+/**
+ * Appends a 2-point orthogonal segment to the wire list, avoiding duplicate/overlapping colinear segments
+ * so shared busbars (like +24V or L1) never produce stacked overlapping wires.
+ */
+function addDeduplicatedSegment(wires: Wire[], pA: Pt, pB: Pt, kind: WireKind): void {
+  if (pA.x === pB.x && pA.y === pB.y) return;
+
+  const isHoriz = pA.y === pB.y;
+  const isVert = pA.x === pB.x;
+
+  if (isHoriz) {
+    const y = pA.y;
+    const minX = Math.min(pA.x, pB.x);
+    const maxX = Math.max(pA.x, pB.x);
+    for (let i = 0; i < wires.length; i++) {
+      const w = wires[i];
+      if (w.pts.length === 2 && w.pts[0].y === y && w.pts[1].y === y) {
+        const wMinX = Math.min(w.pts[0].x, w.pts[1].x);
+        const wMaxX = Math.max(w.pts[0].x, w.pts[1].x);
+        if (wMinX <= minX && wMaxX >= maxX) {
+          return;
+        }
+        if (minX <= wMinX && maxX >= wMaxX) {
+          if (minX < wMinX) addDeduplicatedSegment(wires, { x: minX, y }, { x: wMinX, y }, kind);
+          if (maxX > wMaxX) addDeduplicatedSegment(wires, { x: wMaxX, y }, { x: maxX, y }, kind);
+          return;
+        }
+      }
+    }
+  } else if (isVert) {
+    const x = pA.x;
+    const minY = Math.min(pA.y, pB.y);
+    const maxY = Math.max(pA.y, pB.y);
+    for (let i = 0; i < wires.length; i++) {
+      const w = wires[i];
+      if (w.pts.length === 2 && w.pts[0].x === x && w.pts[1].x === x) {
+        const wMinY = Math.min(w.pts[0].y, w.pts[1].y);
+        const wMaxY = Math.max(w.pts[0].y, w.pts[1].y);
+        if (wMinY <= minY && wMaxY >= maxY) {
+          return;
+        }
+        if (minY <= wMinY && maxY >= wMaxY) {
+          if (minY < wMinY) addDeduplicatedSegment(wires, { x, y: minY }, { x, y: wMinY }, kind);
+          if (maxY > wMaxY) addDeduplicatedSegment(wires, { x, y: wMaxY }, { x, y: maxY }, kind);
+          return;
+        }
+      }
+    }
+  }
+
+  wires.push({
+    id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    pts: [{ ...pA }, { ...pB }],
+    kind,
+  });
+}
+
 export function routeManhattanWire(start: Pt, end: Pt): Pt[] {
   const p1 = { x: snap(start.x), y: snap(start.y) };
   const p2 = { x: snap(end.x), y: snap(end.y) };
@@ -378,13 +435,9 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
 
           const pts = routeManhattanWire(fromTerm.worldPos, toTerm.worldPos);
           const wireKind = normalizeWireKind(act.kind);
-          const newWire: Wire = {
-            id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-            pts,
-            kind: wireKind,
-          };
-
-          updatedWires.push(newWire);
+          for (let i = 0; i < pts.length - 1; i++) {
+            addDeduplicatedSegment(updatedWires, pts[i], pts[i + 1], wireKind);
+          }
           successCount++;
           break;
         }
@@ -396,12 +449,9 @@ export function executeCadActions(doc: Doc, actions: CadAction[]): ExecutionResu
           }
           const snappedPts = act.pts.map((p) => snapPt(p));
           const wireKind = normalizeWireKind(act.kind);
-          const newWire: Wire = {
-            id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-            pts: snappedPts,
-            kind: wireKind,
-          };
-          updatedWires.push(newWire);
+          for (let i = 0; i < snappedPts.length - 1; i++) {
+            addDeduplicatedSegment(updatedWires, snappedPts[i], snappedPts[i + 1], wireKind);
+          }
           successCount++;
           break;
         }
